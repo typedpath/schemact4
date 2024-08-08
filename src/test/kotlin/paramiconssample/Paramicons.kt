@@ -36,7 +36,7 @@ val paramsEntity = Entity(name="params", description="paramiconparams") {
 
 }
 
-val paramiconsInfrastructure = Schemact(
+val paramicons = Schemact(
 domains = listOf(rootDomain),
 functions = mutableListOf(thumbnailerFunction),
 entities = mutableListOf(metaDataEntity, paramsEntity)

@@ -1,0 +1,9 @@
+8 aug 2024
+----------
+sample model defined - example  Paramicons.kt defines requirements of Paramicons project
+   field paramicons brings everything together
+TODO add db
+This model omits:
+    the concept of Path which is need for fine grained security and query definition
+    the concept of id for model elements which is probably important for versioning
+The schema is defined by Entity and Connection s between them.
