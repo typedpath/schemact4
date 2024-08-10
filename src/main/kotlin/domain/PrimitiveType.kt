@@ -8,7 +8,7 @@ open class PrimitiveType(name: String, description: String,
   : Entity( name=name, description = description, isValueType = true) {
   }
 
-class StringType(val maxLength: Int) : PrimitiveType(name="String(${maxLength})",
+open class StringType(val maxLength: Int) : PrimitiveType(name="String(${maxLength})",
     kotlinName = "String",
     typescriptName = "string",
     sqlType = "TEXT",
