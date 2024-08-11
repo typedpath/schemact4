@@ -20,6 +20,10 @@ fun deployInfrastructure(schemact : Schemact,
     deployInfrastructure(asStackParams(schemact, deploymentName, thumbnailerCodeJar))
 }
 
+fun deployUiCode(schemact : Schemact, deploymentName : String, uiCodeLocation: String) {
+    deployUiCode(asStackParams(schemact, deploymentName, File("TODO")), uiCodeLocation)
+}
+
 fun asStackParams(schemact : Schemact,
                   deploymentName: String,
                   thumbnailerCodeJar: File) : StackParams {
