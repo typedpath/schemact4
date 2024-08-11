@@ -3,7 +3,9 @@ package paramiconssample
 import schemact.domain.*
 import schemact.domain.Function
 
-val rootDomain =  Domain(name = "testedsoftware.org", wildcardCertificateRef = "sampleWildcertRef", deployments = listOf(
+val rootDomain =  Domain(name = "testedsoftware.org", wildcardCertificateRef = "sampleWildcertRef",
+    cdnZoneReference = "sampleCdnZoneReference",
+    deployments = listOf(
     Deployment("paramicons"),
     Deployment("devparamicons")
 ))
