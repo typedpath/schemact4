@@ -1,4 +1,4 @@
-package domain
+package schemact.domain
 
 open class PrimitiveType(name: String, description: String,
                          val kotlinName: String,
@@ -38,29 +38,41 @@ class IntType() : PrimitiveType(name="Int",
 
 
 fun Entity.string(name: String, description: String, maxLength: Int) {
-    connections.add(Connection(name=name, description=description, entity1 = this,
+    connections.add(
+        Connection(name=name, description=description, entity1 = this,
         cardinality = Cardinality.OneToOne,
-        type=ConnectionType.Contains,
-        entity2 = StringType(maxLength)))
+        type= ConnectionType.Contains,
+        entity2 = StringType(maxLength)
+        )
+    )
 }
 
 fun Entity.float(name: String, description: String) {
-    connections.add(Connection(name=name, description=description, entity1 = this,
+    connections.add(
+        Connection(name=name, description=description, entity1 = this,
         cardinality = Cardinality.OneToOne,
-        type=ConnectionType.Contains,
-        entity2 = FloatType()))
+        type= ConnectionType.Contains,
+        entity2 = FloatType()
+        )
+    )
 }
 
 fun Entity.bool(name: String, description: String) {
-    connections.add(Connection(name=name, description=description, entity1 = this,
+    connections.add(
+        Connection(name=name, description=description, entity1 = this,
         cardinality = Cardinality.OneToOne,
-        type=ConnectionType.Contains,
-        entity2 = BooleanType()))
+        type= ConnectionType.Contains,
+        entity2 = BooleanType()
+        )
+    )
 }
 
 fun Entity.int(name: String, description: String) {
-    connections.add(Connection(name=name, description=description, entity1 = this,
+    connections.add(
+        Connection(name=name, description=description, entity1 = this,
         cardinality = Cardinality.OneToOne,
-        type=ConnectionType.Contains,
-        entity2 = IntType()))
+        type= ConnectionType.Contains,
+        entity2 = IntType()
+        )
+    )
 }

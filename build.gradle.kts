@@ -1,8 +1,9 @@
 plugins {
     kotlin("jvm") version "1.9.0"
+    `maven-publish`
 }
 
-group = "org.example"
+group = "com.typedpath"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -19,4 +20,16 @@ tasks.test {
 
 kotlin {
     jvmToolchain(8)
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("schemact4") {
+            from(components["java"])
+        }
+        repositories {
+            mavenLocal()
+            //maven(url = "build/repository")
+        }
+    }
 }

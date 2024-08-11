@@ -1,4 +1,4 @@
-package domain
+package schemact.domain
 
 //TODO use a class maxTo, minTo
 enum class Cardinality { OneToOne,OneToMany }

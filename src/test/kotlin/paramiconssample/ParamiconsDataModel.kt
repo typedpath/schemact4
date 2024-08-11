@@ -1,6 +1,6 @@
 package paramiconssample
 
-import domain.*
+import schemact.domain.*
 
 val metaDataEntity = Entity(name="metadata", description="describe params") {
     string("id", "identifier", 10)

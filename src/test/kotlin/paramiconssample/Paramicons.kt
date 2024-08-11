@@ -1,8 +1,7 @@
 package paramiconssample
 
-import domain.*
-import domain.Function
-import domain.string
+import schemact.domain.*
+import schemact.domain.Function
 
 val rootDomain =  Domain(name = "testedsoftware.org", wildcardCertificateRef = "sampleWildcertRef", deployments = listOf(
     Deployment("paramicons"),
@@ -20,7 +19,7 @@ userKeyedDatabase = UserKeyedDatabase(entities=mutableListOf(metaDataEntity, par
         description = "accepts an svg and creates an open graph friendly paramicon index page, returns index page url",
         paramType = Entity(name="param", description="Params" ) {
             string(name="svg", description="svg for rendering", maxLength = 4000)
-            containsOne("bucketName", description="bucketName", type=StaticWebsite.BucketName())
+            containsOne("bucketName", description="bucketName", type= StaticWebsite.BucketName())
         },
         returnType = StringType(200)
     )
