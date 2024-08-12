@@ -1,6 +1,8 @@
 package schemact.gradleplugin
 
 import com.typedpath.aws.deployCode
+import com.typedpath.aws.deployInfrastructure
+import com.typedpath.aws.deployUiCode
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import schemact.domain.Deployment
@@ -27,8 +29,23 @@ class SchemactPlugin : Plugin<Project> {
             it.group = "schemact_${deployment.subdomain}"
             it.actions.add (
                 {
-                    println("test deployment task ${deployment.subdomain}")
                     deployCode(extension.schemact, deployment.subdomain, File(extension.thumbnailerJar))
+                }
+            )
+        }
+        project.tasks.create("${deployment.subdomain}_deployUiCode") {
+            it.group = "schemact_${deployment.subdomain}"
+            it.actions.add (
+                {
+                    deployUiCode(extension.schemact, deployment.subdomain, extension.uiCodeLocation)
+                }
+            )
+        }
+        project.tasks.create("${deployment.subdomain}_deployInfrastructure") {
+            it.group = "schemact_${deployment.subdomain}"
+            it.actions.add (
+                {
+                    deployInfrastructure(extension.schemact, deployment.subdomain, File(extension.thumbnailerJar))
                 }
             )
         }
