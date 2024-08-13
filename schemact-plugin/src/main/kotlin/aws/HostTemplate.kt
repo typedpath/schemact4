@@ -43,7 +43,7 @@ class HostTemplate(params: StackParams) : ServerlessCloudformationTemplate() {
     val svgThumbnailerFunction = AWS_Lambda_Function(
         code = AWS_Lambda_Function.Code {
             s3Bucket = params.functionCodeBucketName()
-            s3Key = params.codeJar.name
+            s3Key = params.idToCodeJar.entries.first().value.name
         },
         role = ref(thumbnailerFunctionFunctionRole.arnAttribute())
     ) {

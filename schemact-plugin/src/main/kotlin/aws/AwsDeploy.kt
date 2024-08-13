@@ -6,27 +6,26 @@ import java.io.File
 
 fun deployCode(schemact : Schemact,
                deploymentName: String,
-               thumbnailerCodeJar: File
+               idToCodeJar : Map<String, File>
                /**TODO make this a list of function mappings*/) {
 
-    deployCode(asStackParams(schemact, deploymentName, thumbnailerCodeJar))
+    deployCode(asStackParams(schemact, deploymentName, idToCodeJar))
 }
 
 fun deployInfrastructure(schemact : Schemact,
                deploymentName: String,
-               thumbnailerCodeJar: File
-               /**TODO make this a list of function mappings*/) {
+                         idToCodeJar : Map<String, File>) {
 
-    deployInfrastructure(asStackParams(schemact, deploymentName, thumbnailerCodeJar))
+    deployInfrastructure(asStackParams(schemact, deploymentName, idToCodeJar))
 }
 
 fun deployUiCode(schemact : Schemact, deploymentName : String, uiCodeLocation: String) {
-    deployUiCode(asStackParams(schemact, deploymentName, File("TODO")), uiCodeLocation)
+    deployUiCode(asStackParams(schemact, deploymentName, emptyMap()), uiCodeLocation)
 }
 
 fun asStackParams(schemact : Schemact,
                   deploymentName: String,
-                  thumbnailerCodeJar: File) : StackParams {
+                 idToCodeJar: Map<String, File>) : StackParams {
     if (schemact.domains.size!=1) {
         throw RuntimeException("exactly 1 domain only expected")
     }
@@ -42,8 +41,7 @@ fun asStackParams(schemact : Schemact,
         rootDomain = domain.name,
         wildCardSslCertArn = domain.wildcardCertificateRef,
         cloudFrontHostedZoneId = domain.cdnZoneReference,
-        // TODO change this to a list of functions
-        codeJar = thumbnailerCodeJar
+        idToCodeJar = idToCodeJar
     )
 
 }

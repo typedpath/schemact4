@@ -114,11 +114,23 @@ private fun requestUpdateStack(
     return result
 }
 
+//TODO remmove this
+fun createOrUpdateStack(
+    template: CloudFormationTemplate, stackName: String, region: Regions = Regions.US_EAST_1,
+    cleanup: Boolean = true,
+    blockUpdate: Boolean = false,
+    onSuccess: (
+        credentialsProvider: AWSCredentialsProvider,
+        outputs: List<Output>
+    ) -> Unit = { a, b -> {} }
+): Map<String, String> =
+    createOrUpdateStackFromString( toYaml(template), stackName, region,cleanup,blockUpdate,onSuccess)
+
 /**
  * this is based on https://github.com/aws/aws-sdk-java/tree/master/src/samples/AwsCloudFormation
  */
-fun createOrUpdateStack(
-        template: CloudFormationTemplate, stackName: String, region: Regions = Regions.US_EAST_1,
+fun createOrUpdateStackFromString(
+        strTemplate: String, stackName: String, region: Regions = Regions.US_EAST_1,
         cleanup: Boolean = true,
         blockUpdate: Boolean = false,
         onSuccess: (
@@ -141,7 +153,6 @@ fun createOrUpdateStack(
         val existingStack =
                 getStack(stackName, 10000, client)
 
-        val strTemplate = toYaml(template)
         println(strTemplate)
 
         if (blockUpdate) {

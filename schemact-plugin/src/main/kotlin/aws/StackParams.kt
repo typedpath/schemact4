@@ -9,7 +9,7 @@ data class StackParams(
     val rootDomain: String,
     val wildCardSslCertArn: String,
     val cloudFrontHostedZoneId: String,
-    val codeJar: File
+    val idToCodeJar: Map<String, File>
 ) {
     fun functionCodeBucketName() = "code.${name}.${rootDomain}"
     fun functionCodeStackName() = "${name}Code"

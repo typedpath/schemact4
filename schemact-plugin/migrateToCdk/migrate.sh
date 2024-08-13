@@ -1,0 +1,1 @@
+cdk migrate --stack-name paramicons-tested-software-org --language java --from-path ./paramicons.yaml

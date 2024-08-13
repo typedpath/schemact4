@@ -27,8 +27,9 @@ fun deployCode(stackParams: StackParams) {
     val s3Builder = AmazonS3Client.builder()
     s3Builder.region = stackParams.region.getName()
     // .region(devStackParams.region) .build()
-    println("reading file ${stackParams.codeJar.absolutePath}")
-    val req = PutObjectRequest(stackParams.functionCodeBucketName(),"${stackParams.codeJar.name}", stackParams.codeJar)
+    val codeFile = stackParams.idToCodeJar.entries.first().value
+    println("reading file ${codeFile.absolutePath}")
+    val req = PutObjectRequest(stackParams.functionCodeBucketName(),"${codeFile.name}", codeFile)
     val s3 = s3Builder.build()
     s3.putObject(req )
 
