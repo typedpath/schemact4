@@ -1,4 +1,4 @@
-package schemact.gradleplugin.cdk
+package schemact.gradleplugin.aws.cdk
 
 import software.amazon.awscdk.RemovalPolicy
 import software.amazon.awscdk.Stack

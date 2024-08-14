@@ -1,4 +1,4 @@
-package com.typedpath.stack.util
+package schemact.gradleplugin.aws.util
 
 import java.io.File
 

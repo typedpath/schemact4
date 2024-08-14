@@ -1,4 +1,4 @@
-package com.typedpath.stack.util
+package schemact.gradleplugin.aws.util
 //TODO put this in utility project or cloudformation2kotlin - already copied from schemact3,2,1
 
 import com.amazonaws.AmazonClientException
@@ -9,8 +9,6 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.cloudformation.AmazonCloudFormation
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder
 import com.amazonaws.services.cloudformation.model.*
-import com.typedpath.awscloudformation.CloudFormationTemplate
-import com.typedpath.awscloudformation.toYaml
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -113,18 +111,6 @@ private fun requestUpdateStack(
     val result: UpdateStackResult = client.updateStack(req)
     return result
 }
-
-//TODO remmove this
-fun createOrUpdateStack(
-    template: CloudFormationTemplate, stackName: String, region: Regions = Regions.US_EAST_1,
-    cleanup: Boolean = true,
-    blockUpdate: Boolean = false,
-    onSuccess: (
-        credentialsProvider: AWSCredentialsProvider,
-        outputs: List<Output>
-    ) -> Unit = { a, b -> {} }
-): Map<String, String> =
-    createOrUpdateStackFromString( toYaml(template), stackName, region,cleanup,blockUpdate,onSuccess)
 
 /**
  * this is based on https://github.com/aws/aws-sdk-java/tree/master/src/samples/AwsCloudFormation
@@ -263,9 +249,6 @@ fun defaultCurrentDateTimePattern() =
 fun defaultStackName(cloudFormationTemplateClass: Class<*>): String =
         "${cloudFormationTemplateClass.name.toLowerCase().replace('.', '-')
                 .replace('$', '-')}-${defaultCurrentDateTimePattern()}"
-
-fun defaultStackName(cloudFormationTemplate: CloudFormationTemplate): String =
-        defaultStackName(cloudFormationTemplate.javaClass)
 
 
 // Wait for a stack to complete transitioning

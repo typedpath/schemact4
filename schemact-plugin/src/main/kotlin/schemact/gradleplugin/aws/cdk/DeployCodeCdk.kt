@@ -1,4 +1,4 @@
-package schemact.gradleplugin.cdk
+package schemact.gradleplugin.aws.cdk
 
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.regions.Regions

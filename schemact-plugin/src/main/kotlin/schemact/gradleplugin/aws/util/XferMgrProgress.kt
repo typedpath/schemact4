@@ -1,4 +1,4 @@
-package com.typedpath.stack.util
+package schemact.gradleplugin.aws.util
 
 import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonServiceException

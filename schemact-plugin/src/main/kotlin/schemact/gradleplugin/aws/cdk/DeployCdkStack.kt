@@ -1,14 +1,10 @@
-package schemact.gradleplugin.cdk
+package schemact.gradleplugin.aws.cdk
 
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.cloudformation.model.Output
-import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.model.PutObjectRequest
 
-import com.typedpath.stack.util.createOrUpdateStackFromString
-import schemact.domain.Deployment
-import schemact.domain.Domain
+import schemact.gradleplugin.aws.util.createOrUpdateStackFromString
 import software.amazon.awscdk.App
 import software.amazon.awscdk.StageSynthesisOptions
 import software.constructs.Construct

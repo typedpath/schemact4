@@ -1,20 +1,21 @@
-package schemact.gradleplugin.cdk;
+package schemact.gradleplugin.aws.cdk;
+import org.gradle.configurationcache.extensions.capitalized
 import schemact.domain.Deployment
 import schemact.domain.Domain
 import software.amazon.awscdk.Stack
 import software.amazon.awscdk.StackProps
+import software.amazon.awscdk.services.cloudfront.CfnDistribution
 import software.amazon.awscdk.services.iam.CfnRole
 import software.amazon.awscdk.services.lambda.CfnFunction
 import software.amazon.awscdk.services.lambda.CfnPermission
 import software.amazon.awscdk.services.lambda.CfnUrl
+import software.amazon.awscdk.services.route53.CfnRecordSetGroup
 import software.amazon.awscdk.services.s3.CfnBucket
 import software.amazon.awscdk.services.s3.CfnBucketPolicy
 import software.constructs.Construct
 import java.io.File
 import java.util.*
-import java.util.Map
 import kotlin.collections.List
-import kotlin.collections.forEach
 import kotlin.collections.mutableListOf
 
 class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
@@ -27,15 +28,18 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
 
     init {
         val functionRole = createFunctionRole()
-        idToFunctionJars.entries.forEach {
-            createFunction(it.key, codeBucketName, it.value.name, websiteDomainName, functionRole)
+        val idToFunctionUrl: Map<String, CfnUrl> =  idToFunctionJars.entries.associate {
+            it.key to
+            createFunction(it.key, domain, codeBucketName, it.value.name, websiteDomainName, functionRole)
         }
         val websiteResourcesHostingBucket = createWebsiteResourcesHostingBucket()
         createWebsiteResourcesHostingBucketPolicy(websiteResourcesHostingBucket)
-        //TODO the cloudfront distribution
-}
+        val cfnDistribution = createWebsiteResourcesCloudFrontDistribution(scope = this, domain=domain, websiteDomainName=websiteDomainName, idToFunctionUrl=idToFunctionUrl)
+        createWebsiteResourcesDnsRecordSetGroup(websiteDomainName = websiteDomainName, domain=domain, cloudFrontDistribution = cfnDistribution)
+    }
 
-    fun createFunction(id: String, codeBucketName: String, jarFileName: String, staticWebsiteBucketName: String, functionRole: CfnRole) {
+    fun createFunction(id: String, domain: Domain, codeBucketName: String, jarFileName: String, staticWebsiteBucketName: String,
+                       functionRole: CfnRole) : CfnUrl {
         val function: CfnFunction =
             CfnFunction.Builder.create(this, "${id}Function")
                 .code(
@@ -46,10 +50,11 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
                 )
                 .environment(
                     CfnFunction.EnvironmentProperty.builder()
-                        .variables(Map.of("s3bucket", staticWebsiteBucketName))
+                        .variables(java.util.Map.of("s3bucket", staticWebsiteBucketName))
                         .build()
                 )
-                .handler("org.testedsoftware.paramicons.${id}Handler")
+                //TODO parameterise handler
+                .handler("${domain.name.split(".").reversed().joinToString(".")}.function.${id.capitalized()}Handler")
                 .memorySize(1024)
                 .role(functionRole.getAttrArn())
                 .runtime("java17")
@@ -64,23 +69,24 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
                 .principal("*")
                 .build()
 
-        val functionLambdaUrl: CfnUrl = CfnUrl.Builder.create(this, "thumbnailerLambdaUrl")
+        val functionLambdaUrl: CfnUrl = CfnUrl.Builder.create(this, "${id}LambdaUrl")
             .authType("NONE")
             .targetFunctionArn(function.getRef())
             .build()
+        return functionLambdaUrl
     }
 
     fun createFunctionRole() : CfnRole  =
             CfnRole.Builder.create(this, "functionRole")
                 .assumeRolePolicyDocument(
-                    Map.of(
-                        "Statement", Arrays.asList(
-                            Map.of(
+                    java.util.Map.of(
+                        "Statement", mutableListOf(
+                            java.util.Map.of(
                                 "Action", mutableListOf(
                                     "sts:AssumeRole"
                                 ),
                                 "Effect", "Allow",
-                                "Principal", Map.of<String, List<String>>(
+                                "Principal", java.util.Map.of<String, List<String>>(
                                     "Service", mutableListOf(
                                         "edgelambda.amazonaws.com",
                                         "lambda.amazonaws.com"
@@ -97,12 +103,12 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
                     )
                 )
                 .policies(
-                    Arrays.asList(
+                    mutableListOf(
                         CfnRole.PolicyProperty.builder()
                             .policyDocument(
-                                Map.of(
-                                    "Statement", Arrays.asList(
-                                        Map.of(
+                                java.util.Map.of(
+                                    "Statement", mutableListOf(
+                                        java.util.Map.of(
                                             "Action", mutableListOf(
                                                 "s3:PutObject",
                                                 "s3:*"
@@ -143,19 +149,19 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
         CfnBucketPolicy.Builder.create(this, "websiteResourcesHostingBucketPolicy")
             .bucket(websiteResourcesHostingBucket.getRef())
             .policyDocument(
-                Map.of<String, Any>(
-                    "Statement", Arrays.asList<kotlin.collections.Map<String, Any>>(
-                        Map.of<String, Any>(
+                java.util.Map.of<String, Any>(
+                    "Statement", mutableListOf<kotlin.collections.Map<String, Any>>(
+                        java.util.Map.of<String, Any>(
                             "Action", mutableListOf<String>(
                                 "s3:GetObject"
                             ),
                             "Effect", "Allow",
-                            "Principal", Map.of<String, List<String>>(
+                            "Principal", java.util.Map.of<String, List<String>>(
                                 "AWS", mutableListOf<String>(
                                     "*"
                                 )
                             ),
-                            "Resource", Arrays.asList<String>(
+                            "Resource", mutableListOf<String>(
                                 java.lang.String.join(
                                     "",
                                     "arn:aws:s3:::",
@@ -169,5 +175,36 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
                 )
             )
             .build()
+
+    fun createWebsiteResourcesDnsRecordSetGroup(websiteDomainName: String, domain:Domain, cloudFrontDistribution: CfnDistribution) =
+        CfnRecordSetGroup.Builder.create(this, "websiteResourcesDnsRecordSetGroup")
+            .comment("DNS records associated with ${websiteDomainName}. static site")
+            .hostedZoneName("${domain.name}.")
+            .recordSets(
+                Arrays.asList<CfnRecordSetGroup.RecordSetProperty>(
+                    CfnRecordSetGroup.RecordSetProperty.builder()
+                        .aliasTarget(
+                            CfnRecordSetGroup.AliasTargetProperty.builder()
+                                .dnsName(cloudFrontDistribution.getAttrDomainName())
+                                .hostedZoneId(domain.cdnZoneReference)
+                                .build()
+                        )
+                        .name(websiteDomainName)
+                        .type("A")
+                        .build(),
+                    CfnRecordSetGroup.RecordSetProperty.builder()
+                        .aliasTarget(
+                            CfnRecordSetGroup.AliasTargetProperty.builder()
+                                .dnsName(cloudFrontDistribution.getAttrDomainName())
+                                .hostedZoneId(domain.cdnZoneReference)
+                                .build()
+                        )
+                        .name(websiteDomainName)
+                        .type("AAAA")
+                        .build()
+                )
+            )
+            .build()
+
 
 }
