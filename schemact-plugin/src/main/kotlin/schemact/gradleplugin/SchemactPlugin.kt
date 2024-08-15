@@ -13,26 +13,43 @@ class SchemactPlugin : Plugin<Project> {
             .create("schemactConfig", SchemactPluginConfig::class.java)
 
         fun createTasksFor( deployment: Deployment) {
-            val domain = extension.schemact.domains[0]
-            project.tasks.create("${deployment.subdomain}_deployCode") {
+            val schemact = extension.schemact
+
+            val domain = schemact.domains[0]
+            val idToFunctionJars = extension.idToFunctionJars
+            if (idToFunctionJars!=null)
+                project.tasks.create("${deployment.subdomain}_deployCode") {
                 it.group = "schemact_${deployment.subdomain}"
                 it.actions.add {
-                        deployCodeCdk(domain, deployment, extension.idToFunctionJars)
+                        deployCodeCdk(domain, deployment, idToFunctionJars)
                     }
             }
-            project.tasks.create("${deployment.subdomain}_deployInfrastructure") {
+            if (idToFunctionJars!=null) project.tasks.create("${deployment.subdomain}_deployInfrastructure") {
                 it.group = "schemact_${deployment.subdomain}"
                 it.actions.add {
-                        deployHostCdk(domain = domain, deployment = deployment, idToFunctionJars = extension.idToFunctionJars)
+                        deployHostCdk(domain = domain, deployment = deployment, idToFunctionJars = idToFunctionJars)
                     }
 
             }
-            project.tasks.create("${deployment.subdomain}_deployUiCode") {
+            val uiCodeLocation = extension.uiCodeLocation
+            if (uiCodeLocation!=null) project.tasks.create("${deployment.subdomain}_deployUiCode") {
                 it.group = "schemact_${deployment.subdomain}"
                 it.actions.add {
-                        deployUiCode(domain, deployment, extension.uiCodeLocation)
+                        deployUiCode(domain, deployment, uiCodeLocation)
                     }
             }
+
+            let2(extension.codeGenerationTargetDirectory, extension.functions) {
+                  dir, functions ->
+                    project.tasks.create("${deployment.subdomain}_genCode") {
+                      it.group = "schemact_${deployment.subdomain}"
+                      it.actions.add {
+                          createSourceCode(dir, functions)
+                    }
+                }
+            }
+
+
         }
 
     project.afterEvaluate {
