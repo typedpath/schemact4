@@ -5,6 +5,7 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSetContainer
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import schemact.domain.Deployment
+import schemact.domain.Function
 import schemact.gradleplugin.aws.cdk.deployCodeCdk
 import schemact.gradleplugin.aws.cdk.deployHostCdk
 import schemact.gradleplugin.cdk.deployUiCode
@@ -21,9 +22,12 @@ class SchemactPlugin : Plugin<Project> {
             .create("schemactConfig", SchemactPluginConfig::class.java)
 
 
+        //
+
+        //
+
         fun createTasksFor(deployment: Deployment) {
             val schemact = extension.schemact
-
             val domain = schemact.domains[0]
             val idToFunctionJars = extension.idToFunctionJars
             if (idToFunctionJars != null)
@@ -52,29 +56,9 @@ class SchemactPlugin : Plugin<Project> {
                 }
             }
 
-            extension.functions?.let {
-                val functions = it
-                if (!functions.isEmpty()) {
-                    val mainSourceSet =
-                        project.extensions.getByType(KotlinJvmProjectExtension::class.java)
-                            .sourceSets.getByName("main")
-                    val sourceGenDir = sourceGenDir(project)
-                    mainSourceSet.kotlin.srcDir(sourceGenDir)
-                    File(sourceGenDir).mkdirs()
 
-                    project.tasks.create("${deployment.subdomain}_genCode") {
-                        it.group = "schemact_${deployment.subdomain}"
-                        it.actions.add {
-                            println("here **************")
-                            createSourceCode(
-                                genDir = File(sourceGenDir),
-                                domain = domain, schemact = schemact, functions = functions
-                            )
-                        }
-                    }
-                }
-            }
         }
+
 
         project.afterEvaluate {
 
@@ -88,6 +72,37 @@ class SchemactPlugin : Plugin<Project> {
                     printSourceSets(project)
                 }
             }
+
+            project.tasks.create("printId2Functions") {
+                it.group = "schemact_debug"
+                it.actions.add {
+                    printId2Functions(project, extension.functions)
+                }
+            }
+            val schemact = extension.schemact
+            val domain = schemact.domains[0]
+            extension.functions?.let {
+                val functions = it
+                if (!functions.isEmpty()) {
+                    val mainSourceSet =
+                        project.extensions.getByType(KotlinJvmProjectExtension::class.java)
+                            .sourceSets.getByName("main")
+                    val sourceGenDir = sourceGenDir(project)
+                    mainSourceSet.kotlin.srcDir(sourceGenDir)
+                    File(sourceGenDir).mkdirs()
+                    project.tasks.create("genCode") {
+                        it.group = "schemact"
+                        it.actions.add {
+                            println("here **************")
+                            createSourceCode(
+                                genDir = File(sourceGenDir),
+                                domain = domain, schemact = schemact, functions = functions
+                            )
+                        }
+                    }
+                }
+            }
+
         }
     }
 }
@@ -104,6 +119,14 @@ fun printSourceSets(project: Project) {
             println("   source:   ${it.absolutePath}")
         }
     }
-
-
 }
+
+fun printId2Functions(project: Project, functions: List<Function>?) {
+    // val sourceSet = sourceSets.create("schemactgen")
+     functions?.let {
+         it.forEach { // svgthumbnailer-1.0.14-SNAPSHOT-fat
+            println("${it.name} => ${project.buildDir}/lib/${it.name}-${project.version}-fat.jar")
+         }
+     }
+}
+
