@@ -10,5 +10,5 @@ open class SchemactPluginConfig {
    var idToFunctionJars:Map<String, File>?=null
    var uiCodeLocation: String?=null
    var functions: List<Function>?=null
-   var codeGenerationTargetDirectory: File?=null
+  // var codeGenerationTargetDirectory: File?=null
 }

@@ -12,6 +12,7 @@ val rootDomain =  Domain(name = "testedsoftware.org", wildcardCertificateRef = "
 
 
 val paramicons = Schemact(
+    name = "paramicons",
 domains = listOf(rootDomain),
 entities = mutableListOf(metaDataEntity, paramsEntity),
 userKeyedDatabase = UserKeyedDatabase(entities=mutableListOf(metaDataEntity, paramsEntity))

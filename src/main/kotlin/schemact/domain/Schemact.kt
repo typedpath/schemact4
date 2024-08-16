@@ -1,6 +1,6 @@
 package schemact.domain
 
-class Schemact(val domains: List<Domain> = mutableListOf(),
+class Schemact(val name: String, val domains: List<Domain> = mutableListOf(),
                val entities: MutableList<Entity> = mutableListOf(),
                val staticWebsites: MutableList<StaticWebsite> = mutableListOf(),
                val functions: MutableList<Function> = mutableListOf(),
