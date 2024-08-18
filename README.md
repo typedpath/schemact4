@@ -14,6 +14,7 @@
   - ~~add (sample) functions module~~
   - ~~reorganise plugin so functions can be specified in functions/gradle.buid.kts~~ +
        ~~plugin options are optional~~ 
+  - generate kotlin source
   - include multiple function test 
 - incorporate build function code into plugin
 - incorporate build ui code into plugin
