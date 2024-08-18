@@ -9,12 +9,14 @@
   - ~~TODO : cloudfront distribution infrastructure~~
   - ~~TODO: test ui deploy~~
   - ~~TODO: cleanout cloudformation2kotlin library references~~ 
-- generate aws wrapper for function code
+- generate ~~aws~~ wrapper for function code
   - ~~reorganise paramicons project so schemact definition can be shared among modules~~ 
   - ~~add (sample) functions module~~
   - ~~reorganise plugin so functions can be specified in functions/gradle.buid.kts~~ +
        ~~plugin options are optional~~ 
-  - generate kotlin source
+  - ~~generate kotlin source~~
+  - plugin should add in aws gateway gradle dependancies
+  - generate typescript client code
   - include multiple function test 
 - incorporate build function code into plugin
 - incorporate build ui code into plugin

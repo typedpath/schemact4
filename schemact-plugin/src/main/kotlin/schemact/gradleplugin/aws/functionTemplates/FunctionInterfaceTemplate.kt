@@ -4,13 +4,15 @@ import schemact.domain.ConnectionType
 import schemact.domain.Entity
 import schemact.domain.Function
 import schemact.domain.PrimitiveType
+import java.time.LocalDateTime
 
 fun functionInterface(`package`: String, functionId: String, interfaceName: String, function: Function) = """
 package ${`package`}
 interface ${interfaceName} {
-    fun execute(${topLevelFieldsAsArgs(functionId, function.paramType)}) : ${if (function.returnType is PrimitiveType) (function.returnType as PrimitiveType).kotlinName else "Return" }
+    // created from template  functionInterface at ${LocalDateTime.now()}       
+    fun ${function.name}(${topLevelFieldsAsArgs(functionId, function.paramType)}) : ${if (function.returnType is PrimitiveType) (function.returnType as PrimitiveType).kotlinName else "Return" }
 }
-""".trimIndent()
+"""
 
 fun dataClassCode(functionId: String,entity: Entity, className: String) : String =
      if (entity is PrimitiveType) {

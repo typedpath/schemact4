@@ -56,9 +56,7 @@ class SchemactPlugin : Plugin<Project> {
                 }
             }
 
-
         }
-
 
         project.afterEvaluate {
 
@@ -94,8 +92,18 @@ class SchemactPlugin : Plugin<Project> {
                         it.group = "schemact"
                         it.actions.add {
                             println("here **************")
+                            val mainKotlinSourceDir =
+                                project.extensions.
+                                   getByType(KotlinJvmProjectExtension::class.java).sourceSets.filter {
+                                           it.name=="main"
+                                       }.flatMap { it.kotlin.srcDirs }.filter { it.path.contains("main") }.first()
+                             if (mainKotlinSourceDir==null) {
+                                 throw RuntimeException("cant find main kotlin source dir")
+                             }
+
                             createSourceCode(
                                 genDir = File(sourceGenDir),
+                                mainKotlinSourceDir = mainKotlinSourceDir,
                                 domain = domain, schemact = schemact, functions = functions
                             )
                         }
@@ -113,7 +121,7 @@ fun printSourceSets(project: Project) {
     sourceSets.forEach {
         println("k source set: ${it.name}")
         it.kotlin.srcDirs.forEach {
-            println(" srcDir: ${it.absolutePath}")
+            println(" name:${it.name}   srcDir: ${it.absolutePath} ")
         }
         it.kotlin.forEach {
             println("   source:   ${it.absolutePath}")

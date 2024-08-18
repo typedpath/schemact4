@@ -2,6 +2,7 @@ package schemact.domain
 
 open class Entity(val name: String, val description: String, val isValueType: Boolean= false,
                   val parent: Entity? = null,
+                  var isFromInfrastructure: Boolean = false,
                   var connections: MutableList<Connection> = mutableListOf(),
                   init: Entity.() -> Unit = {}) {
     init { init() }
