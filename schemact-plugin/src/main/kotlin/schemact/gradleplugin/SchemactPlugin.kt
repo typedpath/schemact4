@@ -81,7 +81,6 @@ class SchemactPlugin : Plugin<Project> {
                     createGenSourceTask(project=project, schemact=extension.schemact,
                         domain=extension.schemact.domains[0], functions=functions)
                     createPackageFunctionsTask(project)
-                    createPackageFunctionsTask2(project)
                 }
             }
         }
@@ -117,75 +116,22 @@ fun createGenSourceTask(project: Project, schemact: Schemact, domain: Domain, fu
     }
 }
 
-fun createPackageFunctionsTask2(project: Project) {
-    project.tasks.create("packageCode2", Jar::class.java) { task->
+fun createPackageFunctionsTask(project: Project) {
+    project.tasks.create("packageCode", Jar::class.java) { task->
         task.group = "schemact"
         task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
         task.description = "bundles the functions into a jar"
         task.archiveClassifier.set("schemact-aws-lambda")
 
         val dependencies =
-            project.configurations.getByName("kotlinCompilerClasspath").resolve()
-            .map(project::zipTree).toMutableList()
+            project.configurations.getByName("runtimeClasspath").resolve()
+                .onEach { println("adding jar ${it.javaClass} $it")  }
+                .map(project::zipTree).toMutableList()
         dependencies.add(project.fileTree("${project.buildDir}/classes/kotlin/main"))
 
         task.from(dependencies)
     }
 
-}
-
-fun createPackageFunctionsTask(project: Project) {
-    println("createPackageFunctionsTask 0" )
-
-    project.tasks.create("packageCode", Jar::class.java) { task->
-        println("createPackageFunctionsTask" )
-
-        task.group = "schemact"
-        task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
-        task.archiveClassifier.set("fat")
-        val sourceSets = project.extensions.getByType(KotlinJvmProjectExtension::class.java).sourceSets
-        val mainSourceSet: KotlinSourceSet = sourceSets.getByName("main")
-        println("mainSourceSet=$mainSourceSet" )
-
-
-
-        println("mainSourceSet: ${mainSourceSet.javaClass} ${mainSourceSet}")
-
-        //project.
-
-        //task.from(mainSourceSet)
-        println("createPackageFunctionsTask 2" )
-        val runtimeClassPathConfig = project.configurations.getByName("runtimeClasspath")
-        println("createPackageFunctionsTask 3" )
-        //task.dependsOn(runtimeClassPathConfig)
-        println("createPackageFunctionsTask 4" )
-        println ("runtimeClassPathConfig: ${runtimeClassPathConfig.javaClass} ${runtimeClassPathConfig}")
-
-        task.from ( {
-            runtimeClassPathConfig.filter {it.name.endsWith("jar")  }
-           // .onEach { println("processing ${it.javaClass} $it")  }
-            .map{
-                //println("about to zipTree ${it.javaClass} $it")
-                project.zipTree(it)
-               // println("Zip Treed ${it.javaClass} $it")
-            }
-        })
-
-    }
-
-/*
-val fatJar = tasks.register<Jar>("fatJar") {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-    archiveClassifier.set("fat")
-
-    from(sourceSets.main.get().output)
-
-    dependsOn(configurations.runtimeClasspath)
-    from({
-        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
-    })
-}
- */
 }
 
 fun printSourceSets(project: Project) {
@@ -205,7 +151,7 @@ fun printSourceSets(project: Project) {
     }
 
     project.configurations.forEach {
-        println("configx: ${it.name} ${it.javaClass}")
+        println("config : ${it.name} ${it.javaClass}")
     }
 
     project.configurations.getByName("runtimeClasspath").resolve().forEach {
