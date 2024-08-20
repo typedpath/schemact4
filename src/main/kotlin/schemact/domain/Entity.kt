@@ -32,5 +32,8 @@ open class Entity(val name: String, val description: String, val isValueType: Bo
         connections.add(c)
         return c
     }
+
+    fun fieldsFromInfrastructure() :List<Connection> = connections.filter {it.type==ConnectionType.Contains && it.entity2.isFromInfrastructure}
+
 }
 

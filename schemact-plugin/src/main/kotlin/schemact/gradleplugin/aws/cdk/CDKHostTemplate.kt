@@ -2,6 +2,8 @@ package schemact.gradleplugin.aws.cdk;
 import org.gradle.configurationcache.extensions.capitalized
 import schemact.domain.Deployment
 import schemact.domain.Domain
+import schemact.domain.Function
+import schemact.domain.StaticWebsite
 import software.amazon.awscdk.Stack
 import software.amazon.awscdk.StackProps
 import software.amazon.awscdk.services.cloudfront.CfnDistribution
@@ -21,16 +23,16 @@ import kotlin.collections.mutableListOf
 class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
                       domain: Domain, deployment: Deployment,
                       codeBucketName: String,
-                      idToFunctionJars: kotlin.collections.Map<String, File>
+                      functionToFunctionJars: Map<Function, File>
 )  : Stack(scope, id, props) {
 
     val websiteDomainName = "${deployment.subdomain}.${domain.name}"
 
     init {
         val functionRole = createFunctionRole()
-        val idToFunctionUrl: Map<String, CfnUrl> =  idToFunctionJars.entries.associate {
-            it.key to
-            createFunction(it.key, domain, codeBucketName, it.value.name, websiteDomainName, functionRole)
+        val idToFunctionUrl: Map<String, CfnUrl> =  functionToFunctionJars.entries.associate {
+            it.key.name to
+            createFunction(it.value.name, it.key, domain, codeBucketName, it.value.name, websiteDomainName, functionRole)
         }
         val websiteResourcesHostingBucket = createWebsiteResourcesHostingBucket()
         createWebsiteResourcesHostingBucketPolicy(websiteResourcesHostingBucket)
@@ -38,7 +40,14 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
         createWebsiteResourcesDnsRecordSetGroup(websiteDomainName = websiteDomainName, domain=domain, cloudFrontDistribution = cfnDistribution)
     }
 
-    fun createFunction(id: String, domain: Domain, codeBucketName: String, jarFileName: String, staticWebsiteBucketName: String,
+    fun environmentVariables(function: Function, codeBucketName: String) : Map<String, String> {
+        return function.paramType.fieldsFromInfrastructure().map {
+            if (it.entity2 is StaticWebsite.BucketName) it.name to codeBucketName
+            else throw RuntimeException("unknown infrastructure field type ${it.entity2.name} in ${it.name}.${it}")
+        }.associateBy({it.first}, {it.second})
+    }
+
+    fun createFunction(id: String, function: Function, domain: Domain, codeBucketName: String, jarFileName: String, staticWebsiteBucketName: String,
                        functionRole: CfnRole) : CfnUrl {
         val function: CfnFunction =
             CfnFunction.Builder.create(this, "${id}Function")
@@ -50,7 +59,7 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
                 )
                 .environment(
                     CfnFunction.EnvironmentProperty.builder()
-                        .variables(java.util.Map.of("s3bucket", staticWebsiteBucketName))
+                        .variables(environmentVariables(function, codeBucketName))
                         .build()
                 )
                 //TODO parameterise handler

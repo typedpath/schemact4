@@ -7,7 +7,7 @@ import java.io.File
 open class SchemactPluginConfig {
    lateinit var schemact:Schemact
    //TODO make this a generic list of functions
-   var idToFunctionJars:Map<String, File>?=null
+   var functionToFunctionJars: Map<Function, File>?=null
    var uiCodeLocation: String?=null
    var functions: List<Function>?=null
   // var codeGenerationTargetDirectory: File?=null

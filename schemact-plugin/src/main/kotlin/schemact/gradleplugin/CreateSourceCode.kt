@@ -31,7 +31,7 @@ fun createSourceCode (genDir: File, mainKotlinSourceDir: File, domain: Domain, s
         val handlerClassName = "${it.name.capitalized()}Handler"
         val paramType = it.paramType
         // assign args from infrastructure
-        val argsFromEnvironment = paramType.connections.filter { it.entity2.isFromInfrastructure}
+        val argsFromEnvironment = paramType.fieldsFromInfrastructure()
         // assign small args to params
         val argsFromParams = paramType.connections.filter {
             val subParam = it.entity2

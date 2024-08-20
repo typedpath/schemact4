@@ -3,11 +3,9 @@ package schemact.gradleplugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.DuplicatesStrategy
-import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet
 import schemact.domain.Deployment
 import schemact.domain.Domain
 import schemact.domain.Function
@@ -29,21 +27,21 @@ class SchemactPlugin : Plugin<Project> {
         fun createTasksFor(deployment: Deployment) {
             val schemact = extension.schemact
             val domain = schemact.domains[0]
-            val idToFunctionJars = extension.idToFunctionJars
-            if (idToFunctionJars != null)
+            val functionToFunctionJars = extension.functionToFunctionJars
+            if (functionToFunctionJars != null)
                 project.tasks.create("${deployment.subdomain}_deployCode") {
                     it.group = "schemact_${deployment.subdomain}"
                     it.actions.add {
-                        deployCodeCdk(domain, deployment, idToFunctionJars)
+                        deployCodeCdk(domain, deployment, functionToFunctionJars)
                     }
                 }
-            if (idToFunctionJars != null) project.tasks.create("${deployment.subdomain}_deployInfrastructure") {
+            if (functionToFunctionJars != null) project.tasks.create("${deployment.subdomain}_deployInfrastructure") {
                 it.group = "schemact_${deployment.subdomain}"
                 it.actions.add {
                     deployHostCdk(
                         domain = domain,
                         deployment = deployment,
-                        idToFunctionJars = idToFunctionJars
+                        functionToFunctionJars = functionToFunctionJars
                     )
                 }
             }
