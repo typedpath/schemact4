@@ -1,5 +1,6 @@
-package schemact.gradleplugin
+package schemact.gradleplugin.aws
 
+import CodeLocations
 import apiGatewayEventHandler
 import org.gradle.configurationcache.extensions.capitalized
 import schemact.domain.*
@@ -14,10 +15,9 @@ fun createSourceCode (genDir: File, mainKotlinSourceDir: File, domain: Domain, s
         genDir.mkdirs()
         val destination = File(genDir, "Test.kt")
         destination.writeText("""fun hello() {println("Hello World")}""")
-        val packageTree = domain.name.split(".").reversed().toMutableList()
-        packageTree.add(schemact.name)
+        val packageTree = CodeLocations.packageTree(domain, schemact)
         val packageName = packageTree.joinToString(".")
-        val interfaceClassName = "${it.name.capitalized()}Int"
+        val interfaceClassName = CodeLocations.interfaceClassName(id = it.name)
 
         val interfaceSourceSubpath = "${packageTree.joinToString ("/")}/${interfaceClassName}.kt"
         val interfaceSourceFile = File(genDir, interfaceSourceSubpath)
@@ -27,8 +27,8 @@ fun createSourceCode (genDir: File, mainKotlinSourceDir: File, domain: Domain, s
 
 
         // TODO non string args
-        val implClassName = "${it.name.capitalized()}Impl"
-        val handlerClassName = "${it.name.capitalized()}Handler"
+        val implClassName = CodeLocations.implClassName(it.name)
+        val handlerClassName = CodeLocations.handlerClassName(it.name)
         val paramType = it.paramType
         // assign args from infrastructure
         val argsFromEnvironment = paramType.fieldsFromInfrastructure()

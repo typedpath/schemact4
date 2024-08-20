@@ -12,6 +12,7 @@ import schemact.domain.Function
 import schemact.domain.Schemact
 import schemact.gradleplugin.aws.cdk.deployCodeCdk
 import schemact.gradleplugin.aws.cdk.deployHostCdk
+import schemact.gradleplugin.aws.createSourceCode
 import schemact.gradleplugin.cdk.deployUiCode
 import java.io.File
 
@@ -40,6 +41,7 @@ class SchemactPlugin : Plugin<Project> {
                 it.actions.add {
                     deployHostCdk(
                         domain = domain,
+                        schemact = schemact,
                         deployment = deployment,
                         functionToFunctionJars = functionToFunctionJars
                     )

@@ -5,9 +5,11 @@ import com.amazonaws.regions.Regions
 import schemact.domain.Deployment
 import schemact.domain.Domain
 import schemact.domain.Function
+import schemact.domain.Schemact
 import java.io.File
 
 fun deployHostCdk(domain: Domain,
+                  schemact: Schemact,
                   deployment: Deployment,
                   functionToFunctionJars: Map<Function, File>,
                   region: Regions = Regions.US_EAST_1) {
@@ -15,6 +17,7 @@ fun deployHostCdk(domain: Domain,
 
     deployCdkStack(stackName = stackName, region = region) {
         CDKHostTemplate(scope = it, id = null, props = null, domain = domain,
+            schemact = schemact,
             deployment = deployment, codeBucketName = functionCodeBucketName(domain, deployment), functionToFunctionJars = functionToFunctionJars)
     }
 

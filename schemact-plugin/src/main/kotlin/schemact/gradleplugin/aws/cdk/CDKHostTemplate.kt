@@ -1,9 +1,7 @@
 package schemact.gradleplugin.aws.cdk;
-import org.gradle.configurationcache.extensions.capitalized
-import schemact.domain.Deployment
-import schemact.domain.Domain
+import CodeLocations.handlerFullClassName
+import schemact.domain.*
 import schemact.domain.Function
-import schemact.domain.StaticWebsite
 import software.amazon.awscdk.Stack
 import software.amazon.awscdk.StackProps
 import software.amazon.awscdk.services.cloudfront.CfnDistribution
@@ -21,6 +19,7 @@ import kotlin.collections.List
 import kotlin.collections.mutableListOf
 
 class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
+                      schemact: Schemact,
                       domain: Domain, deployment: Deployment,
                       codeBucketName: String,
                       functionToFunctionJars: Map<Function, File>
@@ -32,7 +31,7 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
         val functionRole = createFunctionRole()
         val idToFunctionUrl: Map<String, CfnUrl> =  functionToFunctionJars.entries.associate {
             it.key.name to
-            createFunction(it.value.name, it.key, domain, codeBucketName, it.value.name, websiteDomainName, functionRole)
+            createFunction(id = it.value.name, function = it.key, domain = domain, schemact = schemact, codeBucketName = codeBucketName, jarFileName =  it.value.name, staticWebsiteBucketName = websiteDomainName, functionRole = functionRole)
         }
         val websiteResourcesHostingBucket = createWebsiteResourcesHostingBucket()
         createWebsiteResourcesHostingBucketPolicy(websiteResourcesHostingBucket)
@@ -47,7 +46,7 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
         }.associateBy({it.first}, {it.second})
     }
 
-    fun createFunction(id: String, function: Function, domain: Domain, codeBucketName: String, jarFileName: String, staticWebsiteBucketName: String,
+    fun createFunction(id: String, function: Function, domain: Domain, schemact: Schemact, codeBucketName: String, jarFileName: String, staticWebsiteBucketName: String,
                        functionRole: CfnRole) : CfnUrl {
         val function: CfnFunction =
             CfnFunction.Builder.create(this, "${id}Function")
@@ -62,8 +61,7 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
                         .variables(environmentVariables(function, codeBucketName))
                         .build()
                 )
-                //TODO parameterise handler
-                .handler("${domain.name.split(".").reversed().joinToString(".")}.function.${id.capitalized()}Handler")
+                .handler("${handlerFullClassName(schemact = schemact, domain=domain, id=id)}")
                 .memorySize(1024)
                 .role(functionRole.getAttrArn())
                 .runtime("java17")
