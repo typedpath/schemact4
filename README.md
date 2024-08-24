@@ -25,6 +25,19 @@
   - create typescript for entities 
   - create database service
   - create typescript bindings for database service
+- incorporate module concept - ie location for functions
+   - this will make binaries locateable by convention  
+- create build pipeline 
+  - attach permissions to plugin actions, deployments  
+  - pipeline ui is a web app that proxies the plugin tasks + checks permissions
+    - refactor plugin to separate tasks from gradle plugin specific code 
+- support versioning
+  - create version - locates functions and static content at version sensitive locations
+     - e.g. <bucketName/version>
+     - e.g. functions - create jars with required version
+     - create git branch
+     - do functions have a specific version or everything is at the same version ? 
+     
 
 
 
