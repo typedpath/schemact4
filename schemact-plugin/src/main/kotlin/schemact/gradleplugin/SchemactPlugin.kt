@@ -6,18 +6,19 @@ import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
-import schemact.domain.Deployment
-import schemact.domain.Domain
+import schemact.domain.*
 import schemact.domain.Function
-import schemact.domain.Schemact
 import schemact.gradleplugin.aws.cdk.deployCodeCdk
 import schemact.gradleplugin.aws.cdk.deployHostCdk
 import schemact.gradleplugin.aws.createSourceCode
 import schemact.gradleplugin.cdk.deployUiCode
 import java.io.File
 
+const val TASK_GROUP_NAME = "schemact"
+
 class SchemactPlugin : Plugin<Project> {
 
+    val TASK_GROUP_NAME = "schemact"
 
     override fun apply(project: Project) {
 
@@ -31,13 +32,13 @@ class SchemactPlugin : Plugin<Project> {
             val functionToFunctionJars = extension.functionToFunctionJars
             if (functionToFunctionJars != null)
                 project.tasks.create("${deployment.subdomain}_deployCode") {
-                    it.group = "schemact_${deployment.subdomain}"
+                    it.group = "${TASK_GROUP_NAME}_${deployment.subdomain}"
                     it.actions.add {
                         deployCodeCdk(domain, deployment, functionToFunctionJars)
                     }
                 }
             if (functionToFunctionJars != null) project.tasks.create("${deployment.subdomain}_deployInfrastructure") {
-                it.group = "schemact_${deployment.subdomain}"
+                it.group = "${TASK_GROUP_NAME}_${deployment.subdomain}"
                 it.actions.add {
                     deployHostCdk(
                         domain = domain,
@@ -47,9 +48,9 @@ class SchemactPlugin : Plugin<Project> {
                     )
                 }
             }
-            val uiCodeLocation = extension.uiCodeLocation
+            val uiCodeLocation = extension.uiCodeBuildLocation
             if (uiCodeLocation != null) project.tasks.create("${deployment.subdomain}_deployUiCode") {
-                it.group = "schemact_${deployment.subdomain}"
+                it.group = "${TASK_GROUP_NAME}_${deployment.subdomain}"
                 it.actions.add {
                     deployUiCode(domain, deployment, uiCodeLocation)
                 }
@@ -63,14 +64,14 @@ class SchemactPlugin : Plugin<Project> {
             }
 
             project.tasks.create("printSourceSets") {
-                it.group = "schemact_debug"
+                it.group = "${TASK_GROUP_NAME}_debug"
                 it.actions.add {
                     printSourceSets(project)
                 }
             }
 
             project.tasks.create("printId2Functions") {
-                it.group = "schemact_debug"
+                it.group = "${TASK_GROUP_NAME}_debug"
                 it.actions.add {
                     printId2Functions(project, extension.functions)
                 }
@@ -79,7 +80,7 @@ class SchemactPlugin : Plugin<Project> {
                 val functions = it
                 if (functions.isNotEmpty()) {
                     createGenSourceTask(project=project, schemact=extension.schemact,
-                        domain=extension.schemact.domains[0], functions=functions)
+                        domain=extension.schemact.domains[0], functions=functions, staticWebSiteToSourceRoot=extension.staticWebSiteToSourceRoot)
                     createPackageFunctionsTask(project)
                 }
             }
@@ -87,7 +88,8 @@ class SchemactPlugin : Plugin<Project> {
     }
 }
 
-fun createGenSourceTask(project: Project, schemact: Schemact, domain: Domain, functions: List<Function>) {
+fun createGenSourceTask(project: Project, schemact: Schemact, domain: Domain, functions: List<Function>,
+                        staticWebSiteToSourceRoot: Map<StaticWebsite, File>?) {
     val mainSourceSet =
         project.extensions.getByType(KotlinJvmProjectExtension::class.java)
             .sourceSets.getByName("main")
@@ -96,9 +98,8 @@ fun createGenSourceTask(project: Project, schemact: Schemact, domain: Domain, fu
     mainSourceSet.kotlin.srcDir(sourceGenDir)
     File(sourceGenDir).mkdirs()
     project.tasks.create("genCode") { task ->
-        task.group = "schemact"
+        task.group = TASK_GROUP_NAME
         task.actions.add {
-            println("here **************")
             val mainKotlinSourceDir =
                 project.extensions.
                 getByType(KotlinJvmProjectExtension::class.java).sourceSets.filter {
@@ -107,25 +108,77 @@ fun createGenSourceTask(project: Project, schemact: Schemact, domain: Domain, fu
 
             mainKotlinSourceDir?:throw RuntimeException("cant find main kotlin source dir")
 
+            // if there are website clients is the location known to generate them ?
+
+            val safeStaticWebSiteToSourceRoot = staticWebSiteToSourceRoot?: emptyMap()
+            val functionToStaticWebsite = validateFunctionClients(functions, schemact, safeStaticWebSiteToSourceRoot)
+
+            // staticWebsite2Functions
             createSourceCode(
                 genDir = File(sourceGenDir),
                 mainKotlinSourceDir = mainKotlinSourceDir,
-                domain = domain, schemact = schemact, functions = functions
+                functionToStaticWebsite =functionToStaticWebsite,
+                staticWebSiteToSourceRoot = safeStaticWebSiteToSourceRoot,
+                domain = domain,
+                schemact = schemact, functions = functions
             )
+
         }
     }
 }
 
+fun validateFunctionClients(functions: List<Function>, schemact: Schemact, staticWebSiteToSourceRoot: Map<StaticWebsite, File>) : Map<Function, List<StaticWebsite>> {
+
+
+    val functionsToStaticWebsites = functions.map {
+        val f = it
+        Pair(it, schemact.staticWebsites.filter{
+            it.functionClients.find { f ==it.function }!=null
+        } )
+    }.filter { it.second.size>0 }.associate { it }
+
+    val staticWebsitesWithClients = functionsToStaticWebsites.entries.flatMap { it.value }.toSet()
+    // validations
+    if (functionsToStaticWebsites.size>0) {
+        fun requiredFunctionClients() = "${functionsToStaticWebsites.map { Pair(it.key, it.value.map{it.name}.joinToString (",")) }
+            .map{ "${it.first}:${it.second}" }.joinToString (" ")}"
+        if (staticWebSiteToSourceRoot==null)  {
+            throw RuntimeException("staticWebSiteToSourceRoot null cant generate function client source for clients: ${requiredFunctionClients()} ")
+        }
+        val staticWebSitesWithUnknownSrcRoots = staticWebsitesWithClients.minus(staticWebSiteToSourceRoot.keys)
+        if (staticWebSitesWithUnknownSrcRoots.size>0) {
+            throw RuntimeException("function code gen requires src location for these websites : ${staticWebSitesWithUnknownSrcRoots
+                .joinToString(",") { it.name }} ")
+        }
+        val nonRequiredSourceRootSpecs = staticWebSiteToSourceRoot.keys.minus(staticWebsitesWithClients)
+        if (nonRequiredSourceRootSpecs.size>0) {
+            throw RuntimeException("website source roots specified that do not have function clients ${nonRequiredSourceRootSpecs.joinToString(",") { it.name }}")
+        }
+    }
+
+    val nonExistantWebsiteSourceRoots = staticWebSiteToSourceRoot.values.filter{
+        !it.exists()
+    }.map { it.absolutePath }
+
+    if( nonExistantWebsiteSourceRoots.size>0) {
+        throw RuntimeException("these websiteSourceRoots do not exist: ${nonExistantWebsiteSourceRoots.joinToString(",")}")
+    }
+
+
+    return functionsToStaticWebsites
+}
+
+
 fun createPackageFunctionsTask(project: Project) {
     project.tasks.create("packageCode", Jar::class.java) { task->
-        task.group = "schemact"
+        task.group = TASK_GROUP_NAME
         task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
         task.description = "bundles the functions into a jar"
-        task.archiveClassifier.set("schemact-aws-lambda")
+        task.archiveClassifier.set("${TASK_GROUP_NAME}-aws-lambda")
 
         val dependencies =
             project.configurations.getByName("runtimeClasspath").resolve()
-                .onEach { println("adding jar ${it.javaClass} $it")  }
+                //.onEach { println("adding jar ${it.javaClass} $it")  }
                 .map(project::zipTree).toMutableList()
         dependencies.add(project.fileTree("${project.buildDir}/classes/kotlin/main"))
 
@@ -168,7 +221,7 @@ fun printSourceSets(project: Project) {
 fun printId2Functions(project: Project, functions: List<Function>?) {
     // val sourceSet = sourceSets.create("schemactgen")
      functions?.let {
-         it.forEach { // svgthumbnailer-1.0.14-SNAPSHOT-fat
+         it.forEach {
             println("${it.name} => ${project.buildDir}/lib/${it.name}-${project.version}-fat.jar")
          }
      }

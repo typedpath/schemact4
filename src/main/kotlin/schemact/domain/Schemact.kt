@@ -7,8 +7,9 @@ class Schemact(val name: String, val domains: List<Domain> = mutableListOf(),
                val userKeyedDatabase: UserKeyedDatabase?=null,
                init: Schemact.() -> Unit = {}
 ) {
-    fun staticWebsite(name: String, description: String) : StaticWebsite {
-        val sw = StaticWebsite(name=name, description=description)
+    fun staticWebsite(name: String, description: String, init: StaticWebsite.() -> Unit = {})
+     : StaticWebsite {
+        val sw = StaticWebsite(name=name, description=description, init=init)
         staticWebsites.add(sw)
         return sw
     }
