@@ -17,7 +17,7 @@
   - ~~generate kotlin source~~
   - plugin should add in aws gateway gradle dependancies
   - ~~plugin should add in aws fatJar~~
-  - generate typescript client code
+  - ~~generate typescript client code~~
   - include multiple function test 
 - incorporate build function code into plugin
 - incorporate build ui code into plugin
