@@ -111,7 +111,7 @@ fun createFunctionCacheBehaviour(id: String)  =  CfnDistribution.CacheBehaviorPr
             .build()
     )
     .minTtl(0)
-    .pathPattern("/$id/*")
+    .pathPattern("/functions/$id")
     .targetOriginId(id)
     .viewerProtocolPolicy("allow-all")
     .build()

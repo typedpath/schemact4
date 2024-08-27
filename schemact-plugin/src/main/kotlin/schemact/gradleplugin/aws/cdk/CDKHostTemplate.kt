@@ -31,7 +31,7 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
         val functionRole = createFunctionRole()
         val idToFunctionUrl: Map<String, CfnUrl> =  functionToFunctionJars.entries.associate {
             it.key.name to
-            createFunction(id = it.value.name, function = it.key, domain = domain, schemact = schemact, codeBucketName = codeBucketName, jarFileName =  it.value.name, staticWebsiteBucketName = websiteDomainName, functionRole = functionRole)
+            createFunction(id = it.key.name, function = it.key, domain = domain, schemact = schemact, codeBucketName = codeBucketName, jarFileName =  it.value.name, staticWebsiteBucketName = websiteDomainName, functionRole = functionRole)
         }
         val websiteResourcesHostingBucket = createWebsiteResourcesHostingBucket()
         createWebsiteResourcesHostingBucketPolicy(websiteResourcesHostingBucket)
@@ -39,9 +39,9 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
         createWebsiteResourcesDnsRecordSetGroup(websiteDomainName = websiteDomainName, domain=domain, cloudFrontDistribution = cfnDistribution)
     }
 
-    fun environmentVariables(function: Function, codeBucketName: String) : Map<String, String> {
+    fun environmentVariables(function: Function, bucketName: String) : Map<String, String> {
         return function.paramType.fieldsFromInfrastructure().map {
-            if (it.entity2 is StaticWebsite.BucketName) it.name to codeBucketName
+            if (it.entity2 is StaticWebsite.BucketName) it.name to bucketName
             else throw RuntimeException("unknown infrastructure field type ${it.entity2.name} in ${it.name}.${it}")
         }.associateBy({it.first}, {it.second})
     }
@@ -58,7 +58,7 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
                 )
                 .environment(
                     CfnFunction.EnvironmentProperty.builder()
-                        .variables(environmentVariables(function, codeBucketName))
+                        .variables(environmentVariables(function, staticWebsiteBucketName))
                         .build()
                 )
                 .handler("${handlerFullClassName(schemact = schemact, domain=domain, id=id)}")

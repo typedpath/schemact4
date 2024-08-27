@@ -142,9 +142,6 @@ fun validateFunctionClients(functions: List<Function>, schemact: Schemact, stati
     if (functionsToStaticWebsites.size>0) {
         fun requiredFunctionClients() = "${functionsToStaticWebsites.map { Pair(it.key, it.value.map{it.name}.joinToString (",")) }
             .map{ "${it.first}:${it.second}" }.joinToString (" ")}"
-        if (staticWebSiteToSourceRoot==null)  {
-            throw RuntimeException("staticWebSiteToSourceRoot null cant generate function client source for clients: ${requiredFunctionClients()} ")
-        }
         val staticWebSitesWithUnknownSrcRoots = staticWebsitesWithClients.minus(staticWebSiteToSourceRoot.keys)
         if (staticWebSitesWithUnknownSrcRoots.size>0) {
             throw RuntimeException("function code gen requires src location for these websites : ${staticWebSitesWithUnknownSrcRoots
@@ -181,7 +178,7 @@ fun createPackageFunctionsTask(project: Project) {
                 //.onEach { println("adding jar ${it.javaClass} $it")  }
                 .map(project::zipTree).toMutableList()
         dependencies.add(project.fileTree("${project.buildDir}/classes/kotlin/main"))
-
+        dependencies.add(project.fileTree("${project.buildDir}/resources/main"))
         task.from(dependencies)
     }
 
