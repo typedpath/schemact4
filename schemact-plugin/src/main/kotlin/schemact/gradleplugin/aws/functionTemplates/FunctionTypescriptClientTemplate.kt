@@ -28,7 +28,7 @@ export default async function ${function.name}(${allArgs.joinToString(", "){"${i
     }
     let body = ${if (argFromBody!=null) (argFromBody.name+"_in") else ""}
 ${argsFromParams.joinToString(System.lineSeparator()) {
-"""    let ${it.name} = JSON.stringify(${it.name}_in);"""  }}    
+"""    let ${it.name} = ${it.name}_in;"""  }}    
        let res = await axios.post(url, body, {headers : {
          'Content-Type': 'text/plain',
        },
@@ -42,30 +42,6 @@ ${argsFromParams.joinToString(System.lineSeparator()) {
 """
 }
 
-/*
-export async function svgThumbnail(svg: String, id: string,  paramsIn: object) : Promise<String> {
-       let url = urlPath;
-       //support local dev
-       if (window.location.href.indexOf("localhost")>=0) {
-            url = 'https://schemactsample.testedsoftware.org' + urlPath
-       }
-       let params = JSON.stringify(paramsIn)
-       let res = await axios.post(url, svg, {headers : {
-         'Content-Type': 'text/plain',
-       },
-       params: {
-             id,
-             params
-       }
-
-     });
-        return ""+res.data;
-     }
-
-
-}
-
- */
 
 
 private fun expectTypescriptType( entity: Entity) : String{
