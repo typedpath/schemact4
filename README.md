@@ -19,14 +19,17 @@
   - ~~plugin should add in aws fatJar~~
   - ~~generate typescript client code~~
   - include multiple function test 
-- incorporate build function code into plugin
-- incorporate build ui code into plugin
+- simplify deployment with a fullDeploy task
+  - ~~add (module) task schemact/packageCode dependencies (on build and genCode tasks)~~  
+  - incorporate build function code into fullDeploy
+     - incorporate module concept - ie location for functions
+       - this will make binaries locateable by convention
+  - incorporate build ui code into fullDeploy
 - build paramicons crud service from plugin
   - create typescript for entities 
   - create database service
   - create typescript bindings for database service
-- incorporate module concept - ie location for functions
-   - this will make binaries locateable by convention  
+ 
 - create build pipeline 
   - attach permissions to plugin actions, deployments  
   - pipeline ui is a web app that proxies the plugin tasks + checks permissions
