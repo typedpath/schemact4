@@ -22,8 +22,9 @@
 - simplify deployment with a fullDeploy task
   - ~~add (module) task schemact/packageCode dependencies (on build and genCode tasks)~~  
   - incorporate build function code into fullDeploy
-     - incorporate module concept - ie location for functions
-       - this will make binaries locateable by convention
+     - ~~incorporate module concept - ie location for functions~~
+       - ~~this will make binaries locateable by convention~~
+- bug fix required for task dependencies for packageCode task
   - incorporate build ui code into fullDeploy
 - build paramicons crud service from plugin
   - create typescript for entities 
