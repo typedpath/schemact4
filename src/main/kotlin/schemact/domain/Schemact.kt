@@ -3,7 +3,9 @@ package schemact.domain
 class Schemact(val name: String, val domains: List<Domain> = mutableListOf(),
                val entities: MutableList<Entity> = mutableListOf(),
                val staticWebsites: MutableList<StaticWebsite> = mutableListOf(),
+               //TODO keep this ? - are all functions contained by modules ?
                val functions: MutableList<Function> = mutableListOf(),
+               val modules: MutableList<Module> = mutableListOf(),
                val userKeyedDatabase: UserKeyedDatabase?=null,
                init: Schemact.() -> Unit = {}
 ) {

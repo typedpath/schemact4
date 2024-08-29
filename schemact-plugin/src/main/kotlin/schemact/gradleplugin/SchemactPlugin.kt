@@ -73,15 +73,15 @@ class SchemactPlugin : Plugin<Project> {
             project.tasks.create("printId2Functions") {
                 it.group = "${TASK_GROUP_NAME}_debug"
                 it.actions.add {
-                    printId2Functions(project, extension.functions)
+                    printId2Modules(project, extension.schemact.modules)
                 }
             }
-            extension.functions?.let {
-                val functions = it
+            extension.module?.let {
+                val functions = it.functions
                 if (functions.isNotEmpty()) {
                     createGenSourceTask(project=project, schemact=extension.schemact,
                         domain=extension.schemact.domains[0], functions=functions, staticWebSiteToSourceRoot=extension.staticWebSiteToSourceRoot)
-                    createPackageFunctionsTask(project)
+                    createPackageFunctionsTask(project, it)
                 }
             }
         }
@@ -168,12 +168,13 @@ fun validateFunctionClients(functions: List<Function>, schemact: Schemact, stati
 }
 
 
-fun createPackageFunctionsTask(project: Project) {
+fun createPackageFunctionsTask(project: Project, module: Module) {
     val packageCodeTask = project.tasks.create("packageCode", Jar::class.java) { task->
         task.group = TASK_GROUP_NAME
         task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
         task.description = "bundles the functions into a jar"
-        task.archiveClassifier.set("${TASK_GROUP_NAME}-aws-lambda")
+        //task.archiveClassifier.set("${TASK_GROUP_NAME}-aws-lambda")
+        task.archiveFileName.set(packagedJarName(module))
 
         val dependencies =
             project.configurations.getByName("runtimeClasspath").resolve()
@@ -214,16 +215,14 @@ fun printSourceSets(project: Project) {
     project.configurations.getByName("kotlinCompilerClasspath").resolve().forEach {
         println("   kotlinCompilerClasspath artifact: ${it.name} ${it}")
     }
-
-
 }
 
-fun printId2Functions(project: Project, functions: List<Function>?) {
+fun packagedJarName(module: Module)  = "${module.name}-${module.version}-schemact-aws-lambda.jar"
+
+fun printId2Modules(project: Project, modules: List<Module>) {
     // val sourceSet = sourceSets.create("schemactgen")
-     functions?.let {
-         it.forEach {
-            println("${it.name} => ${project.buildDir}/lib/${it.name}-${project.version}-fat.jar")
-         }
+    modules.forEach {
+            println("${it.name} => ${packagedJarName(it)}")
      }
 }
 
