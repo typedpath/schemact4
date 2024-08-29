@@ -8,6 +8,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest
 import schemact.domain.Deployment
 import schemact.domain.Domain
 import schemact.domain.Function
+import schemact.domain.Module
 import java.io.File
 
 fun functionCodeBucketName(domain: Domain, deployment: Deployment): String =
@@ -15,7 +16,7 @@ fun functionCodeBucketName(domain: Domain, deployment: Deployment): String =
 
 fun deployCodeCdk(domain: Domain,
                    deployment: Deployment,
-                  functionToFunctionJars : Map<Function, File>,
+                  moduleToJars : Map<Module, File>,
                   region: Regions = Regions.US_EAST_1) {
     val stackName =  "${deployment.subdomain}-${domain.name.replace('.', '-')}-code"
 
@@ -26,7 +27,7 @@ fun deployCodeCdk(domain: Domain,
     val s3Builder = AmazonS3Client.builder()
     s3Builder.region = region.getName()
     // .region(devStackParams.region) .build()
-    functionToFunctionJars.values.toSet().forEach{
+    moduleToJars.values.toSet().forEach{
         val codeFile = it
         println("reading file ${codeFile.absolutePath}")
         val req = PutObjectRequest(functionCodeBucketName(domain, deployment),"${codeFile.name}", codeFile)

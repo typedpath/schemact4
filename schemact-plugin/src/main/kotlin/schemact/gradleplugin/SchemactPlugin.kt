@@ -29,15 +29,21 @@ class SchemactPlugin : Plugin<Project> {
         fun createTasksFor(deployment: Deployment) {
             val schemact = extension.schemact
             val domain = schemact.domains[0]
-            val functionToFunctionJars = extension.functionToFunctionJars
-            if (functionToFunctionJars != null)
+            val module = extension.module
+            val moduleToJars = moduleToJars(project, schemact)
+            if (moduleToJars.size>0 && module==null)
                 project.tasks.create("${deployment.subdomain}_deployCode") {
                     it.group = "${TASK_GROUP_NAME}_${deployment.subdomain}"
                     it.actions.add {
-                        deployCodeCdk(domain, deployment, functionToFunctionJars)
+                        deployCodeCdk(domain, deployment, moduleToJars)
                     }
                 }
-            if (functionToFunctionJars != null) project.tasks.create("${deployment.subdomain}_deployInfrastructure") {
+            val functionToFunctionJars = moduleToJars.flatMap {
+                val jar = it.value
+                it.key.functions.map { Pair(it, jar) }
+            }.associate { it }
+
+            if (functionToFunctionJars.size>0 && module==null) project.tasks.create("${deployment.subdomain}_deployInfrastructure") {
                 it.group = "${TASK_GROUP_NAME}_${deployment.subdomain}"
                 it.actions.add {
                     deployHostCdk(
@@ -73,7 +79,7 @@ class SchemactPlugin : Plugin<Project> {
             project.tasks.create("printId2Functions") {
                 it.group = "${TASK_GROUP_NAME}_debug"
                 it.actions.add {
-                    printId2Modules(project, extension.schemact.modules)
+                    printId2Modules(extension.schemact.modules)
                 }
             }
             extension.module?.let {
@@ -87,6 +93,10 @@ class SchemactPlugin : Plugin<Project> {
         }
     }
 }
+
+fun moduleToJars(project:Project, schemact: Schemact) : Map<Module, File> =
+    schemact.modules.associate { Pair(it, File("${project.projectDir}/${it.name}/build/libs/${packagedJarName(it)}")) }
+
 
 fun createGenSourceTask(project: Project, schemact: Schemact, domain: Domain, functions: List<Function>,
                         staticWebSiteToSourceRoot: Map<StaticWebsite, File>?) {
@@ -219,7 +229,7 @@ fun printSourceSets(project: Project) {
 
 fun packagedJarName(module: Module)  = "${module.name}-${module.version}-schemact-aws-lambda.jar"
 
-fun printId2Modules(project: Project, modules: List<Module>) {
+fun printId2Modules( modules: List<Module>) {
     // val sourceSet = sourceSets.create("schemactgen")
     modules.forEach {
             println("${it.name} => ${packagedJarName(it)}")
