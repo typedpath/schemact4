@@ -97,7 +97,7 @@ fun createGenSourceTask(project: Project, schemact: Schemact, domain: Domain, fu
 
     mainSourceSet.kotlin.srcDir(sourceGenDir)
     File(sourceGenDir).mkdirs()
-    project.tasks.create("genCode") { task ->
+    val genTask = project.tasks.create("genCode") { task ->
         task.group = TASK_GROUP_NAME
         task.actions.add {
             val mainKotlinSourceDir =
@@ -125,6 +125,8 @@ fun createGenSourceTask(project: Project, schemact: Schemact, domain: Domain, fu
 
         }
     }
+    val buildTask = project.tasks.getByPath("build")
+    buildTask.dependsOn(genTask)
 }
 
 fun validateFunctionClients(functions: List<Function>, schemact: Schemact, staticWebSiteToSourceRoot: Map<StaticWebsite, File>) : Map<Function, List<StaticWebsite>> {
@@ -167,7 +169,7 @@ fun validateFunctionClients(functions: List<Function>, schemact: Schemact, stati
 
 
 fun createPackageFunctionsTask(project: Project) {
-    project.tasks.create("packageCode", Jar::class.java) { task->
+    val packageCodeTask = project.tasks.create("packageCode", Jar::class.java) { task->
         task.group = TASK_GROUP_NAME
         task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
         task.description = "bundles the functions into a jar"
@@ -181,7 +183,8 @@ fun createPackageFunctionsTask(project: Project) {
         dependencies.add(project.fileTree("${project.buildDir}/resources/main"))
         task.from(dependencies)
     }
-
+    val buildTask = project.tasks.getByPath("build")
+    packageCodeTask.dependsOn(buildTask)
 }
 
 fun printSourceSets(project: Project) {
