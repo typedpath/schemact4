@@ -135,8 +135,9 @@ fun createGenSourceTask(project: Project, schemact: Schemact, domain: Domain, fu
 
         }
     }
-    val buildTask = project.tasks.getByPath("build")
+    val buildTask = project.tasks.getByPath("compileKotlin")
     buildTask.dependsOn(genTask)
+
 }
 
 fun validateFunctionClients(functions: List<Function>, schemact: Schemact, staticWebSiteToSourceRoot: Map<StaticWebsite, File>) : Map<Function, List<StaticWebsite>> {
@@ -225,6 +226,11 @@ fun printSourceSets(project: Project) {
     project.configurations.getByName("kotlinCompilerClasspath").resolve().forEach {
         println("   kotlinCompilerClasspath artifact: ${it.name} ${it}")
     }
+
+    project.tasks.forEach {
+        println("   task : ${it.name} ${it}")
+    }
+
 }
 
 fun packagedJarName(module: Module)  = "${module.name}-${module.version}-schemact-aws-lambda.jar"
