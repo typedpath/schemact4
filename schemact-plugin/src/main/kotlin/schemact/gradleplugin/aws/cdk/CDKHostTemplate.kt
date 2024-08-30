@@ -1,7 +1,8 @@
-package schemact.gradleplugin.aws.cdk;
-import CodeLocations.handlerFullClassName
+package schemact.gradleplugin.aws.cdk
 import schemact.domain.*
 import schemact.domain.Function
+import schemact.gradleplugin.aws.cdk.CreateWebsiteResourcesCloudFrontDistribution.createWebsiteResourcesCloudFrontDistribution
+import schemact.gradleplugin.aws.functiontemplates.CodeLocations.handlerFullClassName
 import software.amazon.awscdk.Stack
 import software.amazon.awscdk.StackProps
 import software.amazon.awscdk.services.cloudfront.CfnDistribution

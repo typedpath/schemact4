@@ -1,3 +1,5 @@
+package schemact.gradleplugin.aws.functiontemplates
+
 import schemact.domain.Connection
 import schemact.domain.Function
 import schemact.domain.StringType

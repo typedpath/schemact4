@@ -1,3 +1,4 @@
+package schemact.gradleplugin.aws.functiontemplates
 import org.gradle.configurationcache.extensions.capitalized
 import schemact.domain.Domain
 import schemact.domain.Schemact

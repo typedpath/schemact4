@@ -1,5 +1,6 @@
 package schemact.gradleplugin.aws.util
 
+import schemact.gradleplugin.aws.util.S3Util.copyToS3
 import java.io.File
 
 fun buildWebsite(sourceDirectory: File, command: Array<String>) {

@@ -1,7 +1,5 @@
-package schemact.gradleplugin.aws.functionTemplates
+package schemact.gradleplugin.aws.functiontemplates
 
-import schemact.domain.ConnectionType
-import schemact.domain.Entity
 import schemact.domain.Function
 import schemact.domain.PrimitiveType
 import java.time.LocalDateTime

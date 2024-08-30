@@ -8,17 +8,28 @@ import schemact.domain.Function
 import schemact.domain.Schemact
 import java.io.File
 
-fun deployHostCdk(domain: Domain,
-                  schemact: Schemact,
-                  deployment: Deployment,
-                  functionToFunctionJars: Map<Function, File>,
-                  region: Regions = Regions.US_EAST_1) {
-    val stackName =  "${deployment.subdomain}-${domain.name.replace('.', '-')}"
+object DeployHostCdk {
+    fun deployHostCdk(
+        domain: Domain,
+        schemact: Schemact,
+        deployment: Deployment,
+        functionToFunctionJars: Map<Function, File>,
+        region: Regions = Regions.US_EAST_1
+    ) {
+        val stackName = "${deployment.subdomain}-${domain.name.replace('.', '-')}"
 
-    deployCdkStack(stackName = stackName, region = region) {
-        CDKHostTemplate(scope = it, id = null, props = null, domain = domain,
-            schemact = schemact,
-            deployment = deployment, codeBucketName = functionCodeBucketName(domain, deployment), functionToFunctionJars = functionToFunctionJars)
-    }
+        DeployCdkStack.deployCdkStack(stackName = stackName, region = region) {
+            CDKHostTemplate(
+                scope = it,
+                id = null,
+                props = null,
+                domain = domain,
+                schemact = schemact,
+                deployment = deployment,
+                codeBucketName = functionCodeBucketName(domain, deployment),
+                functionToFunctionJars = functionToFunctionJars
+            )
+        }
 
     }
+}

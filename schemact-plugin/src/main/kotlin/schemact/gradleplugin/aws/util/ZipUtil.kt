@@ -8,50 +8,50 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
+object ZipUtil {
+    fun zipDirectory(directory: File, os: OutputStream): Unit {
 
-fun zipDirectory(directory: File, os: OutputStream): Unit {
+        val files = mutableListOf<Path>()
 
-    val files  = mutableListOf<Path>()
+        val fileVisitor = object : SimpleFileVisitor<Path>() {
+            override fun visitFile(path: Path, attrs: BasicFileAttributes): FileVisitResult {
+                println("visited ${path}")
+                files.add(path)
+                return FileVisitResult.CONTINUE
+            }
+        }
 
-    val fileVisitor =object : SimpleFileVisitor<Path>() {
-       override fun visitFile(path: Path, attrs: BasicFileAttributes) : FileVisitResult
-       {
-           println("visited ${path}" )
-           files.add(path)
-           return FileVisitResult.CONTINUE
-       }
+        Files.walkFileTree(directory.toPath(), fileVisitor)
+        val out = ZipOutputStream(os);
+        files.forEach {
+            var ze = ZipEntry(it.fileName.toString());
+            out.putNextEntry(ze);
+            out.write(it.toFile().readBytes())
+        }
+        out.close();
     }
 
-    Files.walkFileTree(directory.toPath(), fileVisitor)
-    val out =  ZipOutputStream(os);
-    files.forEach {
-        var ze =  ZipEntry(it.fileName.toString());
-        out.putNextEntry(ze);
-        out.write(it.toFile().readBytes())
+
+    private fun getResourceFolder(folder: String): File {
+        val loader = Thread.currentThread().contextClassLoader
+        val url = loader.getResource(folder)
+        return File(url!!.path)
     }
-    out.close();
-}
 
 
-private fun getResourceFolder(folder: String): File {
-    val loader = Thread.currentThread().contextClassLoader
-    val url = loader.getResource(folder)
-    return File(url!!.path)
-}
+    fun zipResourceDirectory(resourceDirectory: String, os: OutputStream) {
+        zipDirectory(getResourceFolder(resourceDirectory), os)
+    }
 
+    fun main() {
 
-fun zipResourceDirectory(resourceDirectory: String, os: OutputStream) {
-    zipDirectory(getResourceFolder(resourceDirectory), os)
-}
+        val file = File("./createStack.zip")
+        val resourceDir = "serverless/basic/src"
+        val fos = FileOutputStream(file);
 
-fun main() {
+        println("zipping resource $resourceDir into ${file.absoluteFile}")
+        zipResourceDirectory(resourceDir, fos)
+        fos.close()
 
-    val file =  File("./createStack.zip")
-    val resourceDir  = "serverless/basic/src"
-    val fos = FileOutputStream(file);
-
-    println("zipping resource $resourceDir into ${file.absoluteFile}" )
-    zipResourceDirectory(resourceDir, fos)
-    fos.close()
-
+    }
 }

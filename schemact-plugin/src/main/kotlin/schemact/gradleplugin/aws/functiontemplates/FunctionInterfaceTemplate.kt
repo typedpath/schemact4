@@ -1,4 +1,4 @@
-package schemact.gradleplugin.aws.functionTemplates
+package schemact.gradleplugin.aws.functiontemplates
 
 import schemact.domain.ConnectionType
 import schemact.domain.Entity
