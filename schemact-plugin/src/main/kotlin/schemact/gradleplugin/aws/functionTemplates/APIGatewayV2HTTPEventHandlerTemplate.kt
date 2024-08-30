@@ -41,7 +41,7 @@ class ${handlerClassName} : RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HT
 }.joinToString (System.lineSeparator())} 
     
     val result = ($implClassName()).${function.name}(${function.paramType.connections.map{"${it.name}=${it.name}"}.joinToString(", ")})
-    System.out.println("result: {'$'}result")
+    System.out.println("result: ${'$'}result")
 
     return APIGatewayV2HTTPResponse.builder()
             .withBody(result)
