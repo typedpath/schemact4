@@ -21,9 +21,9 @@
   - include multiple function test 
   - unnecessary dependnecies should be removed from fat jar 
     - probably aws jars
-- simplify deployment with a fullDeploy task
+- ~~simplify deployment with a buildAndDeploy task~~
   - ~~add (module) task schemact/packageCode dependencies (on build and genCode tasks)~~  
-  - incorporate build function code into fullDeploy
+  - ~~incorporate build function code into buildAndDeploy~~
      - ~~incorporate module concept - ie location for functions~~
        - ~~this will make binaries locateable by convention~~
 - ~~bug fix required for task dependencies for packageCode task~~

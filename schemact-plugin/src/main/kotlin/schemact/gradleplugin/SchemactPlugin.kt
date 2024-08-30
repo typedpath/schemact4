@@ -2,6 +2,7 @@ package schemact.gradleplugin
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 //import org.gradle.api.artifacts.DependencyResolutionListener
 //import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.file.DuplicatesStrategy
@@ -37,8 +38,10 @@ class SchemactPlugin : Plugin<Project>  {
 
             val deployCodeAllowed = moduleToJars.isNotEmpty() && module==null
 
+            val deployCodeTaskName = "${deployment.subdomain}_deployCode"
+
             if (deployCodeAllowed)
-                project.tasks.create("${deployment.subdomain}_deployCode") {
+                  project.tasks.create(deployCodeTaskName) {
                     it.group = "${TASK_GROUP_NAME}_${deployment.subdomain}"
                     it.actions.add {
                         deployCodeCdk(domain, deployment, moduleToJars)
@@ -50,8 +53,9 @@ class SchemactPlugin : Plugin<Project>  {
             }.associate { it }
 
             val deployInfrastructureAllowed = functionToFunctionJars.isNotEmpty() && module==null
+            val deployInfrastructureTaskName = "${deployment.subdomain}_deployInfrastructure"
 
-            if (deployInfrastructureAllowed) project.tasks.create("${deployment.subdomain}_deployInfrastructure") {
+            if (deployInfrastructureAllowed) project.tasks.create(deployInfrastructureTaskName) {
                 it.group = "${TASK_GROUP_NAME}_${deployment.subdomain}"
                 it.actions.add {
                     deployHostCdk(
@@ -64,23 +68,35 @@ class SchemactPlugin : Plugin<Project>  {
             }
 
             val uiCodeLocation = extension.uiCodeBuildLocation
-            val deployUICodeAllowed = uiCodeLocation != null
 
-            if (uiCodeLocation != null) project.tasks.create("${deployment.subdomain}_deployUiCode") {
+            val deployUiCodeTaskName = "${deployment.subdomain}_deployUiCode"
+
+            if (uiCodeLocation != null) project.tasks.create(deployUiCodeTaskName) {
                 it.group = "${TASK_GROUP_NAME}_${deployment.subdomain}"
                 it.actions.add {
                     deployUiCode(domain, deployment, uiCodeLocation)
                 }
             }
 
-            if (deployCodeAllowed && deployInfrastructureAllowed /*&& deployUICodeAllowed*/) {
-                val task = project.tasks.create("${deployment.subdomain}_buildAndDeploy") {
+            if (deployCodeAllowed && deployInfrastructureAllowed ) {
+                val taskName = "${deployment.subdomain}_buildAndDeploy"
+                val task = project.tasks.create(taskName) {
                     it.group = "${TASK_GROUP_NAME}_${deployment.subdomain}"
+                    it.actions.add {
+                        deployCodeCdk(domain, deployment, moduleToJars)
+                        deployHostCdk(
+                            domain = domain,
+                            schemact = schemact,
+                            deployment = deployment,
+                            functionToFunctionJars = functionToFunctionJars
+                        )
+                        if (uiCodeLocation != null) {
+                            deployUiCode(domain, deployment, uiCodeLocation)
+                        }
+                    }
                 }
-                schemact.modules.forEach {
-                    task.dependsOn(":${it.name}:$PACKAGE_CODE_MODULE_TASK_NAME")
-                }
-
+                val moduleDependsOn = schemact.modules.map {":${it.name}:$PACKAGE_CODE_MODULE_TASK_NAME"}
+                task.dependsOn(moduleDependsOn)
             }
         }
 
@@ -131,6 +147,7 @@ fun createPackageFunctionsTask(project: Project, module: Module) {
             project.configurations.getByName("runtimeClasspath").resolve()
                 //.onEach { println("adding jar ${it.javaClass} $it")  }
                 .map(project::zipTree).toMutableList()
+        println("createPackageFunctionsTask points at ${project.buildDir}")
         dependencies.add(project.fileTree("${project.buildDir}/classes/kotlin/main"))
         dependencies.add(project.fileTree("${project.buildDir}/resources/main"))
         task.from(dependencies)
