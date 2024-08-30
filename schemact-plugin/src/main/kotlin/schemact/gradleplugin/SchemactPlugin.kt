@@ -2,6 +2,8 @@ package schemact.gradleplugin
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+//import org.gradle.api.artifacts.DependencyResolutionListener
+//import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.jvm.tasks.Jar
@@ -11,17 +13,21 @@ import schemact.domain.Function
 import schemact.gradleplugin.aws.cdk.deployCodeCdk
 import schemact.gradleplugin.aws.cdk.deployHostCdk
 import schemact.gradleplugin.aws.createSourceCode
-import schemact.gradleplugin.cdk.deployUiCode
+import schemact.gradleplugin.aws.deployUiCode
 import java.io.File
+import schemact.gradleplugin.aws.awsLambdaDependencies
+
 
 const val TASK_GROUP_NAME = "schemact"
 
-class SchemactPlugin : Plugin<Project> {
+class SchemactPlugin : Plugin<Project>/*, DependencyResolutionListener*/  {
 
     val TASK_GROUP_NAME = "schemact"
+    lateinit var project: Project
 
     override fun apply(project: Project) {
 
+        this.project=project
 
         val extension: SchemactPluginConfig = project.extensions
             .create("schemactConfig", SchemactPluginConfig::class.java)
@@ -69,10 +75,10 @@ class SchemactPlugin : Plugin<Project> {
                 createTasksFor(it)
             }
 
-            project.tasks.create("printSourceSets") {
+            project.tasks.create("printProjectInfo") {
                 it.group = "${TASK_GROUP_NAME}_debug"
                 it.actions.add {
-                    printSourceSets(project)
+                    printProjectInfo(project)
                 }
             }
 
@@ -92,6 +98,20 @@ class SchemactPlugin : Plugin<Project> {
             }
         }
     }
+
+
+    /*override fun beforeResolve(dependencies: ResolvableDependencies) {
+        println("******** beforeResolve")
+        val deps = project.configurations.getByName("implementation").getDependencies()
+        awsLambdaDependencies.forEach {
+            println ("adding dependency $it")
+            deps.add(project.getDependencies().create(it))
+        }
+        project.gradle.removeListener(this)
+    }
+
+    override fun afterResolve(dependencies: ResolvableDependencies) {
+    }*/
 }
 
 fun moduleToJars(project:Project, schemact: Schemact) : Map<Module, File> =
@@ -100,6 +120,13 @@ fun moduleToJars(project:Project, schemact: Schemact) : Map<Module, File> =
 
 fun createGenSourceTask(project: Project, schemact: Schemact, domain: Domain, functions: List<Function>,
                         staticWebSiteToSourceRoot: Map<StaticWebsite, File>?) {
+
+    val deps = project.configurations.getByName("implementation").getDependencies()
+    awsLambdaDependencies.forEach {
+        println ("adding dependency $it")
+        deps.add(project.getDependencies().create(it))
+    }
+
     val mainSourceSet =
         project.extensions.getByType(KotlinJvmProjectExtension::class.java)
             .sourceSets.getByName("main")
@@ -199,7 +226,7 @@ fun createPackageFunctionsTask(project: Project, module: Module) {
     packageCodeTask.dependsOn(buildTask)
 }
 
-fun printSourceSets(project: Project) {
+fun printProjectInfo(project: Project) {
     val sourceSets = project.extensions.getByType(KotlinJvmProjectExtension::class.java).sourceSets
     // val sourceSet = sourceSets.create("schemactgen")
     sourceSets.forEach {

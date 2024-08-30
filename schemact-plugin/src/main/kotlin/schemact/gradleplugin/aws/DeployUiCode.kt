@@ -1,4 +1,4 @@
-package schemact.gradleplugin.cdk
+package schemact.gradleplugin.aws
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3Client
 import schemact.domain.Deployment

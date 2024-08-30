@@ -15,10 +15,12 @@
   - ~~reorganise plugin so functions can be specified in functions/gradle.buid.kts~~ +
        ~~plugin options are optional~~ 
   - ~~generate kotlin source~~
-  - plugin should add in aws gateway gradle dependancies
+  - ~~plugin should add in aws gateway gradle dependancies~~
   - ~~plugin should add in aws fatJar~~
   - ~~generate typescript client code~~
   - include multiple function test 
+  - unnecessary dependnecies should be removed from fat jar 
+    - probably aws jars
 - simplify deployment with a fullDeploy task
   - ~~add (module) task schemact/packageCode dependencies (on build and genCode tasks)~~  
   - incorporate build function code into fullDeploy
