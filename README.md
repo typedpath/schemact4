@@ -9,7 +9,7 @@
   - ~~TODO : cloudfront distribution infrastructure~~
   - ~~TODO: test ui deploy~~
   - ~~TODO: cleanout cloudformation2kotlin library references~~ 
-- generate ~~aws~~ wrapper for function code
+- ~~generate ~~aws~~ wrapper for function code~~
   - ~~reorganise paramicons project so schemact definition can be shared among modules~~ 
   - ~~add (sample) functions module~~
   - ~~reorganise plugin so functions can be specified in functions/gradle.buid.kts~~ +
@@ -43,8 +43,12 @@
      - e.g. functions - create jars with required version
      - create git branch
      - do functions have a specific version or everything is at the same version ? 
-     
-
+- add  lambda configuration
+  - per deployment provisioned and reserver lambda function concurrency
+    - for controlling costs / eliminating cold starts 
+      - https://docs.aws.amazon.com/lambda/latest/dg/provisioned-concurrency.html 
+  - switch on snapStart ? - https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html
+  - memory
 
 
 
