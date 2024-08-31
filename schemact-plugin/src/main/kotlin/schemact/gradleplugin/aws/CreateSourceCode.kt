@@ -2,11 +2,8 @@ package schemact.gradleplugin.aws
 
 import schemact.domain.*
 import schemact.domain.Function
-import schemact.gradleplugin.aws.functiontemplates.CodeLocations
+import schemact.gradleplugin.aws.functiontemplates.*
 import schemact.gradleplugin.aws.functiontemplates.FunctionTypescriptClientTemplate.functionTypescriptClientTemplate
-import schemact.gradleplugin.aws.functiontemplates.apiGatewayEventHandler
-import schemact.gradleplugin.aws.functiontemplates.functionInterface
-import schemact.gradleplugin.aws.functiontemplates.functionSampleImpl
 import java.io.File
 
 object CreateSourceCode {
@@ -62,15 +59,17 @@ object CreateSourceCode {
         val paramType = function.paramType
         // assign args from infrastructure
         val argsFromEnvironment = paramType.fieldsFromInfrastructure()
+
+        fun argIsTooBigForParam(paramType: Entity) = paramType is StringType && paramType.maxLength > 1000
         // assign small args to params
         val argsFromParams = paramType.connections.filter {
             val subParam = it.entity2
-            !subParam.isFromInfrastructure && !(subParam !is StringType || (subParam is StringType && subParam.maxLength > 1000))
+            !subParam.isFromInfrastructure && subParam is PrimitiveType && !argIsTooBigForParam(subParam)
         }
         // assign big args to body
         val argsFromBody = paramType.connections.filter {
             val subParam = it.entity2
-            subParam is StringType && subParam.maxLength > 1000
+            subParam !is PrimitiveType ||argIsTooBigForParam(subParam)
         }
 
         generateServiceCode(
@@ -127,6 +126,24 @@ object CreateSourceCode {
         argsFromBody: List<Connection>,
         mainKotlinSourceDir: File
     ) {
+        // find all the entities in the arguments
+        // assume all definitions are nested
+        // generate source
+        val allTopLevelConnections = argsFromBody.toMutableList()
+        allTopLevelConnections.addAll(argsFromParams)
+        //assume argFrom environment are defined elsewhere
+        val complexTopLevelTypes = allTopLevelConnections.map { it.entity2 }.filter { it !is PrimitiveType }.toSet()
+        println("generateServiceCode complexTopLevelTypes for function ${function.name}: ${complexTopLevelTypes.joinToString(","){it.name}}")
+        complexTopLevelTypes.forEach {
+            val dataClassName = it.name
+            val dataClassSubPath = "${packageTree.joinToString("/")}/${dataClassName}.kt"
+            val dataClassFile = File(genDir, dataClassSubPath)
+            dataClassFile.parentFile.mkdirs()
+            with (dataClassFile) {
+                writeText(dataClass(`package`=packageName, entity = it))
+            }
+        }
+
         val interfaceClassName = CodeLocations.interfaceClassName(id = function.name)
 
         val interfaceSourceSubpath = "${packageTree.joinToString("/")}/${interfaceClassName}.kt"

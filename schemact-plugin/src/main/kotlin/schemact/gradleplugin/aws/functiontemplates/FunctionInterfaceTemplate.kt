@@ -23,15 +23,17 @@ fun dataClassCode(functionId: String,entity: Entity, className: String) : String
 
 fun topLevelFieldsAsArgs(functionId: String, entity: Entity) : String {
     val unsupportedFields =  entity.connections.filter {
-        it.type!= ConnectionType.Contains || it.entity2 !is PrimitiveType
+        it.type!= ConnectionType.Contains //|| it.entity2 !is PrimitiveType
     }
 
     if (unsupportedFields.size>0) {
-        throw RuntimeException("these fields are not primitive and contained ${unsupportedFields.map
+        throw RuntimeException("these fields are not contained ${unsupportedFields.map
          {"$functionId.${it.name}"}.joinToString(", ")}")
     }
 
-    return entity.connections.map { "${it.name}: ${ (it.entity2 as PrimitiveType).kotlinName}" }.joinToString (", ")
+    return entity.connections.map {"${it.name}: ${
+        if ( it.entity2 is PrimitiveType) { (it.entity2 as PrimitiveType).kotlinName } else { it.entity2.name }
+    }"}.joinToString (", ")
 
 }
 

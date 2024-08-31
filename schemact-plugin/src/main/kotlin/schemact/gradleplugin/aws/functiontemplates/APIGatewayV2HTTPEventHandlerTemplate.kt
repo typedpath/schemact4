@@ -1,9 +1,8 @@
 package schemact.gradleplugin.aws.functiontemplates
 
-import schemact.domain.Connection
-import schemact.domain.Function
-import schemact.domain.StringType
 import java.time.LocalDateTime
+import schemact.domain.*
+import schemact.domain.Function
 
 
 //TODO deal with optional arguments
@@ -20,11 +19,17 @@ import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.annotation.JsonProperty
 
 //https://docs.aws.amazon.com/lambda/latest/dg/urls-invocation.html
 // https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format
 
+
 class ${handlerClassName} : RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HTTPResponse> {
+
+    data class Body (${argsFromBody.joinToString(",") { asDataClassField(it) }})
+
     override fun handleRequest(
         input: APIGatewayV2HTTPEvent?,
         context: Context?
@@ -34,9 +39,9 @@ class ${handlerClassName} : RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HT
     """    
     val ${it.name} = System.getenv("${it.name}")"""
 }.joinToString(System.lineSeparator())}       
-        ${if (argsFromBody.size!=1 || argsFromBody[0].entity2 !is StringType) """throw RuntimeException("only 1 string arg supported in body")"""
-        else """
-    val ${argsFromBody[0].name} = input!!.body"""}     
+      val body = ObjectMapper().readValue(input!!.body, Body::class.java)
+      ${argsFromBody.joinToString(System.lineSeparator()) {"""
+      val ${it.name}=body.${it.name}"""   }} 
        ${argsFromParams.map { 
 """
     val ${it.name} = input.queryStringParameters.get("${it.name}")!!"""       
@@ -52,3 +57,7 @@ class ${handlerClassName} : RequestHandler<APIGatewayV2HTTPEvent, APIGatewayV2HT
     }
 }
 """
+
+private fun asDataClassField(connection: Connection) = """@JsonProperty("${connection.name}") val ${connection.name}:${kotlinTypeName(connection.entity2)} """
+
+private fun kotlinTypeName(entity: Entity) = if (entity is PrimitiveType) entity.kotlinName else entity.name

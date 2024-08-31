@@ -23,7 +23,7 @@ class FloatType() : PrimitiveType(name="Float",
 )
 
 class BooleanType() : PrimitiveType(name="Bool",
-    kotlinName = "Bool",
+    kotlinName = "Boolean",
     typescriptName = "boolean",
     sqlType = "int???",
     description = "Boolean"
@@ -37,37 +37,40 @@ class IntType() : PrimitiveType(name="Int",
 )
 
 
-fun Entity.string(name: String, description: String, maxLength: Int) {
+fun Entity.string(name: String, description: String?=null, maxLength: Int, optional:Boolean=false) {
     connections.add(
         Connection(name=name, description=description, entity1 = this,
         cardinality = Cardinality.OneToOne,
         type= ConnectionType.Contains,
-        entity2 = StringType(maxLength)
+        entity2 = StringType(maxLength),
+            optional = optional
         )
     )
 }
 
-fun Entity.float(name: String, description: String) {
+fun Entity.float(name: String, description: String?=null, optional:Boolean=false) {
     connections.add(
         Connection(name=name, description=description, entity1 = this,
         cardinality = Cardinality.OneToOne,
         type= ConnectionType.Contains,
-        entity2 = FloatType()
+        entity2 = FloatType(),
+        optional = optional
         )
     )
 }
 
-fun Entity.bool(name: String, description: String) {
+fun Entity.bool(name: String, description: String?=null, optional:Boolean=false) {
     connections.add(
         Connection(name=name, description=description, entity1 = this,
         cardinality = Cardinality.OneToOne,
         type= ConnectionType.Contains,
-        entity2 = BooleanType()
+        entity2 = BooleanType(),
+            optional = optional
         )
     )
 }
 
-fun Entity.int(name: String, description: String) {
+fun Entity.int(name: String, description: String?=null, optional:Boolean=false) {
     connections.add(
         Connection(name=name, description=description, entity1 = this,
         cardinality = Cardinality.OneToOne,
