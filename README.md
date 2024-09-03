@@ -4,7 +4,7 @@
 ## TODO
 ### Moving Code From Paramicons ( https://github.com/typedpath/paramicons ) to Schemact4 
 
-- make function support multiple functions instead of hardcoded thumbnail
+- ~~make function support multiple functions instead of hardcoded thumbnail~~
   - ~~move to aws CDK libraru~~
   - ~~TODO : cloudfront distribution infrastructure~~
   - ~~TODO: test ui deploy~~
@@ -18,7 +18,7 @@
   - ~~plugin should add in aws gateway gradle dependancies~~
   - ~~plugin should add in aws fatJar~~
   - ~~generate typescript client code~~
-  - include multiple function test 
+  - ~~include multiple function test~~ 
   - unnecessary dependnecies should be removed from fat jar 
     - probably aws jars
 - ~~simplify deployment with a buildAndDeploy task~~
@@ -27,6 +27,10 @@
      - ~~incorporate module concept - ie location for functions~~
        - ~~this will make binaries locateable by convention~~
 - ~~bug fix required for task dependencies for packageCode task~~
+- support react modules / dependencies 
+  - objects libs- e.g. paramicons/ lib
+  - viewer libs hosts -  e.g. paramicons/example 
+  - injection of meta data,w support for named properties
 - incorporate build ui code into fullDeploy
 - build paramicons crud service from plugin
   - create typescript for entities 
@@ -40,9 +44,9 @@
 - support versioning
   - create version - locates functions and static content at version sensitive locations
      - e.g. <bucketName/version>
-     - e.g. functions - create jars with required version
+     - ~~e.g. functions - create jars with required version~~
      - create git branch
-     - do functions have a specific version or everything is at the same version ? 
+     - ~~modules have a specific version~~ ? 
 - add  lambda configuration
   - per deployment provisioned and reserver lambda function concurrency
     - for controlling costs / eliminating cold starts 
