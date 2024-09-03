@@ -22,14 +22,14 @@ ${indent}data class ${entity.name}(${asArgs(entity)}) ${if (complexTypes.isNotEm
 }
 
 private fun asArgs(entity: Entity) : String {
-    return entity.connections.map { """@JsonProperty("${it.name}") val ${it.name}: ${if (it.entity2 is PrimitiveType) (it.entity2 as PrimitiveType).kotlinName else it.entity2.name} """ }.joinToString(", ")
+    return entity.connections.map { """@JsonProperty("${it.name}") var ${it.name}: ${if (it.entity2 is PrimitiveType) (it.entity2 as PrimitiveType).kotlinName else it.entity2.name} """ }.joinToString(", ")
 }
 
 //entity.connections.map { "${it.name}: ${ (it.entity2 as PrimitiveType).kotlinName}" }.joinToString (", ")
 
 
 
-data class TopLevel(val a: String, val b: Level2) {
-    data class Level2(val c: Int) {
+/* sample: data class TopLevel(var a: String, var b: Level2) {
+    data class Level2(var c: Int) {
     }
-}
+}*/
