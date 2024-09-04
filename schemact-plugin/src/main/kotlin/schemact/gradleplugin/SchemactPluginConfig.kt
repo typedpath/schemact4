@@ -9,6 +9,7 @@ import java.io.File
 open class SchemactPluginConfig {
    lateinit var schemact:Schemact
    var uiCodeBuildLocation: String?=null
+   var uiCodeBuildScript: String?=null
    var module:Module?=null
    var staticWebSiteToSourceRoot: Map<StaticWebsite, File>? = null
 }

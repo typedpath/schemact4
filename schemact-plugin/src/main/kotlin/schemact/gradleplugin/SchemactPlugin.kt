@@ -2,18 +2,19 @@ package schemact.gradleplugin
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
 //import org.gradle.api.artifacts.DependencyResolutionListener
 //import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.jvm.tasks.Jar
 import schemact.domain.*
 import schemact.gradleplugin.DebugInfo.printProjectInfo
-import schemact.gradleplugin.aws.DeployUiCode.deployUiCode
+import schemact.gradleplugin.aws.UiCode.buildUiCode
+import schemact.gradleplugin.aws.UiCode.deployUiCode
 import schemact.gradleplugin.aws.cdk.DeployHostCdk.deployHostCdk
 import schemact.gradleplugin.aws.cdk.deployCodeCdk
 
 import java.io.File
+import kotlin.io.path.Path
 
 
 const val TASK_GROUP_NAME = "schemact"
@@ -127,6 +128,21 @@ class SchemactPlugin : Plugin<Project>  {
                     createPackageFunctionsTask(project, it)
                 }
             }
+
+            val buildUiCodeTaskName = "buildUiCodeTODOfixthis"
+
+            val uiCodeBuildScript = extension.uiCodeBuildScript
+            uiCodeBuildScript?.let {
+                project.tasks.create(buildUiCodeTaskName) {
+                    it.group = "schemact"
+                    it.actions.add {
+                        buildUiCode(rootProjectDir = project.projectDir,
+                            tempDir = Path("build/tmp"),
+                            uiCodeBuildScript)
+                    }
+                }
+            }
+
         }
     }
 }
