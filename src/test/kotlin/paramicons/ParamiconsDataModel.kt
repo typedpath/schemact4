@@ -1,4 +1,4 @@
-package paramiconssample
+package paramicons.schemact
 
 import schemact.domain.*
 
@@ -34,7 +34,8 @@ val paramsEntity = Entity(name="params", description="paramiconparams") {
 }
 
 val polarRadialCon2Params = Entity(name="polarRadialCon2Params", description = "polarRadialCon2Params",
-    parent = paramsEntity) {
+    parent = paramsEntity
+) {
     int("rotationFrequency", "TODO")
     int("radialFrequency", "TODO")
     int("spokeAngle0", "TODO")
