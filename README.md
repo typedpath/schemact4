@@ -1,5 +1,46 @@
 # SCHEMA Complete over Time
 
+Schemact is a DSL for describing software architecture including. It includes:
+- Entities and Connection i.e. data and relationships in 
+- Modules i.e. deployable code artifacts
+- Functions i.e. code with a defined interface that can typically be called across a network 
+- (Root) Domain e.g. *.testedsoftware.org
+- Deployments i.e deployed instances
+- Schemact - the root container
+
+The criteria for inclusion of an element type is: Does it simplify a sample porject ?
+
+Its backed by a gradle plugin that converts those elements into cloud deployments.
+The plugin emits:
+- aws cloudformation stacks
+- server and client source code
+- tasks to deploy and build
+
+These are key objectives:
+- automate everything that can be automated
+- solve long term problems such as
+  - versioning + dependencies between services
+
+## Sample Projects
+There is one sample project currently: [paramicons.testedsoftware.uk](), the code is here: https://github.com/typedpath/paramicons
+
+## Progress Metrics
+
+### Module Types
+- Standalone Function - started - paramicons/functions (uses aws lambda functions)
+- Spring Boot - TODO
+- React (NPM) Libs - TODO
+
+### Infrastructure Items
+- Function 
+- Relational Databases
+- Topics / Ques
+
+### Cloud Providers
+- AWS started
+- GCP TODO
+
+
 
 ## TODO
 ### Moving Code From Paramicons ( https://github.com/typedpath/paramicons ) to Schemact4 
