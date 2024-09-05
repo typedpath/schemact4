@@ -1,14 +1,14 @@
 # SCHEMA Complete over Time
 
-Schemact is a DSL for describing software architecture including. It includes:
-- Entities and Connection i.e. data and relationships in 
+Schemact is a DSL for describing software architecture including:
+- Entities and Connections i.e. data and relationships in 
 - Modules i.e. deployable code artifacts
 - Functions i.e. code with a defined interface that can typically be called across a network 
 - (Root) Domain e.g. *.testedsoftware.org
 - Deployments i.e deployed instances
 - Schemact - the root container
 
-The criteria for inclusion of an element type is: Does it simplify a sample porject ?
+The criteria for inclusion of an element type is: Does it simplify a sample project ?
 
 Its backed by a gradle plugin that converts those elements into cloud deployments.
 The plugin emits:
@@ -24,22 +24,36 @@ These are key objectives:
 ## Sample Projects
 There is one sample project currently: [paramicons.testedsoftware.uk](), the code is here: https://github.com/typedpath/paramicons
 
+
+
 ## Progress Metrics
 
 ### Module Types
 - Standalone Function - started - paramicons/functions (uses aws lambda functions)
-- Spring Boot - TODO
+- Spring Boot 
 - React (NPM) Libs - TODO
 
 ### Infrastructure Items
 - Function 
 - Relational Databases
-- Topics / Ques
+   -  Entity Bean Generation
+- Topics / Queues / Streams
+
+### Application Language Support
+- Kotlin
+- Java
+- Typescript
 
 ### Cloud Providers
 - AWS started
 - GCP TODO
 
+### DSL Language Support
+- Kotlin / Gradle - started
+- Typescript / NPM
+
+### Release/ Control / Management
+- release / procedures
 
 
 ## TODO
