@@ -123,8 +123,8 @@ class SchemactPlugin : Plugin<Project>  {
             extension.module?.let {
                 val functions = it.functions
                 if (functions.isNotEmpty()) {
-                    createGenSourceTask(project=project, schemact=extension.schemact,
-                        domain=extension.schemact.domains[0], functions=functions, staticWebSiteToSourceRoot=extension.staticWebSiteToSourceRoot)
+                    GenSourceTask.createGenSourceTask(project=project, schemact=extension.schemact,
+                        domain=extension.schemact.domains[0], module = it, staticWebSiteToSourceRoot=extension.staticWebSiteToSourceRoot)
                     createPackageFunctionsTask(project, it)
                 }
             }

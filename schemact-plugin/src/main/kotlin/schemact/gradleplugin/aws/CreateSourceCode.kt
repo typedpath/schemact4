@@ -12,11 +12,11 @@ object CreateSourceCode {
         mainKotlinSourceDir: File,
         domain: Domain,
         schemact: Schemact,
-        functions: List<Function>,
+        module: Module,
         functionToStaticWebsite: Map<Function, List<StaticWebsite>>,
         staticWebSiteToSourceRoot: Map<StaticWebsite, File>
     ) {
-        functions.forEach {
+        module.functions.forEach {
             println("creating service code for function ${it.name} + client code for these websites: " +
                     "${
                         functionToStaticWebsite.flatMap { it.value }.joinToString(",") { it.name }
@@ -25,6 +25,7 @@ object CreateSourceCode {
             println("created website code in: ${staticWebSiteToSourceRoot.entries.joinToString(",") { "${it.key.name}=>${it.value}" }}")
             createFunctionCode(
                 function = it,
+                module = module,
                 genDir = genDir,
                 domain = domain,
                 schemact = schemact,
@@ -39,6 +40,7 @@ object CreateSourceCode {
 
     private fun createFunctionCode(
         function: Function,
+        module: Module,
         genDir: File,
         domain: Domain,
         schemact: Schemact,
@@ -74,6 +76,7 @@ object CreateSourceCode {
 
         generateServiceCode(
             function,
+            module,
             packageTree,
             genDir,
             packageName,
@@ -116,6 +119,7 @@ object CreateSourceCode {
 
     private fun generateServiceCode(
         function: Function,
+        module: Module,
         packageTree: List<String>,
         genDir: File,
         packageName: String,
@@ -156,14 +160,18 @@ object CreateSourceCode {
             )
         )
 
-        val handlerSource = apiGatewayEventHandler(
-            packageName = packageName, function = function,
-            implClassName = implClassName,
-            handlerClassName = handlerClassName,
-            argsFromEnvironment = argsFromEnvironment,
-            argsFromParams = argsFromParams,
-            argsFromBody = argsFromBody
-        )
+        val handlerSource = if (module.type==Module.Type.StandaloneFunction) {
+             apiGatewayEventHandler(
+                packageName = packageName, function = function,
+                implClassName = implClassName,
+                handlerClassName = handlerClassName,
+                argsFromEnvironment = argsFromEnvironment,
+                argsFromParams = argsFromParams,
+                argsFromBody = argsFromBody
+            )
+        } else {
+            throw RuntimeException("not supporting genSource module type ${module.type}")
+        }
 
 
         val handlerSourceSubpath = "${packageTree.joinToString("/")}/${handlerClassName}.kt"

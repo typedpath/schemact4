@@ -41,3 +41,8 @@ Schemact is outside in.
 
 ## Where does inside out meet outside in
   - TODO put in context of dependency injection
+
+## Service un-oriented architecture
+
+# progress by . . project
+## commit plugin
