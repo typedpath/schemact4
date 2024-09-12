@@ -6,13 +6,11 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
-	"net/http"
-	"os"
-
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/typedpath/test-aws-lambda-function/module"
+	name "github.com/typedpath/test-aws-lambda-function/module"
+
+	"net/http"
 )
 
 // JSON response structure
@@ -36,7 +34,7 @@ func helloHandler(ctx context.Context, r events.APIGatewayProxyRequest) (events.
 }
 
 func notFoundHandler() (events.APIGatewayProxyResponse, error) {
-	response := JsonResponse{Message: "Not found"}
+	response := JsonResponse{Message: "Not found - foolish !"}
 	return writeJsonResponse(http.StatusNotFound, response)
 }
 
@@ -52,8 +50,8 @@ func writeJsonResponse(statusCode int, response JsonResponse) (events.APIGateway
 }
 
 func router(ctx context.Context, r events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	logger.Info("Received request", slog.String("path", r.Path))
+	//logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	//logger.Info("Received request", slog.String("path", r.Path))
 
 	switch {
 	case r.Path == "/" && r.HTTPMethod == "GET":

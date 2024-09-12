@@ -20,11 +20,14 @@ import kotlin.collections.List
 import kotlin.collections.mutableListOf
 
 class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
-                      schemact: Schemact,
+                      val schemact: Schemact,
                       domain: Domain, deployment: Deployment,
                       codeBucketName: String,
                       functionToFunctionJars: Map<Function, File>
 )  : Stack(scope, id, props) {
+
+    fun module(function: Function) : Module =
+        schemact.modules.first { it.functions.contains(function) }
 
     val websiteDomainName = "${deployment.subdomain}.${domain.name}"
 
@@ -32,7 +35,8 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
         val functionRole = createFunctionRole()
         val idToFunctionUrl: Map<String, CfnUrl> =  functionToFunctionJars.entries.associate {
             it.key.name to
-            createFunction(id = it.key.name, function = it.key, domain = domain, schemact = schemact, codeBucketName = codeBucketName, jarFileName =  it.value.name, staticWebsiteBucketName = websiteDomainName, functionRole = functionRole)
+            createFunction(id = it.key.name, function = it.key, module=module(it.key),
+                domain = domain, schemact = schemact, codeBucketName = codeBucketName, jarFileName =  it.value.name, staticWebsiteBucketName = websiteDomainName, functionRole = functionRole)
         }
         val websiteResourcesHostingBucket = createWebsiteResourcesHostingBucket()
         createWebsiteResourcesHostingBucketPolicy(websiteResourcesHostingBucket)
@@ -47,7 +51,15 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
         }.associateBy({it.first}, {it.second})
     }
 
-    fun createFunction(id: String, function: Function, domain: Domain, schemact: Schemact, codeBucketName: String, jarFileName: String, staticWebsiteBucketName: String,
+    fun functionRuntime(module: Module) =
+        when (module.type) {
+            Module.Type.StandaloneFunction -> "java17"
+            Module.Type.GoStandaloneFunction -> "provided.al2023"
+            else -> throw RuntimeException("unsupported module type ${module.type.name}")
+        }
+
+    fun createFunction(id: String, function: Function, module: Module, domain: Domain, schemact: Schemact,
+                       codeBucketName: String, jarFileName: String, staticWebsiteBucketName: String,
                        functionRole: CfnRole) : CfnUrl {
         val function: CfnFunction =
             CfnFunction.Builder.create(this, "${id}Function")
@@ -62,10 +74,11 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
                         .variables(environmentVariables(function, staticWebsiteBucketName))
                         .build()
                 )
-                .handler("${handlerFullClassName(schemact = schemact, domain=domain, id=id)}")
+                .handler("${handlerFullClassName(schemact = schemact, module=module, domain=domain, id=id)}")
                 .memorySize(1024)
                 .role(functionRole.getAttrArn())
-                .runtime("java17")
+                .runtime(functionRuntime(module))
+                .architectures(listOf("arm64"))
                 .timeout(30)
                 .build()
 

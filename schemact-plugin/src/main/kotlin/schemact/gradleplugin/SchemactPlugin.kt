@@ -117,7 +117,7 @@ class SchemactPlugin : Plugin<Project>  {
             project.tasks.create("printId2Modules") {
                 it.group = "${TASK_GROUP_NAME}_debug"
                 it.actions.add {
-                    printId2Modules(extension.schemact.modules)
+                    printId2Modules(project, extension.schemact)
                 }
             }
             extension.module?.let {
@@ -148,7 +148,14 @@ class SchemactPlugin : Plugin<Project>  {
 }
 
 fun moduleToJars(project:Project, schemact: Schemact) : Map<Module, File> =
-    schemact.modules.associate { Pair(it, File("${project.projectDir}/${it.name}/build/libs/${packagedJarName(it)}")) }
+    schemact.modules.associate { Pair(it, File("${project.projectDir}/${it.name}/${moduleToBinarySubPath(it)}")) }
+
+fun moduleToBinarySubPath(module: Module) =
+    when (module.type) {
+        Module.Type.StandaloneFunction -> "build/libs/${packagedJarName(module)}"
+        Module.Type.GoStandaloneFunction -> "bin/${packagedGoZipName(module)}"
+        else -> throw RuntimeException("module ${module.name} has unsupported type ${module.type}")
+    }
 
 
 fun createPackageFunctionsTask(project: Project, module: Module) {
@@ -173,11 +180,13 @@ fun createPackageFunctionsTask(project: Project, module: Module) {
 }
 
 fun packagedJarName(module: Module)  = "${module.name}-${module.version}-schemact-aws-lambda.jar"
+fun packagedGoZipName(module: Module)  = "${module.name}-${module.version}-schemact-aws-lambda.zip"
 
-fun printId2Modules( modules: List<Module>) {
+
+fun printId2Modules(project: Project, schemact: Schemact) {
     // val sourceSet = sourceSets.create("schemactgen")
-    modules.forEach {
-            println("${it.name} => ${packagedJarName(it)}")
+    moduleToJars(project, schemact) .forEach {
+            println("${it.key.name} => ${it.value.absolutePath}")
      }
 }
 
