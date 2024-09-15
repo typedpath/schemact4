@@ -41,9 +41,11 @@ class SchemactPlugin : Plugin<Project>  {
 
             val deployCodeTaskName = "${deployment.subdomain}_deployCode"
 
+            val groupPrefix = "${TASK_GROUP_NAME}_depoyment_"
+
             if (deployCodeAllowed)
                   project.tasks.create(deployCodeTaskName) {
-                    it.group = "${TASK_GROUP_NAME}_${deployment.subdomain}"
+                    it.group = "${groupPrefix}${deployment.subdomain}"
                     it.actions.add {
                         deployCodeCdk(domain, deployment, moduleToJars)
                     }
@@ -57,7 +59,7 @@ class SchemactPlugin : Plugin<Project>  {
             val deployInfrastructureTaskName = "${deployment.subdomain}_deployInfrastructure"
 
             if (deployInfrastructureAllowed) project.tasks.create(deployInfrastructureTaskName) {
-                it.group = "${TASK_GROUP_NAME}_${deployment.subdomain}"
+                it.group = "${groupPrefix}${deployment.subdomain}"
                 it.actions.add {
                     deployHostCdk(
                         domain = domain,
@@ -73,7 +75,7 @@ class SchemactPlugin : Plugin<Project>  {
             val deployUiCodeTaskName = "${deployment.subdomain}_deployUiCode"
 
             if (uiCodeLocation != null) project.tasks.create(deployUiCodeTaskName) {
-                it.group = "${TASK_GROUP_NAME}_${deployment.subdomain}"
+                it.group = "${groupPrefix}${deployment.subdomain}"
                 it.actions.add {
                     deployUiCode(domain, deployment, uiCodeLocation)
                 }
@@ -82,7 +84,7 @@ class SchemactPlugin : Plugin<Project>  {
             if (deployCodeAllowed && deployInfrastructureAllowed ) {
                 val taskName = "${deployment.subdomain}_buildAndDeploy"
                 val task = project.tasks.create(taskName) {
-                    it.group = "${TASK_GROUP_NAME}_${deployment.subdomain}"
+                    it.group = "${groupPrefix}${deployment.subdomain}"
                     it.actions.add {
                         deployCodeCdk(domain, deployment, moduleToJars)
                         deployHostCdk(
@@ -103,7 +105,7 @@ class SchemactPlugin : Plugin<Project>  {
 
         project.afterEvaluate {
 
-            extension.schemact.domains[0].deployments.forEach {
+            if (extension.module==null) extension.schemact.domains[0].deployments.forEach {
                 createTasksFor(it)
             }
 
@@ -123,11 +125,22 @@ class SchemactPlugin : Plugin<Project>  {
             extension.module?.let {
                 val functions = it.functions
                 if (functions.isNotEmpty()) {
-                    GenSourceTask.createGenSourceTask(project=project, schemact=extension.schemact,
+                    println("gen code for module ${it.name}")
+                    GenSourceTask.createGenKotlinSourceTask(project=project, schemact=extension.schemact,
                         domain=extension.schemact.domains[0], module = it, staticWebSiteToSourceRoot=extension.staticWebSiteToSourceRoot)
                     createPackageFunctionsTask(project, it)
                 }
             }
+            // go tasks are top level
+            if (extension.module==null) {
+                extension.schemact.modules.filter{ it.type==Module.Type.GoStandaloneFunction }
+                    .forEach {
+                        GenSourceTask.createGenGoSourceTask(project=project, schemact=extension.schemact,
+                            domain=extension.schemact.domains[0], module = it, staticWebSiteToSourceRoot=extension.staticWebSiteToSourceRoot)
+                    }
+            }
+
+
 
             val buildUiCodeTaskName = "buildUiCodeTODOfixthis"
 
@@ -160,7 +173,7 @@ fun moduleToBinarySubPath(module: Module) =
 
 fun createPackageFunctionsTask(project: Project, module: Module) {
     val packageCodeTask = project.tasks.create(PACKAGE_CODE_MODULE_TASK_NAME, Jar::class.java) { task->
-        task.group = TASK_GROUP_NAME
+        task.group = "${TASK_GROUP_NAME}_module_${module.name}"
         task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
         task.description = "bundles the functions into a jar"
         //task.archiveClassifier.set("${TASK_GROUP_NAME}-aws-lambda")

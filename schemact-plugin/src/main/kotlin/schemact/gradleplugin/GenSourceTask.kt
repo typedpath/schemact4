@@ -12,7 +12,7 @@ import schemact.gradleplugin.aws.CreateSourceCode.createSourceCode
 import java.io.File
 
 object GenSourceTask {
-    fun createGenSourceTask(
+    fun createGenKotlinSourceTask(
         project: Project, schemact: Schemact, domain: Domain, module: Module,
         staticWebSiteToSourceRoot: Map<StaticWebsite, File>?
     ) {
@@ -33,7 +33,7 @@ object GenSourceTask {
         mainSourceSet.kotlin.srcDir(sourceGenDir)
         File(sourceGenDir).mkdirs()
         val genTask = project.tasks.create("genCode") { task ->
-            task.group = TASK_GROUP_NAME
+            task.group = "${TASK_GROUP_NAME}_module_${module.name}"
             task.actions.add {
                 val mainKotlinSourceDir =
                     project.extensions.getByType(KotlinJvmProjectExtension::class.java).sourceSets.filter {
@@ -135,4 +135,19 @@ object GenSourceTask {
 
         return functionsToStaticWebsites
     }
+
+    fun createGenGoSourceTask(
+        project: Project, schemact: Schemact, domain: Domain, module: Module,
+        staticWebSiteToSourceRoot: Map<StaticWebsite, File>?
+    ) {
+        System.out.println("createGenGoSourceTask")
+        val genTask = project.tasks.create("genGoCode") { task ->
+            task.group = TASK_GROUP_NAME
+            task.actions.add {
+                System.out.println("createGenGoSourceTask")
+            }
+        }
+    }
+
+
 }
