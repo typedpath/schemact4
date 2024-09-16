@@ -3,7 +3,8 @@ package schemact.domain
 open class PrimitiveType(name: String, description: String,
                          val kotlinName: String,
                          var sqlType: String= "",
-                         var typescriptName: String=""
+                         var typescriptName: String="",
+                         var goName: String = ""
                          )
   : Entity( name=name, description = description, isValueType = true) {
   }
@@ -12,6 +13,7 @@ open class StringType(val maxLength: Int) : PrimitiveType(name="String(${maxLeng
     kotlinName = "String",
     typescriptName = "string",
     sqlType = "TEXT",
+    goName="string",
     description = "String maxlength " + maxLength
 )
 
@@ -19,6 +21,7 @@ class FloatType() : PrimitiveType(name="Float",
     kotlinName = "Float",
     typescriptName = "number",
     sqlType = "NUMBER",
+    goName = "float32",
     description = "Float"
 )
 
@@ -26,6 +29,7 @@ class BooleanType() : PrimitiveType(name="Bool",
     kotlinName = "Boolean",
     typescriptName = "boolean",
     sqlType = "int???",
+    goName = "bool",
     description = "Boolean"
 )
 
@@ -33,6 +37,7 @@ class IntType() : PrimitiveType(name="Int",
     kotlinName = "Int",
     typescriptName = "number",
     sqlType = "int???",
+    goName = "int32",
     description = "Integer"
 )
 
