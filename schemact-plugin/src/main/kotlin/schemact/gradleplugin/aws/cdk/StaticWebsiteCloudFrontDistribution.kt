@@ -119,7 +119,7 @@ object CreateWebsiteResourcesCloudFrontDistribution {
                 .build()
         )
         .minTtl(0)
-        .pathPattern("/functions/$id")
+        .pathPattern("/$id")
         .targetOriginId(id)
         .viewerProtocolPolicy("allow-all")
         .build()

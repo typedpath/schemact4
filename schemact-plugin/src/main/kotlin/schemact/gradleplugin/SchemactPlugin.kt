@@ -8,6 +8,7 @@ import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.jvm.tasks.Jar
 import schemact.domain.*
 import schemact.gradleplugin.DebugInfo.printProjectInfo
+import schemact.gradleplugin.TaskNaming.groupName
 import schemact.gradleplugin.aws.UiCode.buildUiCode
 import schemact.gradleplugin.aws.UiCode.deployUiCode
 import schemact.gradleplugin.aws.cdk.DeployHostCdk.deployHostCdk
@@ -41,11 +42,11 @@ class SchemactPlugin : Plugin<Project>  {
 
             val deployCodeTaskName = "${deployment.subdomain}_deployCode"
 
-            val groupPrefix = "${TASK_GROUP_NAME}_depoyment_"
+            val groupName = groupName(deployment)
 
             if (deployCodeAllowed)
                   project.tasks.create(deployCodeTaskName) {
-                    it.group = "${groupPrefix}${deployment.subdomain}"
+                    it.group = groupName
                     it.actions.add {
                         deployCodeCdk(domain, deployment, moduleToJars)
                     }
@@ -59,7 +60,7 @@ class SchemactPlugin : Plugin<Project>  {
             val deployInfrastructureTaskName = "${deployment.subdomain}_deployInfrastructure"
 
             if (deployInfrastructureAllowed) project.tasks.create(deployInfrastructureTaskName) {
-                it.group = "${groupPrefix}${deployment.subdomain}"
+                it.group = groupName
                 it.actions.add {
                     deployHostCdk(
                         domain = domain,
@@ -75,7 +76,7 @@ class SchemactPlugin : Plugin<Project>  {
             val deployUiCodeTaskName = "${deployment.subdomain}_deployUiCode"
 
             if (uiCodeLocation != null) project.tasks.create(deployUiCodeTaskName) {
-                it.group = "${groupPrefix}${deployment.subdomain}"
+                it.group = groupName
                 it.actions.add {
                     deployUiCode(domain, deployment, uiCodeLocation)
                 }
@@ -84,7 +85,7 @@ class SchemactPlugin : Plugin<Project>  {
             if (deployCodeAllowed && deployInfrastructureAllowed ) {
                 val taskName = "${deployment.subdomain}_buildAndDeploy"
                 val task = project.tasks.create(taskName) {
-                    it.group = "${groupPrefix}${deployment.subdomain}"
+                    it.group = groupName
                     it.actions.add {
                         deployCodeCdk(domain, deployment, moduleToJars)
                         deployHostCdk(
@@ -124,7 +125,7 @@ class SchemactPlugin : Plugin<Project>  {
             }
             extension.module?.let {
                 val functions = it.functions
-                if (functions.isNotEmpty()) {
+                if (functions.isNotEmpty() || it.functionClients.isNotEmpty()) {
                     println("gen code for module ${it.name}")
                     GenSourceTask.createGenKotlinSourceTask(project=project, schemact=extension.schemact,
                         domain=extension.schemact.domains[0], module = it, staticWebSiteToSourceRoot=extension.staticWebSiteToSourceRoot)
@@ -135,7 +136,7 @@ class SchemactPlugin : Plugin<Project>  {
             if (extension.module==null) {
                 extension.schemact.modules.filter{ it.type==Module.Type.GoStandaloneFunction }
                     .forEach {
-                        GenSourceTask.createGenGoSourceTask(project=project, schemact=extension.schemact,
+                        GenGoSourceTask.createGenGoSourceTask(project=project, schemact=extension.schemact,
                             domain=extension.schemact.domains[0], module = it, staticWebSiteToSourceRoot=extension.staticWebSiteToSourceRoot)
                     }
             }
@@ -166,14 +167,14 @@ fun moduleToJars(project:Project, schemact: Schemact) : Map<Module, File> =
 fun moduleToBinarySubPath(module: Module) =
     when (module.type) {
         Module.Type.StandaloneFunction -> "build/libs/${packagedJarName(module)}"
-        Module.Type.GoStandaloneFunction -> "bin/${packagedGoZipName(module)}"
+        Module.Type.GoStandaloneFunction -> "schemactgosourcegen/bin/${packagedGoZipName(module)}"
         else -> throw RuntimeException("module ${module.name} has unsupported type ${module.type}")
     }
 
 
 fun createPackageFunctionsTask(project: Project, module: Module) {
     val packageCodeTask = project.tasks.create(PACKAGE_CODE_MODULE_TASK_NAME, Jar::class.java) { task->
-        task.group = "${TASK_GROUP_NAME}_module_${module.name}"
+        task.group = groupName(module)
         task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
         task.description = "bundles the functions into a jar"
         //task.archiveClassifier.set("${TASK_GROUP_NAME}-aws-lambda")

@@ -3,11 +3,12 @@ package schemact.gradleplugin.aws.functiontemplates
 import schemact.domain.Connection
 import schemact.domain.Entity
 import schemact.domain.Function
+import schemact.domain.Module
 import schemact.domain.PrimitiveType
 
 object FunctionTypescriptClientTemplate {
     fun functionTypescriptClientTemplate(
-        packageName: String, function: Function, argsFromParams: List<Connection>,
+        packageName: String, module: Module, function: Function, argsFromParams: List<Connection>,
         argsFromBody: List<Connection>
     ): String {
         val allArgs = argsFromParams.toMutableList()
@@ -18,7 +19,7 @@ import axios from "axios";
 
 //namespace $packageName {
 
-const urlPath = "/functions/${function.name}" 
+const urlPath = "/${module.name}/${function.name}" 
 
 export default async function ${function.name}(${
             allArgs.joinToString(", ") {

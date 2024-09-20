@@ -1,14 +1,17 @@
 package schemact.gradleplugin
 
 import org.gradle.api.Project
+import org.gradle.api.UnknownDomainObjectException
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
-import schemact.domain.Domain
+import schemact.domain.*
 import schemact.domain.Function
-import schemact.domain.Module
-import schemact.domain.Schemact
-import schemact.domain.StaticWebsite
+import schemact.gradleplugin.KotlinFunctionClientDependencies.kotlinFunctionClientDependencies
+import schemact.gradleplugin.TaskNaming.groupName
 import schemact.gradleplugin.aws.AwsDependencies.awsLambdaDependencies
 import schemact.gradleplugin.aws.CreateSourceCode.createSourceCode
+import schemact.gradleplugin.golang.templates.Makefile
+import schemact.gradleplugin.golang.templates.goMod
+import schemact.gradleplugin.golang.templates.mainGo
 import java.io.File
 
 object GenSourceTask {
@@ -23,17 +26,27 @@ object GenSourceTask {
                 println("adding dependency $it")
                 deps.add(project.getDependencies().create(it))
             }
+            if (module.functionClients.filter { it.language==Language.Kotlin }.isNotEmpty()) {
+                kotlinFunctionClientDependencies.forEach {
+                    println("adding dependency $it")
+                    deps.add(project.getDependencies().create(it))
+                }
+            }
         }
 
-        val mainSourceSet =
+        val kotlinJvmProjectExtension =  try {
             project.extensions.getByType(KotlinJvmProjectExtension::class.java)
-                .sourceSets.getByName("main")
+        } catch (ex: UnknownDomainObjectException) {
+            throw RuntimeException("cant find KotlinJvmProjectExtension - try referencing plugin kotlin(\"jvm\")", ex)
+        }
+
+        val mainSourceSet = kotlinJvmProjectExtension.sourceSets.getByName("main")
         val sourceGenDir = "${project.buildDir}/schemactsourcegen/kotlin"
 
         mainSourceSet.kotlin.srcDir(sourceGenDir)
         File(sourceGenDir).mkdirs()
         val genTask = project.tasks.create("genCode") { task ->
-            task.group = "${TASK_GROUP_NAME}_module_${module.name}"
+            task.group = groupName(module)
             task.actions.add {
                 val mainKotlinSourceDir =
                     project.extensions.getByType(KotlinJvmProjectExtension::class.java).sourceSets.filter {
@@ -134,19 +147,6 @@ object GenSourceTask {
 
 
         return functionsToStaticWebsites
-    }
-
-    fun createGenGoSourceTask(
-        project: Project, schemact: Schemact, domain: Domain, module: Module,
-        staticWebSiteToSourceRoot: Map<StaticWebsite, File>?
-    ) {
-        System.out.println("createGenGoSourceTask")
-        val genTask = project.tasks.create("genGoCode") { task ->
-            task.group = TASK_GROUP_NAME
-            task.actions.add {
-                System.out.println("createGenGoSourceTask")
-            }
-        }
     }
 
 

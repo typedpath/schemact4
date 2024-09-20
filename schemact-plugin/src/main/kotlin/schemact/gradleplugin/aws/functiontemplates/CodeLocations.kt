@@ -1,6 +1,8 @@
 package schemact.gradleplugin.aws.functiontemplates
 import org.gradle.configurationcache.extensions.capitalized
 import schemact.domain.Domain
+import schemact.domain.Entity
+import schemact.domain.Function
 import schemact.domain.Module
 import schemact.domain.Schemact
 
@@ -24,5 +26,7 @@ object CodeLocations {
         packageTree.add(schemact.name)
         return packageTree
     }
+
+    fun dataClassName(function: Function, entity: Entity) = "${function.name.capitalized()}_${entity.name}"
 
 }

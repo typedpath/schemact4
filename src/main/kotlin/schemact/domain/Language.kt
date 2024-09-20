@@ -1,5 +1,5 @@
 package schemact.domain
 
 enum class Language {
-    Typescript
+    Typescript, Kotlin
 }

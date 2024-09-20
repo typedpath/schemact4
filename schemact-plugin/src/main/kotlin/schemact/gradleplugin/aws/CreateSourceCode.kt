@@ -1,7 +1,9 @@
 package schemact.gradleplugin.aws
 
+import org.gradle.configurationcache.extensions.capitalized
 import schemact.domain.*
 import schemact.domain.Function
+import schemact.gradleplugin.RestPolicy
 import schemact.gradleplugin.aws.functiontemplates.*
 import schemact.gradleplugin.aws.functiontemplates.FunctionTypescriptClientTemplate.functionTypescriptClientTemplate
 import java.io.File
@@ -16,6 +18,8 @@ object CreateSourceCode {
         functionToStaticWebsite: Map<Function, List<StaticWebsite>>,
         staticWebSiteToSourceRoot: Map<StaticWebsite, File>
     ) {
+        val packageTree = CodeLocations.packageTree(domain, schemact)
+
         module.functions.forEach {
             println("creating service code for function ${it.name} + client code for these websites: " +
                     "${
@@ -27,23 +31,43 @@ object CreateSourceCode {
                 function = it,
                 module = module,
                 genDir = genDir,
-                domain = domain,
-                schemact = schemact,
                 mainKotlinSourceDir = mainKotlinSourceDir,
+                packageTree = packageTree,
                 staticWebSites = functionToStaticWebsite.get(it) ?: emptyList(),
                 staticWebSiteToSourceRoot = staticWebSiteToSourceRoot
             )
         }
+        module.functionClients.forEach {
+            if (it.language!=Language.Kotlin) throw RuntimeException("module ${module.name} has unsupported language ${it.language}")
+            createKotlinClientFunctionCode(functionClient = it, schemact=schemact, module = module,
+                genDir = genDir, packageTree=packageTree)
+        }
+    }
 
-
+    private fun createKotlinClientFunctionCode(
+        functionClient: FunctionClient,
+        schemact: Schemact,
+        module: Module,
+        genDir: File,
+        packageTree: List<String>
+        ) {
+          val serviceModule = schemact.findModule(functionClient.function)
+          val packageClientTree = packageTree.plus(serviceModule.name).plus("client")
+          val packageName = packageClientTree.joinToString (".")
+          val clientClassName = "${functionClient.function.name.capitalized()}Call"
+          val fileName = "${clientClassName.capitalized()}.kt"
+          val directory = File("$genDir/${packageClientTree.joinToString("/")}")
+          directory.mkdirs()
+          File(directory, fileName).printWriter().use { writer ->
+              writer.write(kotlinRestClient(serviceModule, functionClient.function, packageName, clientClassName))
+          }
     }
 
     private fun createFunctionCode(
         function: Function,
         module: Module,
         genDir: File,
-        domain: Domain,
-        schemact: Schemact,
+        packageTree: List<String>,
         mainKotlinSourceDir: File,
         staticWebSites: List<StaticWebsite>,
         staticWebSiteToSourceRoot: Map<StaticWebsite, File>
@@ -51,28 +75,13 @@ object CreateSourceCode {
         println("creating code for function ${function.name} in ${genDir.absolutePath}")
 
         genDir.mkdirs()
-        val packageTree = CodeLocations.packageTree(domain, schemact)
         val packageName = packageTree.joinToString(".")
-
 
         // TODO non string args
         val implClassName = CodeLocations.implClassName(function.name)
         val handlerClassName = CodeLocations.handlerClassName(function.name)
-        val paramType = function.paramType
-        // assign args from infrastructure
-        val argsFromEnvironment = paramType.fieldsFromInfrastructure()
+        val restPolicy = RestPolicy(function.paramType)
 
-        fun argIsTooBigForParam(paramType: Entity) = paramType is StringType && paramType.maxLength > 1000
-        // assign small args to params
-        val argsFromParams = paramType.connections.filter {
-            val subParam = it.entity2
-            !subParam.isFromInfrastructure && subParam is PrimitiveType && !argIsTooBigForParam(subParam)
-        }
-        // assign big args to body
-        val argsFromBody = paramType.connections.filter {
-            val subParam = it.entity2
-            subParam !is PrimitiveType ||argIsTooBigForParam(subParam)
-        }
 
         generateServiceCode(
             function,
@@ -82,11 +91,11 @@ object CreateSourceCode {
             packageName,
             implClassName,
             handlerClassName,
-            argsFromEnvironment,
-            argsFromParams,
-            argsFromBody,
+            restPolicy,
             mainKotlinSourceDir
         )
+
+
 
         staticWebSites.forEach {
             val sourceRootLocation = staticWebSiteToSourceRoot.get(it)
@@ -96,15 +105,16 @@ object CreateSourceCode {
             generateClientCode(
                 sourceRoot = sourceRootLocation,
                 packageName = packageName,
+                module=module,
                 function = function,
-                argsFromParams = argsFromParams, argsFromBody = argsFromBody
+                argsFromParams = restPolicy.argsFromParams, argsFromBody = restPolicy.argsFromBody
             )
         }
 
     }
 
     private fun generateClientCode(
-        sourceRoot: File, packageName: String, function: Function, argsFromParams: List<Connection>,
+        sourceRoot: File, packageName: String, module:Module, function: Function, argsFromParams: List<Connection>,
         argsFromBody: List<Connection>
     ) {
         val file = File(sourceRoot, "functions/${function.name}.ts")
@@ -112,6 +122,7 @@ object CreateSourceCode {
         file.writeText(
             functionTypescriptClientTemplate(
                 packageName = packageName, function = function,
+                module=module,
                 argsFromParams = argsFromParams, argsFromBody = argsFromBody
             )
         )
@@ -125,16 +136,14 @@ object CreateSourceCode {
         packageName: String,
         implClassName: String,
         handlerClassName: String,
-        argsFromEnvironment: List<Connection>,
-        argsFromParams: List<Connection>,
-        argsFromBody: List<Connection>,
+        restPolicy: RestPolicy,
         mainKotlinSourceDir: File
     ) {
         // find all the entities in the arguments
         // assume all definitions are nested
         // generate source
-        val allTopLevelConnections = argsFromBody.toMutableList()
-        allTopLevelConnections.addAll(argsFromParams)
+        val allTopLevelConnections = restPolicy.argsFromBody.toMutableList()
+        allTopLevelConnections.addAll(restPolicy.argsFromParams)
         //assume argFrom environment are defined elsewhere
         val complexTopLevelTypes = allTopLevelConnections.map { it.entity2 }.filter { it !is PrimitiveType }.toSet()
         println("generateServiceCode complexTopLevelTypes for function ${function.name}: ${complexTopLevelTypes.joinToString(","){it.name}}")
@@ -165,9 +174,9 @@ object CreateSourceCode {
                 packageName = packageName, function = function,
                 implClassName = implClassName,
                 handlerClassName = handlerClassName,
-                argsFromEnvironment = argsFromEnvironment,
-                argsFromParams = argsFromParams,
-                argsFromBody = argsFromBody
+                argsFromEnvironment = restPolicy.argsFromEnvironment,
+                argsFromParams = restPolicy.argsFromParams,
+                argsFromBody = restPolicy.argsFromBody
             )
         } else {
             throw RuntimeException("not supporting genSource module type ${module.type}")

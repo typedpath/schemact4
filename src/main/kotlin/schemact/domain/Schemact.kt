@@ -20,6 +20,8 @@ class Schemact(val name: String, val domains: List<Domain> = mutableListOf(),
         functions.add(function)
     }
 
+    fun findModule(function: Function) : Module = modules.first { it.functions.contains(function) }
+
     init { init() }
 
 }

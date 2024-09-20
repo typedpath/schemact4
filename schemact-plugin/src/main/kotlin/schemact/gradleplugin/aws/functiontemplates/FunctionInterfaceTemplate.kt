@@ -1,9 +1,7 @@
 package schemact.gradleplugin.aws.functiontemplates
 
-import schemact.domain.ConnectionType
-import schemact.domain.Entity
+import schemact.domain.*
 import schemact.domain.Function
-import schemact.domain.PrimitiveType
 import java.time.LocalDateTime
 
 fun functionInterface(`package`: String, functionId: String, interfaceName: String, function: Function) = """
@@ -21,22 +19,24 @@ fun dataClassCode(functionId: String,entity: Entity, className: String) : String
         """data class $className(${topLevelFieldsAsArgs(functionId, entity)})""".trimIndent()
     }
 
-fun topLevelFieldsAsArgs(functionId: String, entity: Entity) : String {
-    val unsupportedFields =  entity.connections.filter {
+fun topLevelFieldsAsArgs(functionId: String, entity: Entity) : String =
+    topLevelFieldsAsArgs(functionId, entity.connections)
+
+
+fun topLevelFieldsAsArgs(functionId: String, connections: List<Connection>) : String {
+    val unsupportedFields =  connections.filter {
         it.type!= ConnectionType.Contains //|| it.entity2 !is PrimitiveType
     }
 
     if (unsupportedFields.size>0) {
         throw RuntimeException("these fields are not contained ${unsupportedFields.map
-         {"$functionId.${it.name}"}.joinToString(", ")}")
+        {"$functionId.${it.name}"}.joinToString(", ")}")
     }
 
-    return entity.connections.map {"${it.name}: ${
+    return connections.map {"${it.name}: ${
         if ( it.entity2 is PrimitiveType) { (it.entity2 as PrimitiveType).kotlinName } else { it.entity2.name }
     }"}.joinToString (", ")
-
 }
-
 
 interface Sample {
     data class Params(val svg: String, val s3Bucket: String)

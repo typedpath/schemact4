@@ -11,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 ${dataClassSanPackage(entity, "")}    
 """.trimIndent()
 
-private fun dataClassSanPackage(entity: Entity, indent: String) : String {
+fun dataClassSanPackage(entity: Entity, indent: String) : String {
 val complexTypes = entity.connections.map{it.entity2}.filter {it !is PrimitiveType}
 return """
 ${indent}data class ${entity.name}(${asArgs(entity)}) ${if (complexTypes.isNotEmpty()) {"""{ ${
