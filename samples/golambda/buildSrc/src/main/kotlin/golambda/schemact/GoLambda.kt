@@ -19,10 +19,34 @@ val helloWorldFunction = Function("helloWorld",
     returnType = StringType(300)
 )
 
+val helloWorldExtraFunction = Function("helloWorldExtra",
+    description = "just a test",
+    paramType = Entity(name="param", description="Params" ) {
+        containsOne(name="protagonist", type = Entity(name = "name", "a persons name") {
+            string("firstName", maxLength = 100)
+            string("middleNames", maxLength = 500, optional = true)
+            string("lastName", maxLength = 100)
+        })
+    },
+    returnType = Entity(name = "GreetingPolicy", "Greeting Policy") {
+        string(name ="hello", maxLength = 500)
+        string(name= "goodbye", maxLength = 500)
+    }
+)
+
+
 val functionsModule = Module(name= "gofunctions",
-    version = "1.0.03-SNAPSHOT",
+    version = "1.0.14-SNAPSHOT",
     type = Module.Type.GoStandaloneFunction,
-    functions = mutableListOf(helloWorldFunction))
+    functions = mutableListOf(helloWorldFunction, helloWorldExtraFunction))
+
+val externalTestModule = Module(name= "externaltest",
+    version = "1.0.04-SNAPSHOT",
+    type = Module.Type.StandaloneFunction,
+    ) {
+       client(helloWorldFunction, Language.Kotlin)
+       client(helloWorldExtraFunction, Language.Kotlin)
+}
 
 val golambda = Schemact(
 name = "golambda",

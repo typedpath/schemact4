@@ -1,0 +1,6 @@
+Makefile
+main.go
+go.mod
+go.sum
+module/gofunctionsInt.go
+bingo

@@ -7,4 +7,4 @@ pluginManagement {
         mavenLocal()
     }
 }
-
+include("externaltest")
