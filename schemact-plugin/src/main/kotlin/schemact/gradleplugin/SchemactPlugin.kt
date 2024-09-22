@@ -99,7 +99,7 @@ class SchemactPlugin : Plugin<Project>  {
                         }
                     }
                 }
-                val moduleDependsOn = schemact.modules.map {":${it.name}:$PACKAGE_CODE_MODULE_TASK_NAME"}
+                val moduleDependsOn = schemact.modules.filter { it.type!=Module.Type.GoStandaloneFunction }.map {":${it.name}:$PACKAGE_CODE_MODULE_TASK_NAME"}
                 task.dependsOn(moduleDependsOn)
             }
         }
@@ -125,7 +125,7 @@ class SchemactPlugin : Plugin<Project>  {
             }
             extension.module?.let {
                 val functions = it.functions
-                if (functions.isNotEmpty() || it.functionClients.isNotEmpty()) {
+                if (it.type!=Module.Type.GoStandaloneFunction && (functions.isNotEmpty() || it.functionClients.isNotEmpty())) {
                     println("gen code for module ${it.name}")
                     GenSourceTask.createGenKotlinSourceTask(project=project, schemact=extension.schemact,
                         domain=extension.schemact.domains[0], module = it, staticWebSiteToSourceRoot=extension.staticWebSiteToSourceRoot)
