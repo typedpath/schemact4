@@ -19,7 +19,7 @@ import kotlin.io.path.Path
 
 
 const val TASK_GROUP_NAME = "schemact"
-private const val PACKAGE_CODE_MODULE_TASK_NAME = "packageCode"
+private fun packageCodeTaskName(module: Module) : String = "${module.name}_packageCode"
 
 class SchemactPlugin : Plugin<Project>  {
 
@@ -99,7 +99,7 @@ class SchemactPlugin : Plugin<Project>  {
                         }
                     }
                 }
-                val moduleDependsOn = schemact.modules.filter { it.type!=Module.Type.GoStandaloneFunction }.map {":${it.name}:$PACKAGE_CODE_MODULE_TASK_NAME"}
+                val moduleDependsOn = schemact.modules.filter { it.type!=Module.Type.GoStandaloneFunction }.map {":${it.name}:${packageCodeTaskName(it)}"}
                 task.dependsOn(moduleDependsOn)
             }
         }
@@ -173,7 +173,7 @@ fun moduleToBinarySubPath(module: Module) =
 
 
 fun createPackageFunctionsTask(project: Project, module: Module) {
-    val packageCodeTask = project.tasks.create(PACKAGE_CODE_MODULE_TASK_NAME, Jar::class.java) { task->
+    val packageCodeTask = project.tasks.create(packageCodeTaskName(module), Jar::class.java) { task->
         task.group = groupName(module)
         task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
         task.description = "bundles the functions into a jar"

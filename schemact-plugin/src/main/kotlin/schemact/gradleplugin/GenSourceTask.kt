@@ -45,7 +45,7 @@ object GenSourceTask {
 
         mainSourceSet.kotlin.srcDir(sourceGenDir)
         File(sourceGenDir).mkdirs()
-        val genTask = project.tasks.create("genCode") { task ->
+        val genTask = project.tasks.create("${module.name}_genCode") { task ->
             task.group = groupName(module)
             task.actions.add {
                 val mainKotlinSourceDir =
