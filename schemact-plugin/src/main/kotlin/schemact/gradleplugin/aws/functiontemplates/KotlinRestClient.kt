@@ -26,11 +26,12 @@ import io.ktor.serialization.kotlinx.json.*
 //import kotlinx.serialization.Serializable
 
 object  ${className} {  
-     
+   
 ${restPolicy.externalArgs.filter { it.entity2 !is PrimitiveType }.map{
-        dataClassSanPackageSerializable(function, it.entity2, "   ")
-    }.joinToString (System.lineSeparator())}     
-     
+        dataClassSanPackageSerializable(function, it.entity2, "")
+    }.joinToString (System.lineSeparator())}   
+${if (function.returnType !is PrimitiveType) dataClassSanPackageSerializable(function, function.returnType, "") else ""}     
+      
 suspend fun ${ function.name }(${ restPolicy.externalArgs.map { "${it.name} : ${typeName(function, it.entity2)}" }.joinToString (", ")}, domainRoot: String = "",client: HttpClient=HttpClient(CIO) {
     install(HttpTimeout) {
         requestTimeoutMillis = 20000
@@ -39,7 +40,7 @@ suspend fun ${ function.name }(${ restPolicy.externalArgs.map { "${it.name} : ${
     install(ContentNegotiation) {
         json()
     }
-    }) : String  {
+    }) : ${typeName(function, function.returnType)}  {
     val url = "${'$'}domainRoot/${module.name}/${function.name}"
     ${if (restPolicy.argsFromBody.isNotEmpty()) """
     @Serializable data class Body(${restPolicy.argsFromBody.map { "val ${it.name}: ${dataClassName(function, it.entity2)}" }.joinToString (", ")})    
@@ -55,11 +56,10 @@ ${restPolicy.argsFromParams.map{"""
                 setBody(body)
                 contentType(ContentType.Application.Json)
             }
-   val strBody = response.bodyAsText()
-   return strBody         
+   return response.body<${typeName(function, function.returnType)}>()
 }
 }
-""".trimIndent()
+"""
 }
 
 fun typeName(function: Function, entity: Entity) : String {
