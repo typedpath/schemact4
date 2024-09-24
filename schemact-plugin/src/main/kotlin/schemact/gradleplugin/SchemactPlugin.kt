@@ -168,6 +168,7 @@ fun moduleToBinarySubPath(module: Module) =
     when (module.type) {
         Module.Type.StandaloneFunction -> "build/libs/${packagedJarName(module)}"
         Module.Type.GoStandaloneFunction -> "schemactgosourcegen/bin/${packagedGoZipName(module)}"
+        Module.Type.SpringBootApplication -> "TODO moduleToBinarySubPath(${module.type})"
         else -> throw RuntimeException("module ${module.name} has unsupported type ${module.type}")
     }
 

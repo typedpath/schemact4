@@ -1,10 +1,7 @@
 package schemact.gradleplugin.aws.functiontemplates
 import org.gradle.configurationcache.extensions.capitalized
-import schemact.domain.Domain
-import schemact.domain.Entity
+import schemact.domain.*
 import schemact.domain.Function
-import schemact.domain.Module
-import schemact.domain.Schemact
 
 object CodeLocations {
     fun handlerFullClassName(schemact: Schemact, module:Module, domain: Domain, id: String) =
@@ -27,6 +24,15 @@ object CodeLocations {
         return packageTree
     }
 
-    fun dataClassName(function: Function, entity: Entity) = "${function.name.capitalized()}_${entity.name}"
+    fun dataClassName(function: Function, connection: Connection) : String =
+        if (connection.cardinality==Cardinality.OneToMany)
+        "List<${dataClassName(function, connection.entity2)}>"
+        else dataClassName(function, connection.entity2)
 
+    fun dataClassName(function: Function, entity: Entity) : String =
+        if (entity is PrimitiveType) {
+              entity.kotlinName
+        } else {
+            "${function.name.capitalized()}_${entity.name}"
+        }
 }

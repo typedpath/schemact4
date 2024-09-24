@@ -5,11 +5,15 @@ import schemact.domain.Function
 import schemact.domain.PrimitiveType
 import schemact.gradleplugin.aws.functiontemplates.CodeLocations.dataClassName
 
-fun dataClassSanPackageSerializable(function: Function?=null, entity: Entity, indent: String) : String {
+fun dataClassSanPackageSerializable(function: Function?=null, entity: Entity, indent: String, visited: MutableSet<Entity>) : String {
+if (visited.contains(entity)) {
+    return ""
+}
+visited.add(entity)
 val complexTypes = entity.connections.map{it.entity2}.filter {it !is PrimitiveType}
 return """
 ${indent} @Serializable data class ${if (function!=null) dataClassName(function, entity) else entity.name }(${asArgs(entity)}) ${if (complexTypes.isNotEmpty()) {"""{ ${
- complexTypes.joinToString { dataClassSanPackageSerializable(entity = it, indent = "$indent   ") }   
+ complexTypes.joinToString { dataClassSanPackageSerializable(entity = it, indent = "$indent   ", visited = visited) }   
 }${indent}}    
 """} else ""} 
 """

@@ -5,6 +5,7 @@ import schemact.domain.Module
 import schemact.gradleplugin.FunctionIdKey
 import schemact.gradleplugin.RestPolicy
 import schemact.gradleplugin.functionId
+import schemact.gradleplugin.golang.templates.Util.cardinalityToken
 import schemact.gradleplugin.golang.templates.Util.propertyTypeName
 import java.time.LocalDateTime
 
@@ -66,12 +67,12 @@ val function = it
 ${if (RestPolicy(function.paramType).argsFromBody.size>0)"""
         type ${function.name}_Body struct{ 
               ${RestPolicy(function.paramType).argsFromBody.map{ """ 
-              ${it.name.capitalized()} ${propertyTypeName(module, function, it.entity2)} `json:"${it.name}"`""".trimIndent()   }.joinToString (System.lineSeparator())}
+              ${it.name.capitalized()} ${cardinalityToken(it)}${propertyTypeName(module, function, it.entity2)} `json:"${it.name}"`""".trimIndent()   }.joinToString (System.lineSeparator())}
         }
         var body ${function.name}_Body 
         json.Unmarshal([]byte(r.Body), &body)  
  ${RestPolicy(function.paramType).argsFromBody.map{ """
-        var ${it.name} = body.${it.name.capitalized()}""".trimIndent()   }.joinToString ()}
+        var ${it.name} = body.${it.name.capitalized()}"""   }.joinToString (System.lineSeparator())}
 """ else 
 """""" }    
         var result, _ = ${it.name}Impl(${it.paramType.connections.map { it.name }.joinToString(", ")})

@@ -13,6 +13,11 @@ fun main(args: Array<String>) {
             val response = HelloWorldExtraCall.helloWorldExtra(
                 protagonist = HelloWorldExtraCall.HelloWorldExtra_name(firstName="Eric",
                     middleNames = "Authur", lastName = "Idle"),
+                aliases = listOf(HelloWorldExtraCall.HelloWorldExtra_name(firstName = "Eric",
+                    middleNames = "Crazy", lastName = "CrazyMan"),
+                    HelloWorldExtraCall.HelloWorldExtra_name(firstName = "Gerald",
+                        middleNames = "Geranimo", lastName = "Adams")
+                    ),
                 domainRoot = "https://golambda.testedsoftware.org"
             )
             val timeTaken = System.currentTimeMillis() - start

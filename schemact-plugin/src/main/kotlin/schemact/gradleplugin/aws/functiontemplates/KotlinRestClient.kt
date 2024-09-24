@@ -1,14 +1,13 @@
 package schemact.gradleplugin.aws.functiontemplates
 
-import schemact.domain.Entity
+import schemact.domain.*
 import schemact.domain.Function
-import schemact.domain.Module
-import schemact.domain.PrimitiveType
 import schemact.gradleplugin.RestPolicy
 import schemact.gradleplugin.aws.functiontemplates.CodeLocations.dataClassName
 
 fun kotlinRestClient(module: Module, function: Function, packageName: String, className: String) : String  {
     val restPolicy = RestPolicy(function.paramType)
+    val visited = mutableSetOf<Entity>()
     return """
 package ${packageName}
 import io.ktor.client.HttpClient
@@ -28,11 +27,11 @@ import io.ktor.serialization.kotlinx.json.*
 object  ${className} {  
    
 ${restPolicy.externalArgs.filter { it.entity2 !is PrimitiveType }.map{
-        dataClassSanPackageSerializable(function, it.entity2, "")
+        dataClassSanPackageSerializable(function, it.entity2, "", visited)
     }.joinToString (System.lineSeparator())}   
-${if (function.returnType !is PrimitiveType) dataClassSanPackageSerializable(function, function.returnType, "") else ""}     
+${if (function.returnType !is PrimitiveType) dataClassSanPackageSerializable(function, function.returnType, "", visited) else ""}     
       
-suspend fun ${ function.name }(${ restPolicy.externalArgs.map { "${it.name} : ${typeName(function, it.entity2)}" }.joinToString (", ")}, domainRoot: String = "",client: HttpClient=HttpClient(CIO) {
+suspend fun ${ function.name }(${ restPolicy.externalArgs.map { "${it.name} : ${argName(function, it)}" }.joinToString (", ")}, domainRoot: String = "",client: HttpClient=HttpClient(CIO) {
     install(HttpTimeout) {
         requestTimeoutMillis = 20000
         connectTimeoutMillis = 20000
@@ -43,7 +42,7 @@ suspend fun ${ function.name }(${ restPolicy.externalArgs.map { "${it.name} : ${
     }) : ${typeName(function, function.returnType)}  {
     val url = "${'$'}domainRoot/${module.name}/${function.name}"
     ${if (restPolicy.argsFromBody.isNotEmpty()) """
-    @Serializable data class Body(${restPolicy.argsFromBody.map { "val ${it.name}: ${dataClassName(function, it.entity2)}" }.joinToString (", ")})    
+    @Serializable data class Body(${restPolicy.argsFromBody.map { "val ${it.name}: ${dataClassName(function, it)}" }.joinToString (", ")})    
     val body = Body(${restPolicy.argsFromBody.map { "${it.name}= ${it.name}" }.joinToString (", ")})"""
     else """
     val body = ""    
@@ -61,6 +60,9 @@ ${restPolicy.argsFromParams.map{"""
 }
 """
 }
+
+fun argName(function: Function, connection: Connection) : String =
+        dataClassName(function, connection)
 
 fun typeName(function: Function, entity: Entity) : String {
     return if (entity is PrimitiveType) {entity.kotlinName}

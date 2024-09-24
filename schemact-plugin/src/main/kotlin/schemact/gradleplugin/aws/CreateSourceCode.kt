@@ -20,6 +20,10 @@ object CreateSourceCode {
     ) {
         val packageTree = CodeLocations.packageTree(domain, schemact)
 
+        if (module.type == Module.Type.SpringBootApplication) {
+            println("TODO handler for module type ${module.type}")
+        }
+
         module.functions.forEach {
             println("creating service code for function ${it.name} + client code for these websites: " +
                     "${
@@ -81,7 +85,6 @@ object CreateSourceCode {
         val implClassName = CodeLocations.implClassName(function.name)
         val handlerClassName = CodeLocations.handlerClassName(function.name)
         val restPolicy = RestPolicy(function.paramType)
-
 
         generateServiceCode(
             function,
@@ -169,24 +172,23 @@ object CreateSourceCode {
             )
         )
 
-        val handlerSource = if (module.type==Module.Type.StandaloneFunction) {
-             apiGatewayEventHandler(
-                packageName = packageName, function = function,
-                implClassName = implClassName,
-                handlerClassName = handlerClassName,
-                argsFromEnvironment = restPolicy.argsFromEnvironment,
-                argsFromParams = restPolicy.argsFromParams,
-                argsFromBody = restPolicy.argsFromBody
-            )
-        } else {
-            throw RuntimeException("not supporting genSource module type ${module.type}")
+        if (module.type==Module.Type.StandaloneFunction) {
+            val handlerSource =
+                apiGatewayEventHandler(
+                    packageName = packageName, function = function,
+                    implClassName = implClassName,
+                    handlerClassName = handlerClassName,
+                    argsFromEnvironment = restPolicy.argsFromEnvironment,
+                    argsFromParams = restPolicy.argsFromParams,
+                    argsFromBody = restPolicy.argsFromBody
+                )
+
+
+            val handlerSourceSubpath = "${packageTree.joinToString("/")}/${handlerClassName}.kt"
+            val handlerSourceFile = File(genDir, handlerSourceSubpath)
+            handlerSourceFile.parentFile.mkdirs()
+            handlerSourceFile.writeText(handlerSource)
         }
-
-
-        val handlerSourceSubpath = "${packageTree.joinToString("/")}/${handlerClassName}.kt"
-        val handlerSourceFile = File(genDir, handlerSourceSubpath)
-        handlerSourceFile.parentFile.mkdirs()
-        handlerSourceFile.writeText(handlerSource)
 
         val implSourceFile =
             File(mainKotlinSourceDir, "${packageTree.joinToString("/")}/${implClassName}.kt")
