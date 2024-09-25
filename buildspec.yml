@@ -1,1 +1,7 @@
-. ./gradlew build
+version: 0.2
+phases:
+  build:
+    commands:
+      - echo "Lets go team schemact publishToMavenLocal"
+      - . ./gradlew publishToMavenLocal
+      - echo "just did publishToMavenLocal - whats next"
