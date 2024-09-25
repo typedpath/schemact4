@@ -6,6 +6,8 @@ phases:
       - which java
       - java -version
       - ls -al gradle/wrapper
+      - realpath ~
+      - ls -al ~/.m2
+      - ls -al ~/.m2/repository
       - gradle publishToMavenLocal
-      - . ./gradlew publishToMavenLocal
       - echo "just did publishToMavenLocal - whats next"
