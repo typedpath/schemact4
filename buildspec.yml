@@ -5,5 +5,7 @@ phases:
       - echo "Lets go team schemact publishToMavenLocal"
       - which java
       - java -version
+      - ls -al wrapper
+      - gradle publishToMavenLocal
       - . ./gradlew publishToMavenLocal
       - echo "just did publishToMavenLocal - whats next"
