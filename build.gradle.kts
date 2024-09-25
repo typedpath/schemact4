@@ -19,7 +19,6 @@ dependencies {
     implementation("com.amazonaws:aws-java-sdk-core:1.11.574")
     implementation("com.amazonaws:aws-java-sdk-s3:1.11.574")
     implementation("com.amazonaws:aws-java-sdk-cloudformation:1.11.574")
-    implementation("com.typedpath:cloudformation2kotlin:2.0.6-SNAPSHOT")
 }
 
 tasks.test {
