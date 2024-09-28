@@ -21,12 +21,24 @@ The developer is reponsible for creating the code implemented the required funct
 
 ## building and deploying
 
+### installing java 17
+
+in aws console, this works :
+```bash
+sudo yum install java-17-amazon-corretto-devel
+```
+
+
+
 ### building and deploying schemact4 libs
 
 This is necessary because these libs are not deployed to a public repo.
 
 ```bash
 git clone git@github.com:typedpath/schemact4.git
+# alternatively
+
+
 cd schemact4
 . ./gradlew publishToMavenLocal
 cd schemact-plugin/

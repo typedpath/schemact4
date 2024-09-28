@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.typedpath.schemact4"
-version = "1.0-SNAPSHOT"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
@@ -16,7 +16,7 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    implementation("com.typedpath:schemact4:1.0-SNAPSHOT")
+    implementation("com.typedpath:schemact4:1.0.0")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10")
     implementation("com.amazonaws:aws-java-sdk-core:1.11.574")
     implementation("com.amazonaws:aws-java-sdk-s3:1.11.574")

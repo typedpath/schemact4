@@ -21,6 +21,7 @@ import java.util.*
 import kotlin.collections.List
 import kotlin.collections.mutableListOf
 
+// rename to cloudfronthosttemplate ?
 class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
                       val schemact: Schemact,
                       domain: Domain, deployment: Deployment,

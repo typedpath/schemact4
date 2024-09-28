@@ -1,17 +1,16 @@
+import java.net.URI
+
 plugins {
     kotlin("jvm") version "1.9.0"
     `maven-publish`
 }
 
 group = "com.typedpath"
-version = "1.0-SNAPSHOT"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
     mavenLocal()
-    maven(uri( "https://admin.shareddev.testedsoftware.org/repository")) {
-        url = uri( "https://admin.shareddev.testedsoftware.org/repository")
-    }
 }
 
 dependencies {
@@ -19,7 +18,6 @@ dependencies {
     implementation("com.amazonaws:aws-java-sdk-core:1.11.574")
     implementation("com.amazonaws:aws-java-sdk-s3:1.11.574")
     implementation("com.amazonaws:aws-java-sdk-cloudformation:1.11.574")
-    implementation("com.typedpath:cloudformation2kotlin:2.0.6-SNAPSHOT")
 }
 
 tasks.test {
@@ -42,7 +40,14 @@ publishing {
         }
         repositories {
             mavenLocal()
-            //maven(url = "build/repository")
+            maven {
+                name = "GitHubPackages"
+                url = URI("https://maven.pkg.github.com/typedpath/schemact4")
+                credentials {
+                    username = System.getenv("GITHUB_ACTOR")
+                    password = System.getenv("GITHUB_TOKEN")
+                }
+            }
         }
     }
 }

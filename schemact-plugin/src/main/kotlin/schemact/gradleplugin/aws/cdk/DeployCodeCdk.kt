@@ -16,11 +16,13 @@ import java.io.File
 fun functionCodeBucketName(domain: Domain, deployment: Deployment): String =
     "code.${deployment.subdomain}.${domain.name}"
 
+fun functionCodeStackName(domain: Domain, deployment: Deployment) = "${deployment.subdomain}-${domain.name.replace('.', '-')}-code"
+
 fun deployCodeCdk(domain: Domain,
                    deployment: Deployment,
                   moduleToJars : Map<Module, File>,
                   region: Regions = Regions.US_EAST_1) {
-    val stackName =  "${deployment.subdomain}-${domain.name.replace('.', '-')}-code"
+    val stackName =  functionCodeStackName(domain, deployment)
 
     deployCdkStack(stackName) {
         CDKCodeHostTemplate(it, functionCodeBucketName(domain, deployment))
