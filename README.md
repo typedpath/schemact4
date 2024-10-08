@@ -23,7 +23,7 @@ These are key objectives:
 
 ## Sample Projects
  - [paramicons.testedsoftware.org](https://paramicons.testedsoftware.org), the code is [here](https://github.com/typedpath/paramicons) - a react + aws lambda backend
- - golambda - go aws lambda (code is [here]([golambda](samples/golambda)))
+ - golambda - go aws lambda (code is [here](samples/golambda))
 
 
 ## Progress Metrics
