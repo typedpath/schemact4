@@ -22,7 +22,6 @@ These are key objectives:
   - versioning + dependencies between services
 
 ## Sample Projects
-There are sample project currently
  - [paramicons.testedsoftware.org](https://paramicons.testedsoftware.org), the code is [here](https://github.com/typedpath/paramicons) - a react + aws lambda backend
  - golambda - go aws lambda (code is [here]([golambda](samples/golambda)))
 
