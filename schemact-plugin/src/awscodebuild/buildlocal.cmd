@@ -1,0 +1,1 @@
+docker build . -t schemact4_1.0.0/codebuild
