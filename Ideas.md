@@ -46,3 +46,39 @@ Schemact is outside in.
 
 # progress by . . project
 ## commit plugin
+
+# Local Mode
+
+### gradle task 
+can this be a java run with controllable path ?
+
+### packaged app 
+????
+
+# remote build per task
+
+move hard to build stuff onto server e.g. spring boot container
+
+on aws - paramaterized code build
+
+
+## pipeline
+review: https://aws-samples.github.io/aws-deployment-pipeline-reference-architecture/
+- code build is separate to deployment
+  - build artifacts by faulting i.e. if it is not there build it
+  - infrastructure code references particular versions
+Multiple code build setups ?
+- to include in schemact4
+  - synthetic tests
+  - regional waves
+  - rollback
+- review: https://aws.amazon.com/architecture/well-architected/?wa-lens-whitepapers.sort-by=item.additionalFields.sortDate&wa-lens-whitepapers.sort-order=desc&wa-guidance-whitepapers.sort-by=item.additionalFields.sortDate&wa-guidance-whitepapers.sort-order=desc
+ - add waves to deployments ? 
+- potential shortcut for container deployment
+  - import { ApplicationLoadBalancedCodeDeployedFargateService } from '@cdklabs/cdk-ecs-codedeploy';
+ 
+
+
+
+
+

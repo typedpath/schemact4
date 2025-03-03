@@ -4,6 +4,7 @@ package schemact.gradleplugin.aws.util
 import com.amazonaws.AmazonClientException
 import com.amazonaws.AmazonServiceException
 import com.amazonaws.auth.AWSCredentialsProvider
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.cloudformation.AmazonCloudFormation
@@ -15,7 +16,8 @@ import java.time.format.DateTimeFormatter
 object CloudFormationUtil {
     fun defaultCredentialsProvider(): AWSCredentialsProvider {
         try {
-            return ProfileCredentialsProvider()
+            println("returning ${DefaultAWSCredentialsProviderChain.getInstance()}")
+            return DefaultAWSCredentialsProviderChain.getInstance()//ProfileCredentialsProvider()
         } catch (e: Exception) {
             throw AmazonClientException(
                 "Cannot load the credentials from the credential profiles file. " +

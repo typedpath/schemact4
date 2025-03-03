@@ -93,6 +93,7 @@ There is one sample project currently: [paramicons.testedsoftware.uk](), the cod
   - create typescript bindings for database service
  
 - create build pipeline 
+  - see https://www.qloudx.com/leveraging-custom-images-for-aws-codebuild-enhancing-your-build-process/ 
   - attach permissions to plugin actions, deployments  
   - pipeline ui is a web app that proxies the plugin tasks + checks permissions
     - refactor plugin to separate tasks from gradle plugin specific code 
@@ -108,6 +109,7 @@ There is one sample project currently: [paramicons.testedsoftware.uk](), the cod
       - https://docs.aws.amazon.com/lambda/latest/dg/provisioned-concurrency.html 
   - switch on snapStart ? - https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html
   - memory
+
 
 
 

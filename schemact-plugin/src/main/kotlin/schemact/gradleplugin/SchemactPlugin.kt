@@ -12,6 +12,7 @@ import schemact.gradleplugin.TaskNaming.groupName
 import schemact.gradleplugin.aws.UiCode.buildUiCode
 import schemact.gradleplugin.aws.UiCode.deployUiCode
 import schemact.gradleplugin.aws.cdk.DeployHostCdk.deployHostCdk
+import schemact.gradleplugin.aws.cdk.DeployPipelineCdk.deployPipeline
 import schemact.gradleplugin.aws.cdk.deployCodeCdk
 
 import java.io.File
@@ -79,6 +80,20 @@ class SchemactPlugin : Plugin<Project>  {
                 it.group = groupName
                 it.actions.add {
                     deployUiCode(domain, deployment, uiCodeLocation)
+                }
+            }
+
+            println("createTasksFor ${deployment.subdomain}")
+
+            if (deployInfrastructureAllowed) {
+                val taskName = "${deployment.subdomain}_deployPipeline"
+
+                val task = project.tasks.create(taskName) {
+                    it.group = groupName
+                    it.actions.add {
+                        println("TODO $taskName")
+                        deployPipeline(schemact=schemact, domain=domain, deployment=deployment)
+                    }
                 }
             }
 
