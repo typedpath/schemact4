@@ -16,7 +16,7 @@ repositories {
 dependencies {
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    implementation("com.typedpath:schemact4:1.0.0")
+    implementation("com.typedpath:schemact4:1.0.1-SNAPSHOT")
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10")
     implementation("com.amazonaws:aws-java-sdk-core:1.11.574")
     implementation("com.amazonaws:aws-java-sdk-s3:1.11.574")

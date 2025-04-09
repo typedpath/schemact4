@@ -1,0 +1,36 @@
+conversation
+============
+
+please can you give the cdk code in kotlin and the typescript code to
+create a cognto service and the react js typescript code to use the service in a client
+
+what cdk version that for ?
+
+can you list the maven depencies for the kotlin ?
+
+please can you give me the code sample for the react js typescript app again
+
+is there a library function that creates the sign up, login automatically
+
+ui app creation 
+================
+npx create-react-app authsample --template typescript
+//npm install amazon-cognito-identity-js aws-sdk
+cd authsample
+npm install aws-amplify @aws-amplify/ui-react
+npm install ajv --save-dev
+npm start
+
+ui deployment (should be in plugin !)
+======================================
+cd ui/authsample
+npm run build
+      aws s3 cp build  s3://devauthsample.testedsoftware.org --recursive
+      (from console) create cloud front invalidation /*
+
+
+
+
+
+
+

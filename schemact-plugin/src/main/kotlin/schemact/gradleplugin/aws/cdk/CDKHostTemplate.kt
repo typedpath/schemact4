@@ -39,6 +39,9 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
             createFunction(id = it.key.name, function = it.key, module=schemact.findModule(it.key),
                 domain = domain, schemact = schemact, codeBucketName = codeBucketName, jarFileName =  it.value.name, staticWebsiteBucketName = websiteDomainName, functionRole = functionRole)
         }
+        if (schemact.auth !=null) {
+            CDKCognitoStack.cognitoStack(this, "MyCognito")
+        }
         val websiteResourcesHostingBucket = createWebsiteResourcesHostingBucket()
         createWebsiteResourcesHostingBucketPolicy(websiteResourcesHostingBucket)
         val cfnDistribution = createWebsiteResourcesCloudFrontDistribution(scope = this, domain=domain, websiteDomainName=websiteDomainName, idToFunctionUrl=idToFunctionUrl)
@@ -64,7 +67,7 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
     fun createFunction(id: String, function: Function, module: Module, domain: Domain, schemact: Schemact,
                        codeBucketName: String, jarFileName: String, staticWebsiteBucketName: String,
                        functionRole: CfnRole) : CfnUrl {
-        val function: CfnFunction =
+        val cfnFunction: CfnFunction =
             CfnFunction.Builder.create(this, "${id}Function")
                 .code(
                     CfnFunction.CodeProperty.builder()
@@ -88,14 +91,14 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
         val functionPermission: CfnPermission =
             CfnPermission.Builder.create(this, "${id}FunctionPermission")
                 .action("lambda:InvokeFunctionUrl")
-                .functionName(function.getRef())
+                .functionName(cfnFunction.getRef())
                 .functionUrlAuthType("NONE")
                 .principal("*")
                 .build()
 
         val functionLambdaUrl: CfnUrl = CfnUrl.Builder.create(this, "${id}LambdaUrl")
             .authType("NONE")
-            .targetFunctionArn(function.getRef())
+            .targetFunctionArn(cfnFunction.getRef())
             .build()
         return functionLambdaUrl
     }

@@ -6,6 +6,7 @@ class Schemact(val name: String, val domains: List<Domain> = mutableListOf(),
                //TODO keep this ? - are all functions contained by modules ?
                val functions: MutableList<Function> = mutableListOf(),
                val modules: MutableList<Module> = mutableListOf(),
+               val auth: Auth? = null,
                val userKeyedDatabase: UserKeyedDatabase?=null,
                init: Schemact.() -> Unit = {}
 ) {

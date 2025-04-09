@@ -56,7 +56,7 @@ class SchemactPlugin : Plugin<Project>  {
                 it.key.functions.map { Pair(it, jar) }
             }.associate { it }
 
-            val deployInfrastructureAllowed = functionToFunctionJars.isNotEmpty() && module==null
+            val deployInfrastructureAllowed =  schemact.auth!=null || (functionToFunctionJars.isNotEmpty() && module==null)
             val deployInfrastructureTaskName = "${deployment.subdomain}_deployInfrastructure"
 
             if (deployInfrastructureAllowed) project.tasks.create(deployInfrastructureTaskName) {

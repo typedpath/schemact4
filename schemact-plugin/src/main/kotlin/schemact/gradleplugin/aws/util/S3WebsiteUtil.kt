@@ -15,7 +15,7 @@ fun buildWebsite(sourceDirectory: File, command: Array<String>) {
     //TODO switch stdout and sterr back
 }
 
-//build the deployment
+//TODO build the deployment
 fun deployCode(bucketName: String,
                bucketFolder: String?=null,
                sourceDirectory: File,
