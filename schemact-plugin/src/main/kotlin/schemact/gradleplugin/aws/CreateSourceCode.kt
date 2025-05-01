@@ -24,12 +24,22 @@ object CreateSourceCode {
             println("TODO handler for module type ${module.type}")
         }
 
+        val defaultLocalServerDomain = "${schemact.defaultLocalClientDeployment?.subdomain?:"specifydefaultLocalServerDomain"}.${domain.name}"
+
+        val packageName = packageTree.joinToString(".")
+
+
+        schemact.userKeyedDatabase?.let {
+           writeDataClassFile(entity=it.userInfoType, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=genDir )
+        }
+
         module.functions.forEach {
             println("creating service code for function ${it.name} + client code for these websites: " +
-                    "${
                         functionToStaticWebsite.flatMap { it.value }.joinToString(",") { it.name }
-                    }"
             )
+            schemact.userKeyedDatabase?.userInfoType?.let {
+                // generate the user keyed database
+            }
             println("created website code in: ${staticWebSiteToSourceRoot.entries.joinToString(",") { "${it.key.name}=>${it.value}" }}")
             createFunctionCode(
                 function = it,
@@ -38,12 +48,13 @@ object CreateSourceCode {
                 mainKotlinSourceDir = mainKotlinSourceDir,
                 packageTree = packageTree,
                 staticWebSites = functionToStaticWebsite.get(it) ?: emptyList(),
-                staticWebSiteToSourceRoot = staticWebSiteToSourceRoot
+                staticWebSiteToSourceRoot = staticWebSiteToSourceRoot,
+                defaultLocalServerDomain=defaultLocalServerDomain
             )
         }
         module.functionClients.forEach {
             if (it.language!=Language.Kotlin) throw RuntimeException("module ${module.name} has unsupported language ${it.language}")
-            createKotlinClientFunctionCode(functionClient = it, schemact=schemact, module = module,
+            createKotlinClientFunctionCode(functionClient = it, schemact=schemact,
                 genDir = genDir, packageTree=packageTree)
         }
     }
@@ -51,7 +62,6 @@ object CreateSourceCode {
     private fun createKotlinClientFunctionCode(
         functionClient: FunctionClient,
         schemact: Schemact,
-        module: Module,
         genDir: File,
         packageTree: List<String>
         ) {
@@ -74,7 +84,8 @@ object CreateSourceCode {
         packageTree: List<String>,
         mainKotlinSourceDir: File,
         staticWebSites: List<StaticWebsite>,
-        staticWebSiteToSourceRoot: Map<StaticWebsite, File>
+        staticWebSiteToSourceRoot: Map<StaticWebsite, File>,
+        defaultLocalServerDomain: String?
     ) {
         println("creating code for function ${function.name} in ${genDir.absolutePath}")
 
@@ -102,23 +113,23 @@ object CreateSourceCode {
 
         staticWebSites.forEach {
             val sourceRootLocation = staticWebSiteToSourceRoot.get(it)
-            if (sourceRootLocation == null) {
-                throw RuntimeException("cant find sourceRoot from website ${it.name}")
-            }
+            sourceRootLocation ?:throw RuntimeException("cant find sourceRoot from website ${it.name}")
+
             generateClientCode(
                 sourceRoot = sourceRootLocation,
                 packageName = packageName,
                 module=module,
                 function = function,
-                argsFromParams = restPolicy.argsFromParams, argsFromBody = restPolicy.argsFromBody
+                restPolicy = restPolicy,
+                defaultLocalServerDomain=defaultLocalServerDomain
             )
         }
 
     }
 
     private fun generateClientCode(
-        sourceRoot: File, packageName: String, module:Module, function: Function, argsFromParams: List<Connection>,
-        argsFromBody: List<Connection>
+        sourceRoot: File, packageName: String, module:Module, function: Function, restPolicy: RestPolicy,
+        defaultLocalServerDomain: String?
     ) {
         val file = File(sourceRoot, "functions/${function.name}.ts")
         file.parentFile.mkdirs()
@@ -126,17 +137,31 @@ object CreateSourceCode {
             functionTypescriptClientTemplate(
                 packageName = packageName, function = function,
                 module=module,
-                argsFromParams = argsFromParams, argsFromBody = argsFromBody
+                restPolicy = restPolicy,
+                defaultLocalServerDomain=defaultLocalServerDomain
             )
         )
+    }
+
+    private fun writeDataClassFile(entity: Entity, defaultPackageTree: List<String>, defaultPackageName: String,  genDir: File) {
+        val prefferedPackageName = entity.prefferedPackage
+        val packageTree = if (prefferedPackageName==null ) defaultPackageTree else entity.prefferedPackage!!.split(".")
+        val packageName = prefferedPackageName?:defaultPackageName
+        val dataClassName = entity.name
+        val dataClassSubPath = "${packageTree.joinToString("/")}/${dataClassName}.kt"
+        val dataClassFile = File(genDir, dataClassSubPath)
+        dataClassFile.parentFile.mkdirs()
+        with (dataClassFile) {
+            writeText(dataClass(`package`=packageName, entity = entity))
+        }
     }
 
     private fun generateServiceCode(
         function: Function,
         module: Module,
-        packageTree: List<String>,
+        defaultPackageTree: List<String>,
         genDir: File,
-        packageName: String,
+        defaultPackageName: String,
         implClassName: String,
         handlerClassName: String,
         restPolicy: RestPolicy,
@@ -147,27 +172,22 @@ object CreateSourceCode {
         // generate source
         val allTopLevelConnections = restPolicy.argsFromBody.toMutableList()
         allTopLevelConnections.addAll(restPolicy.argsFromParams)
+        allTopLevelConnections.addAll(restPolicy.argsFromEnvironment)
         //assume argFrom environment are defined elsewhere
-        val complexTopLevelTypes = allTopLevelConnections.map { it.entity2 }.filter { it !is PrimitiveType }.toSet()
+        val complexTopLevelTypes = allTopLevelConnections.map { it.entity2 }.filter { it !is PrimitiveType }.toMutableSet()
         println("generateServiceCode complexTopLevelTypes for function ${function.name}: ${complexTopLevelTypes.joinToString(","){it.name}}")
         complexTopLevelTypes.forEach {
-            val dataClassName = it.name
-            val dataClassSubPath = "${packageTree.joinToString("/")}/${dataClassName}.kt"
-            val dataClassFile = File(genDir, dataClassSubPath)
-            dataClassFile.parentFile.mkdirs()
-            with (dataClassFile) {
-                writeText(dataClass(`package`=packageName, entity = it))
-            }
+            writeDataClassFile(entity = it, defaultPackageTree=defaultPackageTree, defaultPackageName = defaultPackageName,
+                genDir= genDir)
         }
-
         val interfaceClassName = CodeLocations.interfaceClassName(id = function.name)
 
-        val interfaceSourceSubpath = "${packageTree.joinToString("/")}/${interfaceClassName}.kt"
+        val interfaceSourceSubpath = "${defaultPackageTree.joinToString("/")}/${interfaceClassName}.kt"
         val interfaceSourceFile = File(genDir, interfaceSourceSubpath)
         interfaceSourceFile.parentFile.mkdirs()
         interfaceSourceFile.writeText(
             functionInterface(
-                `package` = packageName,
+                `package` = defaultPackageName,
                 functionId = function.name, function = function, interfaceName = interfaceClassName
             )
         )
@@ -175,28 +195,24 @@ object CreateSourceCode {
         if (module.type==Module.Type.StandaloneFunction) {
             val handlerSource =
                 apiGatewayEventHandler(
-                    packageName = packageName, function = function,
+                    packageName = defaultPackageName, function = function,
                     implClassName = implClassName,
                     handlerClassName = handlerClassName,
-                    argsFromEnvironment = restPolicy.argsFromEnvironment,
-                    argsFromParams = restPolicy.argsFromParams,
-                    argsFromBody = restPolicy.argsFromBody
-                )
+                    restPolicy = restPolicy)
 
-
-            val handlerSourceSubpath = "${packageTree.joinToString("/")}/${handlerClassName}.kt"
+            val handlerSourceSubpath = "${defaultPackageTree.joinToString("/")}/${handlerClassName}.kt"
             val handlerSourceFile = File(genDir, handlerSourceSubpath)
             handlerSourceFile.parentFile.mkdirs()
             handlerSourceFile.writeText(handlerSource)
         }
 
         val implSourceFile =
-            File(mainKotlinSourceDir, "${packageTree.joinToString("/")}/${implClassName}.kt")
-        println("implSourceFile: ${implSourceFile}")
+            File(mainKotlinSourceDir, "${defaultPackageTree.joinToString("/")}/${implClassName}.kt")
+        println("implSourceFile: $implSourceFile")
         // create a sample HandleImpl
         if (!implSourceFile.exists()) {
             implSourceFile.parentFile.mkdirs()
-            implSourceFile.writeText(functionSampleImpl(packageName, implClassName, function))
+            implSourceFile.writeText(functionSampleImpl(defaultPackageName, implClassName, function))
         }
     }
 }

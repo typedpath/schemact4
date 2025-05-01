@@ -5,14 +5,16 @@ import schemact.domain.Entity
 import schemact.domain.Function
 import schemact.domain.Module
 import schemact.domain.PrimitiveType
+import schemact.gradleplugin.RestPolicy
 
 object FunctionTypescriptClientTemplate {
     fun functionTypescriptClientTemplate(
-        packageName: String, module: Module, function: Function, argsFromParams: List<Connection>,
-        argsFromBody: List<Connection>
+        packageName: String, module: Module, function: Function, restPolicy: RestPolicy,
+        defaultLocalServerDomain: String?
     ): String {
-        val allArgs = argsFromParams.toMutableList()
-        allArgs.addAll(argsFromBody)
+        val allArgs = restPolicy.argsFromParams.toMutableList()
+        allArgs.addAll(restPolicy.argsFromBody)
+        allArgs.addAll(restPolicy.argsFromHeader)
         return """
 // created by functionTypescriptClientTemplate
 import axios from "axios";
@@ -32,18 +34,21 @@ export default async function ${function.name}(${
         }) : Promise<${typescriptType(function.returnType)}> {
     let url = urlPath
     if (window.location.href.indexOf("localhost")>=0) {
-      url = 'https://mydevdomain' + urlPath
+      url = 'https://${if (defaultLocalServerDomain==null) "specifydefaultLocalClientDomain" else defaultLocalServerDomain }' + urlPath
     }
-    let body = {${argsFromBody.joinToString(",") { "${it.name}: ${it.name}_in" }}}; 
+    const headers: {[key: string]: string} = { 'Content-Type': 'text/plain',    }
+    
+    ${restPolicy.argsFromHeader.map { 
+"""    headers['${it.name}']=${it.name}_in;""" }.joinToString(System.lineSeparator())}
+
+    let body = {${restPolicy.argsFromBody.joinToString(",") { "${it.name}: ${it.name}_in" }}}; 
 ${
-            argsFromParams.joinToString(System.lineSeparator()) {
+            restPolicy.argsFromParams.joinToString(System.lineSeparator()) {
                 """    let ${it.name} = ${it.name}_in;"""
             }
         }    
-       let res = await axios.post(url, body, {headers : {
-         'Content-Type': 'text/plain',
-       },
-       params: { ${argsFromParams.joinToString(", ") { it.name }}}
+       let res = await axios.post(url, body, {headers : headers,
+       params: { ${restPolicy.argsFromParams.joinToString(", ") { it.name }}}
 
      });
         return ""+res.data;

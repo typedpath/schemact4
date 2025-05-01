@@ -1,0 +1,44 @@
+conversation
+============
+
+
+TODO . . .
+ui app creation 
+================
+npx create-react-app accountview --template typescript
+//npm install amazon-cognito-identity-js aws-sdk
+cd accountview
+npm install aws-amplify @aws-amplify/ui-react
+npm install ajv --save-dev
+
+//npm install ag-grid-react ag-grid-community
+
+//npm install @ag-grid-community/client-side-row-model
+
+//npm install ag-grid-community@33.0.0 ag-grid-react@33.0.0
+
+rm       //"ag-grid-community": "33.2.3",
+        "ag-grid-react": "33.2.3",
+
+npm install ag-grid-react
+
+rm -rf node_modules package-lock.json
+npm install
+npm install --save axios
+
+
+npm start
+
+ui deployment (should be in plugin !)
+======================================
+cd ui/authsample
+npm run build
+      aws s3 cp build  s3://accountview.testedsoftware.org --recursive
+      (from console) create cloud front invalidation /*
+
+./gradlew :functions:dependencies --configuration implementation
+
+
+
+
+

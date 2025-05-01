@@ -1,4 +1,3 @@
 package schemact.domain
 
-class Topic {
-}
+class Topic

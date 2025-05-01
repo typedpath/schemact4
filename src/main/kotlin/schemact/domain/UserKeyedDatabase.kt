@@ -1,4 +1,3 @@
 package schemact.domain
 
-class UserKeyedDatabase( val entities: MutableList<Entity> = mutableListOf()) {
-}
+class UserKeyedDatabase( val userInfoType: Entity)

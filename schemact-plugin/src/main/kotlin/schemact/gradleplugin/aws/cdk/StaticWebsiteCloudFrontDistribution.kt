@@ -116,9 +116,11 @@ object CreateWebsiteResourcesCloudFrontDistribution {
         .forwardedValues(
             CfnDistribution.ForwardedValuesProperty.builder()
                 .queryString(true)
+                .headers(listOf("Authorization"))
                 .build()
         )
         .minTtl(0)
+        .maxTtl(1)
         .pathPattern("/$id")
         .targetOriginId(id)
         .viewerProtocolPolicy("allow-all")

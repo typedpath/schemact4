@@ -1,4 +1,3 @@
 package schemact.domain
 
-class Auth {
-}
+class Auth

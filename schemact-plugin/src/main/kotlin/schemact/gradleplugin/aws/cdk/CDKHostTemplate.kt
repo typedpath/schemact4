@@ -8,6 +8,7 @@ import schemact.gradleplugin.functionId
 import software.amazon.awscdk.Stack
 import software.amazon.awscdk.StackProps
 import software.amazon.awscdk.services.cloudfront.CfnDistribution
+import software.amazon.awscdk.services.dynamodb.Table
 import software.amazon.awscdk.services.iam.CfnRole
 import software.amazon.awscdk.services.lambda.CfnFunction
 import software.amazon.awscdk.services.lambda.CfnPermission
@@ -33,25 +34,46 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
   val websiteDomainName = "${deployment.subdomain}.${domain.name}"
 
     init {
-        val functionRole = createFunctionRole()
+        val entityToEnvironmentVariable =mutableMapOf<Entity, String>()
+        val userTableName = "${websiteDomainName}-users"
+        var userTable: Table? = null
+        if (schemact.userKeyedDatabase != null)  {
+            entityToEnvironmentVariable[InfrastructureInjectables.DynamoDBTablenameType]=userTableName
+            // tableName org.testedsoftware.sample-users" is valid
+// id e.g. SampleUsers
+            userTable = UserTableStack.userTableStack(
+                scope = this,
+                id = "${deployment.subdomain}Users",
+                tableName = userTableName,
+                deleteWithStack = false
+            )
+        }
+
+        val websiteResourcesHostingBucket = createWebsiteResourcesHostingBucket()
+        entityToEnvironmentVariable[InfrastructureInjectables.BucketNameType]=websiteResourcesHostingBucket.bucketName!!
+        if (schemact.auth !=null) {
+            val cognitoDetails = CDKCognitoStack.cognitoStack(this, this, this.websiteDomainName)
+            entityToEnvironmentVariable[InfrastructureInjectables.CognitoClientDetails.entity]=cognitoDetails.writeAsJsonString()
+        }
+        val functionRole = CDKFunctionRoleTemplate.createFunctionRole(scope = this, websiteDomainName=websiteDomainName,
+            usersTable=userTable)
         val idToFunctionUrl: Map<String, CfnUrl> =  functionToFunctionJars.entries.associate {
             functionId(schemact.findModule(it.key), it.key) to
             createFunction(id = it.key.name, function = it.key, module=schemact.findModule(it.key),
-                domain = domain, schemact = schemact, codeBucketName = codeBucketName, jarFileName =  it.value.name, staticWebsiteBucketName = websiteDomainName, functionRole = functionRole)
+                domain = domain, schemact = schemact, codeBucketName = codeBucketName, jarFileName =  it.value.name, entityToEnvironmentVariable = entityToEnvironmentVariable, functionRole = functionRole)
         }
-        if (schemact.auth !=null) {
-            CDKCognitoStack.cognitoStack(this, "MyCognito")
-        }
-        val websiteResourcesHostingBucket = createWebsiteResourcesHostingBucket()
+
+
         createWebsiteResourcesHostingBucketPolicy(websiteResourcesHostingBucket)
         val cfnDistribution = createWebsiteResourcesCloudFrontDistribution(scope = this, domain=domain, websiteDomainName=websiteDomainName, idToFunctionUrl=idToFunctionUrl)
         createWebsiteResourcesDnsRecordSetGroup(websiteDomainName = websiteDomainName, domain=domain, cloudFrontDistribution = cfnDistribution)
     }
 
-    fun environmentVariables(module: Module, function: Function, bucketName: String) : Map<String, String> {
+    fun environmentVariables(module: Module, function: Function, entityToEnvironmentVariable: Map<Entity, String>) : Map<String, String> {
+        println("environmentVariables ${entityToEnvironmentVariable.entries.joinToString { "${it.key.name}=${it.value}"  }}" )
         val result =  function.paramType.fieldsFromInfrastructure().map {
-            if (it.entity2 is StaticWebsite.BucketName) it.name to bucketName
-            else throw RuntimeException("unknown infrastructure field type ${it.entity2.name} in ${it.name}.${it}")
+            if (entityToEnvironmentVariable.containsKey(it.entity2)) it.name to (entityToEnvironmentVariable[it.entity2])!!
+            else throw RuntimeException("unknown infrastructurex field type ${it.entity2.name} in function ${function.name}.${it.entity1.name}.${it.name}")
         }.associateBy({it.first}, {it.second}).toMutableMap()
         result[FunctionIdKey] = functionId(module, function)
         return result
@@ -65,7 +87,7 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
         }
 
     fun createFunction(id: String, function: Function, module: Module, domain: Domain, schemact: Schemact,
-                       codeBucketName: String, jarFileName: String, staticWebsiteBucketName: String,
+                       codeBucketName: String, jarFileName: String, entityToEnvironmentVariable: Map<Entity, String>,
                        functionRole: CfnRole) : CfnUrl {
         val cfnFunction: CfnFunction =
             CfnFunction.Builder.create(this, "${id}Function")
@@ -77,10 +99,10 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
                 )
                 .environment(
                     CfnFunction.EnvironmentProperty.builder()
-                        .variables(environmentVariables(module, function, staticWebsiteBucketName))
+                        .variables(environmentVariables(module, function, entityToEnvironmentVariable))
                         .build()
                 )
-                .handler("${handlerFullClassName(schemact = schemact, module=module, domain=domain, id=id)}")
+                .handler(handlerFullClassName(schemact = schemact, module=module, domain=domain, id=id))
                 .memorySize(1024)
                 .role(functionRole.getAttrArn())
                 .runtime(functionRuntime(module))
@@ -177,7 +199,7 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
             .bucket(websiteResourcesHostingBucket.getRef())
             .policyDocument(
                 java.util.Map.of<String, Any>(
-                    "Statement", mutableListOf<kotlin.collections.Map<String, Any>>(
+                    "Statement", mutableListOf<Map<String, Any>>(
                         java.util.Map.of<String, Any>(
                             "Action", mutableListOf<String>(
                                 "s3:GetObject"

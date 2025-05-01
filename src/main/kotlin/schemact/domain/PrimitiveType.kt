@@ -6,18 +6,17 @@ open class PrimitiveType(name: String, description: String,
                          var typescriptName: String="",
                          var goName: String = ""
                          )
-  : Entity( name=name, description = description, isValueType = true) {
-  }
+  : Entity( name=name, description = description, isValueType = true)
 
-open class StringType(val maxLength: Int) : PrimitiveType(name="String(${maxLength})",
+open class StringType(val maxLength: Int, name:String="String(${maxLength})") : PrimitiveType(name=name,
     kotlinName = "String",
     typescriptName = "string",
     sqlType = "TEXT",
     goName="string",
-    description = "String maxlength " + maxLength
+    description = "String maxlength $maxLength"
 )
 
-class FloatType() : PrimitiveType(name="Float",
+class FloatType : PrimitiveType(name="Float",
     kotlinName = "Float",
     typescriptName = "number",
     sqlType = "NUMBER",
@@ -25,7 +24,7 @@ class FloatType() : PrimitiveType(name="Float",
     description = "Float"
 )
 
-class BooleanType() : PrimitiveType(name="Bool",
+class BooleanType : PrimitiveType(name="Bool",
     kotlinName = "Boolean",
     typescriptName = "boolean",
     sqlType = "int???",
@@ -33,7 +32,7 @@ class BooleanType() : PrimitiveType(name="Bool",
     description = "Boolean"
 )
 
-class IntType() : PrimitiveType(name="Int",
+class IntType : PrimitiveType(name="Int",
     kotlinName = "Int",
     typescriptName = "number",
     sqlType = "int???",
@@ -42,15 +41,15 @@ class IntType() : PrimitiveType(name="Int",
 )
 
 
-fun Entity.string(name: String, description: String?=null, maxLength: Int, optional:Boolean=false) {
-    connections.add(
-        Connection(name=name, description=description, entity1 = this,
+fun Entity.string(name: String, description: String?=null, maxLength: Int, optional:Boolean=false) : Connection{
+    val result = Connection(name=name, description=description, entity1 = this,
         cardinality = Cardinality.OneToOne,
         type= ConnectionType.Contains,
         entity2 = StringType(maxLength),
-            optional = optional
-        )
+        optional = optional
     )
+    connections.add(result)
+    return result
 }
 
 fun Entity.float(name: String, description: String?=null, optional:Boolean=false) {

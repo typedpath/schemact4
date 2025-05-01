@@ -1,0 +1,74 @@
+import React, { useState } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+import { ColDef, GridReadyEvent, ModuleRegistry, ClientSideRowModelModule } from 'ag-grid-community';
+
+ModuleRegistry.register(ClientSideRowModelModule);
+
+interface IRowData {
+  name: string;
+  age: number;
+  country: string;
+}
+
+const EditableGrid: React.FC = () => {
+  const [rowData, setRowData] = useState<IRowData[]>([
+    { name: 'John Doe', age: 25, country: 'USA' },
+    { name: 'Jane Smith', age: 30, country: 'Canada' },
+    { name: 'Bob Johnson', age: 45, country: 'UK' },
+  ]);
+
+  const columnDefsOld: ColDef<IRowData>[] = [
+    { field: 'name', headerName: 'Name', editable: true },
+    {
+      field: 'age',
+      headerName: 'Age',
+      editable: true,
+      valueParser: (params: { newValue: string; oldValue: number }) => {
+        const value = Number(params.newValue);
+        return isNaN(value) ? params.oldValue : value;
+      },
+    },
+    { field: 'country', headerName: 'Country', editable: true },
+  ];
+
+  const columnDefs: ColDef<IRowData>[] = [
+    { field: 'name', headerName: 'Name' },
+    { field: 'age', headerName: 'Age' },
+    { field: 'country', headerName: 'Country' },
+  ];
+
+  const defaultColDef: ColDef = {
+    sortable: true,
+    filter: true,
+    resizable: true,
+  };
+
+  const onGridReady = (params: GridReadyEvent) => {
+    params.api.sizeColumnsToFit();
+  };
+
+  return (
+    <div style={{ height: '400px', width: '100%' }}>
+      <div className="ag-theme-alpine" style={{ height: '100%', width: '100%' }}>
+        <AgGridReact<IRowData>
+          rowData={rowData}
+          columnDefs={columnDefs}
+          defaultColDef={defaultColDef}
+          onGridReady={onGridReady}
+          editType="fullRow" // Explicitly enable editing
+
+        // singleClickEdit={true} // Commented out
+        /*onCellValueChanged={(event) => {
+          const updatedData = [...rowData];
+          updatedData[event.rowIndex!] = event.data;
+          setRowData(updatedData);
+        }}*/
+        />
+      </div>
+    </div>
+  );
+};
+
+export default EditableGrid;

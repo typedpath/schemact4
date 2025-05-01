@@ -1,0 +1,8 @@
+   aws-lambda-java-core-1.2.1.jar
+    aws-lambda-java-events-3.11.0.jar
+    C:\Users\rober\.gradle\caches\modules-2\files-2.1\com.amazonaws\aws-lambda-java-events\3.11.0\4b75095a69f1095f37f763bc389475ce9fcc2ea\aws-lambda-java-events-3.11.0.jar
+   aws-java-sdk-s3-1.11.574.jar
+    C:\Users\rober\.gradle\caches\modules-2\files-2.1\com.amazonaws\aws-java-sdk-s3\1.11.574\5ae9d80b9f0f714b146e0dc20e71f68786db4e63\aws-java-sdk-s3-1.11.574.jar
+   annotations-13.0.jar C:\Users\rober\.gradle\caches\modules-2\files-2.1\org.jetbrains\annotations\13.0\919f0dfe192fb4e063e7dacadee7f8bb9a2672a9\annotations-13.0.jar
+   aws-java-sdk-kms-1.11.574.jar C:\Users\rober\.gradle\caches\modules-2\files-2.1\com.amazonaws\aws-java-sdk-kms\1.11.574\8945d1033cbe2b42327277f60c856eb38c83b7d6\aws-java-sdk-kms-1.11.574.jar
+   aws-java-sdk-core-1.11.574.jar C:\Users\rober\.gradle\caches\modules-2\files-2.1\com.amazonaws\aws-java-sdk-core\1.11.574\4a2edae1d403218a468cc2aff7a44a489b9a9d69\aws-java-sdk-core-1.11.574.jar

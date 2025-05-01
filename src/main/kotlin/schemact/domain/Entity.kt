@@ -3,7 +3,9 @@ package schemact.domain
 open class Entity(val name: String, val description: String, val isValueType: Boolean= false,
                   val parent: Entity? = null,
                   var isFromInfrastructure: Boolean = false,
+                  var isFromHeader: Boolean = false,
                   var connections: MutableList<Connection> = mutableListOf(),
+                  var prefferedPackage: String? = null,
                   init: Entity.() -> Unit = {}) {
     init { init() }
     fun containsMany(name: String, description: String=name, type: Entity, optional : Boolean = true) : Connection {
@@ -34,6 +36,8 @@ open class Entity(val name: String, val description: String, val isValueType: Bo
     }
 
     fun fieldsFromInfrastructure() :List<Connection> = connections.filter {it.type==ConnectionType.Contains && it.entity2.isFromInfrastructure}
+
+    fun fieldsFromHeader() :List<Connection> = connections.filter {it.type==ConnectionType.Contains && it.entity2.isFromHeader}
 
 }
 

@@ -108,6 +108,8 @@ These are key objectives:
       - https://docs.aws.amazon.com/lambda/latest/dg/provisioned-concurrency.html 
   - switch on snapStart ? - https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html
   - memory
+- switch from L1 cdk constructs CfnXXX to L1 constructs XXX as they are more simple e.g. (CfnDistribution -> Distribution)
+- maybe totally switch to L3 cdk constructs (patterns) - grok examples of L£ constructs
 
 
 

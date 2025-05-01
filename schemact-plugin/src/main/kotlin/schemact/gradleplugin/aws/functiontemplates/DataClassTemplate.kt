@@ -1,5 +1,7 @@
 package schemact.gradleplugin.aws.functiontemplates
 
+import schemact.domain.Cardinality
+import schemact.domain.Connection
 import schemact.domain.Entity
 import schemact.domain.PrimitiveType
 
@@ -22,7 +24,16 @@ ${indent}data class ${entity.name}(${asArgs(entity)}) ${if (complexTypes.isNotEm
 }
 
 private fun asArgs(entity: Entity) : String {
-    return entity.connections.map { """@JsonProperty("${it.name}") var ${it.name}: ${if (it.entity2 is PrimitiveType) (it.entity2 as PrimitiveType).kotlinName else it.entity2.name} """ }.joinToString(", ")
+    return entity.connections.map { """@JsonProperty("${it.name}") var ${it.name}:  ${argTypeDef(it)}""" }.joinToString(", ")
+}
+
+private fun argTypeDef(connection : Connection) : String{
+    val entity = connection.entity2
+    var type = "${if (entity is PrimitiveType) (entity as PrimitiveType).kotlinName else entity.name}"
+    if (connection.cardinality== Cardinality.OneToMany) {
+        type = "MutableList<$type>"
+    }
+    return type
 }
 
 //entity.connections.map { "${it.name}: ${ (it.entity2 as PrimitiveType).kotlinName}" }.joinToString (", ")
