@@ -13,6 +13,7 @@ object AwsDependencies {
         //,"software.amazon.awssdk:cognito-jwt-verifier:2.21.0" // Latest compatible with AWS SDK v2
         ,"com.auth0:java-jwt:4.4.0"
         ,"com.auth0:jwks-rsa:0.22.1"
+        ,"commons-fileupload:commons-fileupload:1.5"
 
     //,"com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2"
     )

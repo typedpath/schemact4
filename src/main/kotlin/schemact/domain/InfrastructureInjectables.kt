@@ -3,6 +3,13 @@ package schemact.domain
 object InfrastructureInjectables {
 // see here https://ogp.me/
 
+    object APIGatewayV2HTTPEventEntity : Entity (
+        name="APIGatewayV2HTTPEvent",
+        prefferedPackage = "com.amazonaws.services.lambda.runtime.events",
+        description = "structure from lambda calls from APIGateway or cloudfront",
+        isNativePassthrough = true
+    )
+
     const val AwsPackage = "schemact.aws"
 
     object CognitoClientDetails {

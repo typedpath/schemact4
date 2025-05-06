@@ -1,5 +1,6 @@
 package schemact.gradleplugin.aws
 
+import multiPartCode
 import org.gradle.configurationcache.extensions.capitalized
 import schemact.domain.*
 import schemact.domain.Function
@@ -143,17 +144,23 @@ object CreateSourceCode {
         )
     }
 
+    private fun writeSourceFile(genDir: File, packageTree: List<String>,  className: String, code: String) {
+        val file = File(genDir, "${packageTree.joinToString("/")}/${className}.kt")
+        file.parentFile.mkdirs()
+        with (file) {
+            writeText(code)
+        }
+    }
+
     private fun writeDataClassFile(entity: Entity, defaultPackageTree: List<String>, defaultPackageName: String,  genDir: File) {
         val prefferedPackageName = entity.prefferedPackage
         val packageTree = if (prefferedPackageName==null ) defaultPackageTree else entity.prefferedPackage!!.split(".")
         val packageName = prefferedPackageName?:defaultPackageName
         val dataClassName = entity.name
-        val dataClassSubPath = "${packageTree.joinToString("/")}/${dataClassName}.kt"
-        val dataClassFile = File(genDir, dataClassSubPath)
-        dataClassFile.parentFile.mkdirs()
-        with (dataClassFile) {
-            writeText(dataClass(`package`=packageName, entity = entity))
-        }
+        //val dataClassSubPath = "${packageTree.joinToString("/")}/${dataClassName}.kt"
+        //val dataClassFile = File(genDir, dataClassSubPath)
+        //dataClassFile.parentFile.mkdirs()
+        writeSourceFile(genDir, packageTree, dataClassName, dataClass(`package`=packageName, entity = entity))
     }
 
     private fun generateServiceCode(
@@ -173,13 +180,21 @@ object CreateSourceCode {
         val allTopLevelConnections = restPolicy.argsFromBody.toMutableList()
         allTopLevelConnections.addAll(restPolicy.argsFromParams)
         allTopLevelConnections.addAll(restPolicy.argsFromEnvironment)
+        allTopLevelConnections.addAll(restPolicy.argsFromMultiPart)
+
         //assume argFrom environment are defined elsewhere
-        val complexTopLevelTypes = allTopLevelConnections.map { it.entity2 }.filter { it !is PrimitiveType }.toMutableSet()
+        val complexTopLevelTypes = allTopLevelConnections.map { it.entity2 }.filter { it !is PrimitiveType || it.connections.size>0}.toMutableSet()
+        println("generateServiceCode complexTopLevelTypes for function ${function.name} reviewing : ${allTopLevelConnections.joinToString(","){it.name}}")
         println("generateServiceCode complexTopLevelTypes for function ${function.name}: ${complexTopLevelTypes.joinToString(","){it.name}}")
         complexTopLevelTypes.forEach {
             writeDataClassFile(entity = it, defaultPackageTree=defaultPackageTree, defaultPackageName = defaultPackageName,
                 genDir= genDir)
         }
+
+        if (restPolicy.argsFromMultiPart.size>0) {
+            writeSourceFile(genDir, defaultPackageTree, "MultiPart", multiPartCode(defaultPackageTree.joinToString(".")))
+        }
+
         val interfaceClassName = CodeLocations.interfaceClassName(id = function.name)
 
         val interfaceSourceSubpath = "${defaultPackageTree.joinToString("/")}/${interfaceClassName}.kt"

@@ -10,7 +10,7 @@ if (visited.contains(entity)) {
     return ""
 }
 visited.add(entity)
-val complexTypes = entity.connections.map{it.entity2}.filter {it !is PrimitiveType}
+val complexTypes = entity.connections.map{it.entity2}.filter {it !is PrimitiveType || it.connections.size>0}
 return """
 ${indent} @Serializable data class ${if (function!=null) dataClassName(function, entity) else entity.name }(${asArgs(entity)}) ${if (complexTypes.isNotEmpty()) {"""{ ${
  complexTypes.joinToString { dataClassSanPackageSerializable(entity = it, indent = "$indent   ", visited = visited) }   

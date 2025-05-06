@@ -1,7 +1,7 @@
 package schemact.domain
 
 open class PrimitiveType(name: String, description: String,
-                         val kotlinName: String,
+                         var kotlinName: String,
                          var sqlType: String= "",
                          var typescriptName: String="",
                          var goName: String = ""
@@ -40,6 +40,13 @@ class IntType : PrimitiveType(name="Int",
     description = "Integer"
 )
 
+open class BlobType(nameIn: String="Blob", var maxBytes: Long): PrimitiveType(name=nameIn,
+    kotlinName = "ByteArray",
+    typescriptName = "Blob",
+    sqlType = "Blob???",
+    goName = "int32",
+    description = "Integer") {
+}
 
 fun Entity.string(name: String, description: String?=null, maxLength: Int, optional:Boolean=false) : Connection{
     val result = Connection(name=name, description=description, entity1 = this,

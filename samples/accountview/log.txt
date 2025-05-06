@@ -26,6 +26,10 @@ rm -rf node_modules package-lock.json
 npm install
 npm install --save axios
 
+npm install --save-dev tsx
+npx tsx src/test-auth.ts
+
+
 
 npm start
 

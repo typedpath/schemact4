@@ -16,6 +16,7 @@ ${dataClassSanPackage(entity, "")}
 fun dataClassSanPackage(entity: Entity, indent: String) : String {
 val complexTypes = entity.connections.map{it.entity2}.filter {it !is PrimitiveType}
 return """
+// create from template DataClassTemplate    
 ${indent}data class ${entity.name}(${asArgs(entity)}) ${if (complexTypes.isNotEmpty()) {"""{ ${
  complexTypes.joinToString { dataClassSanPackage(it, "$indent   ") }   
 }${indent}}    

@@ -2,8 +2,12 @@ package schemact.domain
 
 open class Entity(val name: String, val description: String, val isValueType: Boolean= false,
                   val parent: Entity? = null,
+                  //comes from the infrastructure build
                   var isFromInfrastructure: Boolean = false,
+                  //comes from an HTTP header
                   var isFromHeader: Boolean = false,
+                  // comes from the native handler
+                  var isNativePassthrough: Boolean = false,
                   var connections: MutableList<Connection> = mutableListOf(),
                   var prefferedPackage: String? = null,
                   init: Entity.() -> Unit = {}) {

@@ -38,6 +38,8 @@ fun topLevelFieldsAsArgs(functionId: String, connections: List<Connection>) : St
     }"}.joinToString (", ")
 }
 
+
+
 interface Sample {
     data class Params(val svg: String, val s3Bucket: String)
     data class Return (val url: String)

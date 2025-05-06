@@ -1,10 +1,7 @@
 package schemact.gradleplugin.aws.functiontemplates
 
-import schemact.domain.Connection
-import schemact.domain.Entity
+import schemact.domain.*
 import schemact.domain.Function
-import schemact.domain.Module
-import schemact.domain.PrimitiveType
 import schemact.gradleplugin.RestPolicy
 
 object FunctionTypescriptClientTemplate {
@@ -15,9 +12,10 @@ object FunctionTypescriptClientTemplate {
         val allArgs = restPolicy.argsFromParams.toMutableList()
         allArgs.addAll(restPolicy.argsFromBody)
         allArgs.addAll(restPolicy.argsFromHeader)
+        allArgs.addAll(restPolicy.argsFromMultiPart)
         return """
 // created by functionTypescriptClientTemplate
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 
 //namespace $packageName {
 
@@ -25,13 +23,13 @@ const urlPath = "/${module.name}/${function.name}"
 
 export default async function ${function.name}(${
             allArgs.joinToString(", ") {
-                "${it.name}_in: ${
+                "${functionArgName(it)}: ${
                     typescriptType(
                         it.entity2
                     )
                 }"
             }
-        }) : Promise<${typescriptType(function.returnType)}> {
+        }) : Promise<AxiosResponse<any, any>> { // TODO map to specified return type
     let url = urlPath
     if (window.location.href.indexOf("localhost")>=0) {
       url = 'https://${if (defaultLocalServerDomain==null) "specifydefaultLocalClientDomain" else defaultLocalServerDomain }' + urlPath
@@ -39,22 +37,30 @@ export default async function ${function.name}(${
     const headers: {[key: string]: string} = { 'Content-Type': 'text/plain',    }
     
     ${restPolicy.argsFromHeader.map { 
-"""    headers['${it.name}']=${it.name}_in;""" }.joinToString(System.lineSeparator())}
+"""    headers['${it.name}']=${functionArgName(it)};""" }.joinToString(System.lineSeparator())}
 
-    let body = {${restPolicy.argsFromBody.joinToString(",") { "${it.name}: ${it.name}_in" }}}; 
+      ${ if (restPolicy.useMultiPart) {
+""" 
+    headers['Content-Type'] = 'multipart/form-data';     
+    const body = new FormData();
+      ${ restPolicy.argsFromMultiPart.map {" body.append('${it.name}', ${functionArgName(it)});"}.joinToString (System.lineSeparator())}
+"""            
+        } else {"""
+    let body = {${restPolicy.argsFromBody.joinToString(",") { "${it.name}: ${functionArgName(it)}" }}}; 
+"""}}
 ${
             restPolicy.argsFromParams.joinToString(System.lineSeparator()) {
-                """    let ${it.name} = ${it.name}_in;"""
+                """    let ${it.name} = ${functionArgName(it)};"""
             }
         }    
        let res = await axios.post(url, body, {headers : headers,
        params: { ${restPolicy.argsFromParams.joinToString(", ") { it.name }}}
 
      });
-        return ""+res.data;
+        return res;
      }       
 
-${allArgs.filter { it.entity2 !is PrimitiveType }.joinToString(System.lineSeparator()) { interfaceDef(it.entity2) }}
+${allArgs.filter { it.entity2 !is PrimitiveType && it.entity2 !is ReactJsInjectables.File }.joinToString(System.lineSeparator()) { interfaceDef(it.entity2) }}
 
 
 //}
@@ -84,14 +90,7 @@ export interface ${entity.name}  ${interfaceFieldsDef(entity, "    ")}
         }
     }
 
-            /**
-     * export interface OpenGraphTagging {
-     *    title: string,
-     *    image: {
-     *            url: string, width: number
-     *           }
-     * }
-     */
+private fun functionArgName(connection: Connection) = "${connection.name}_in"
 
 }
 

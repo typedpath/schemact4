@@ -18,9 +18,27 @@ val onLoginFunction = Function("onLogin",
     auth = auth
 )
 
+val uploadFileFunction = Function("uploadFile",
+    description = "uploads a file",
+    paramType = Entity(name="param", description="Params" ) {
+        containsOne("userTableName", description="bucketName", type=InfrastructureInjectables.DynamoDBTablenameType)
+        containsOne("bucketName", description="bucketName", type=InfrastructureInjectables.BucketNameType)
+        containsOne("Authorization", description="Authorization header", type=InfrastructureInjectables.AuthorizationHeaderType)
+        containsOne("cognitoDetails", description="Cognito Details",
+            type=InfrastructureInjectables.CognitoClientDetails.entity)
+        containsOne(name ="file", "upload file", ReactJsInjectables.File(maxBytes=10000000))
+// for debug / development
+        containsOne("input", description="native input details",
+            type=InfrastructureInjectables.APIGatewayV2HTTPEventEntity)
+    },
+    returnType = StringType(200),
+    auth = auth
+)
+
+
 val functionsModule = Module(name= "functions",
-    version = "1.0.26-SNAPSHOT",
-    functions = mutableListOf(onLoginFunction))
+    version = "1.0.38-SNAPSHOT",
+    functions = mutableListOf(onLoginFunction, uploadFileFunction))
 
 val defaultDeployment = Deployment(subdomain = "accountview", codeBranch ="dev")
 
@@ -45,6 +63,8 @@ name = "accountview",
     ) {
     mainPage = staticWebsite("mainPage", "the main page") {
         client(onLoginFunction, Typescript)
+        client(uploadFileFunction, Typescript)
+
     }
 }
 

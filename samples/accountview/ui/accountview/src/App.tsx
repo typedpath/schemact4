@@ -6,6 +6,7 @@ import './amplify-config';
 import { Hub, HubPayload } from '@aws-amplify/core';
 import GridExample from './GridGxample';
 import onLogin from './functions/onLogin';
+import UploadFileClient from './functions/UploadFileClient';
 
 interface AuthUserData {
   userId: string;
@@ -76,7 +77,9 @@ const App: React.FC = () => {
                 Sign Out xx
               </button>
               <div>
+                <UploadFileClient />
                 <GridExample />
+
               </div>
             </>
           ) : (
