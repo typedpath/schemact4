@@ -2,12 +2,17 @@ package schemact.gradleplugin.aws.cdk
 
 import software.amazon.awscdk.services.dynamodb.CfnTable
 import software.amazon.awscdk.services.dynamodb.Table
+import software.amazon.awscdk.services.iam.CfnPolicy
 import software.amazon.awscdk.services.iam.CfnRole
 import software.constructs.Construct
 
 object CDKFunctionRoleTemplate {
-    fun createFunctionRole(scope: Construct, websiteDomainName: String,  usersTable: Table?): CfnRole =
-        CfnRole.Builder.create(scope, "functionRole")
+    fun createFunctionRole(scope: Construct, websiteDomainName: String,  usersTable: Table?, privateBucketName: String?): CfnRole {
+        val policies = mutableListOf<CfnRole.PolicyProperty>(s3Policy(websiteDomainName))
+        if (usersTable != null) policies.add(tablePolicy(usersTable))
+        if (privateBucketName != null) policies.add(s3Policy(privateBucketName))
+
+        return CfnRole.Builder.create(scope, "functionRole")
             .assumeRolePolicyDocument(
                 mapOf(
                     "Statement" to listOf(
@@ -15,7 +20,10 @@ object CDKFunctionRoleTemplate {
                             "Action" to listOf("sts:AssumeRole"),
                             "Effect" to "Allow",
                             "Principal" to mapOf(
-                                "Service" to listOf("edgelambda.amazonaws.com", "lambda.amazonaws.com")
+                                "Service" to listOf(
+                                    "edgelambda.amazonaws.com",
+                                    "lambda.amazonaws.com"
+                                )
                             )
                         )
                     ),
@@ -25,20 +33,18 @@ object CDKFunctionRoleTemplate {
             .managedPolicyArns(
                 listOf("arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole")
             )
-            .policies(
-                if (usersTable!=null) listOf(s3Policy(websiteDomainName),tablePolicy(usersTable))
-                else listOf(s3Policy(websiteDomainName))
-            )
+            .policies( policies)
             .build()
+    }
 
-    fun s3Policy(websiteDomainName: String) =  CfnRole.PolicyProperty.builder()
+    fun s3Policy(bucketName: String) =  CfnRole.PolicyProperty.builder()
         .policyDocument(
             mapOf(
                 "Statement" to listOf(
                     mapOf(
                         "Action" to listOf("s3:PutObject", "s3:*"),
                         "Effect" to "Allow",
-                        "Resource" to listOf("arn:aws:s3:::$websiteDomainName/*")
+                        "Resource" to listOf("arn:aws:s3:::$bucketName/*")
                     )
                 ),
                 "Version" to "2012-10-17"

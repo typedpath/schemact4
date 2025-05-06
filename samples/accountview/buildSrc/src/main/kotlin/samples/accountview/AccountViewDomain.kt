@@ -22,7 +22,7 @@ val uploadFileFunction = Function("uploadFile",
     description = "uploads a file",
     paramType = Entity(name="param", description="Params" ) {
         containsOne("userTableName", description="bucketName", type=InfrastructureInjectables.DynamoDBTablenameType)
-        containsOne("bucketName", description="bucketName", type=InfrastructureInjectables.BucketNameType)
+        containsOne("privateBucketName", description="bucketName", type=InfrastructureInjectables.PrivateBucketNameType)
         containsOne("Authorization", description="Authorization header", type=InfrastructureInjectables.AuthorizationHeaderType)
         containsOne("cognitoDetails", description="Cognito Details",
             type=InfrastructureInjectables.CognitoClientDetails.entity)
@@ -35,9 +35,8 @@ val uploadFileFunction = Function("uploadFile",
     auth = auth
 )
 
-
 val functionsModule = Module(name= "functions",
-    version = "1.0.38-SNAPSHOT",
+    version = "1.0.41-SNAPSHOT",
     functions = mutableListOf(onLoginFunction, uploadFileFunction))
 
 val defaultDeployment = Deployment(subdomain = "accountview", codeBranch ="dev")
@@ -51,6 +50,13 @@ lateinit var  mainPage : StaticWebsite
 
 val userInfo = Entity(name = "UserInfo", description="UserInfo") {
   containsMany(name = "loginEvents", type = StringType(maxLength=200))
+  containsMany(name = "uploads", type = Entity(name="Upload",
+      "uploaded file") {
+        string("filename", "file name", maxLength = 2000)
+        string("s3Location", "where in the s3", maxLength = 2000)
+        string("contentType", "what i sit", maxLength = 2000)
+        string("uploadTime", "uploadTime", maxLength = 2000)
+  })
 }
 
 val accountview = Schemact(
@@ -59,12 +65,12 @@ name = "accountview",
     modules = mutableListOf(functionsModule),
     userKeyedDatabase = UserKeyedDatabase(userInfo),
     defaultLocalClientDeployment = defaultDeployment,
+    privateBucket = PrivateBucket(),
     auth =  auth
     ) {
     mainPage = staticWebsite("mainPage", "the main page") {
         client(onLoginFunction, Typescript)
         client(uploadFileFunction, Typescript)
-
     }
 }
 

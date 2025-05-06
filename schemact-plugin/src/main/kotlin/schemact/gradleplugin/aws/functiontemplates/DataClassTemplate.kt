@@ -30,9 +30,9 @@ private fun asArgs(entity: Entity) : String {
 
 private fun argTypeDef(connection : Connection) : String{
     val entity = connection.entity2
-    var type = "${if (entity is PrimitiveType) (entity as PrimitiveType).kotlinName else entity.name}"
+    var type = "${if (entity is PrimitiveType) entity.kotlinName else entity.name}"
     if (connection.cardinality== Cardinality.OneToMany) {
-        type = "MutableList<$type>"
+        type = "MutableList<$type> = mutableListOf()"
     }
     return type
 }

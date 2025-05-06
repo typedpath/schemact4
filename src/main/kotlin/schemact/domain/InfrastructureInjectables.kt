@@ -34,6 +34,12 @@ object InfrastructureInjectables {
         }
     }
 
+    object PrivateBucketNameType : StringType(maxLength = 100, name="PrivateBucketName") {
+        init {
+            isFromInfrastructure = true
+        }
+    }
+
     object DynamoDBTablenameType : StringType(maxLength = 300, name="DynamoDBTablename") {
         init {
             isFromInfrastructure = true

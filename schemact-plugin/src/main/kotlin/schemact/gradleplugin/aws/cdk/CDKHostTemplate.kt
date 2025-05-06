@@ -1,4 +1,5 @@
 package schemact.gradleplugin.aws.cdk
+import PrivateBucketCdk
 import schemact.domain.*
 import schemact.domain.Function
 import schemact.gradleplugin.FunctionIdKey
@@ -32,6 +33,7 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
 
 
   val websiteDomainName = "${deployment.subdomain}.${domain.name}"
+  var privateBucketName: String? = null
 
     init {
         val entityToEnvironmentVariable =mutableMapOf<Entity, String>()
@@ -48,6 +50,11 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
                 deleteWithStack = false
             )
         }
+        schemact.privateBucket?.let {
+            privateBucketName= "${websiteDomainName}-private"
+            PrivateBucketCdk.create(this, privateBucketName!!)
+            entityToEnvironmentVariable[InfrastructureInjectables.PrivateBucketNameType]=privateBucketName!!
+        }
 
         val websiteResourcesHostingBucket = createWebsiteResourcesHostingBucket()
         entityToEnvironmentVariable[InfrastructureInjectables.BucketNameType]=websiteResourcesHostingBucket.bucketName!!
@@ -56,7 +63,7 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
             entityToEnvironmentVariable[InfrastructureInjectables.CognitoClientDetails.entity]=cognitoDetails.writeAsJsonString()
         }
         val functionRole = CDKFunctionRoleTemplate.createFunctionRole(scope = this, websiteDomainName=websiteDomainName,
-            usersTable=userTable)
+            usersTable=userTable, privateBucketName=privateBucketName)
         val idToFunctionUrl: Map<String, CfnUrl> =  functionToFunctionJars.entries.associate {
             functionId(schemact.findModule(it.key), it.key) to
             createFunction(id = it.key.name, function = it.key, module=schemact.findModule(it.key),
@@ -73,7 +80,7 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
         println("environmentVariables ${entityToEnvironmentVariable.entries.joinToString { "${it.key.name}=${it.value}"  }}" )
         val result =  function.paramType.fieldsFromInfrastructure().map {
             if (entityToEnvironmentVariable.containsKey(it.entity2)) it.name to (entityToEnvironmentVariable[it.entity2])!!
-            else throw RuntimeException("unknown infrastructurex field type ${it.entity2.name} in function ${function.name}.${it.entity1.name}.${it.name}")
+            else throw RuntimeException("unknown infrastructure field type ${it.entity2.name} in function ${function.name}.${it.entity1.name}.${it.name}")
         }.associateBy({it.first}, {it.second}).toMutableMap()
         result[FunctionIdKey] = functionId(module, function)
         return result

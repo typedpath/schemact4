@@ -7,6 +7,7 @@ class Schemact(val name: String, val domains: List<Domain> = mutableListOf(),
                val functions: MutableList<Function> = mutableListOf(),
                val modules: MutableList<Module> = mutableListOf(),
                val auth: Auth? = null,
+               val privateBucket: PrivateBucket? = null,
                val userKeyedDatabase: UserKeyedDatabase?=null,
                val defaultLocalClientDeployment: Deployment? = null,
                init: Schemact.() -> Unit = {}
