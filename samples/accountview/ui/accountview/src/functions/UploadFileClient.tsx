@@ -58,7 +58,7 @@ const UploadFileClient: React.FC = () => {
          }
        );
  */
-      setMessage(`File uploaded successfully: ${response.data.fileUrl}`);
+      setMessage(`File uploaded successfully: ${response.data.uploads[response.data.uploads.length - 1].location}`);
     } catch (error: any) {
       console.error('Upload error:', error);
       setMessage(`Upload failed: ${error.response?.data?.message || error.message || 'Unknown error'}`);

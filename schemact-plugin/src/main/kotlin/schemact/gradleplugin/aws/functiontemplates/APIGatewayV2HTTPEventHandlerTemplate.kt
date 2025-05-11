@@ -81,7 +81,7 @@ class ${handlerClassName} : RequestHandler<${APIGatewayV2HTTPEventEntity.name}, 
     System.out.println("result: ${'$'}result")
 
     return APIGatewayV2HTTPResponse.builder()
-            .withBody(result)
+            .withBody(ObjectMapper().writeValueAsString(result))
             .withStatusCode(200)
             .build()
     }

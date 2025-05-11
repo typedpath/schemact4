@@ -29,9 +29,17 @@ object CreateSourceCode {
 
         val packageName = packageTree.joinToString(".")
 
+// TODO find all the top level entities
+//  print the top level entities
+//   if a top level entity is referenced do not redfine it
+//        val topLevelEntities = schemact.entities
+
+        val allComplexTopLevelTypes = module.functions.flatMap {
+           RestPolicy(it.paramType).complexTopLevelTypes }.toMutableSet()
+        // TODO - add return types
 
         schemact.userKeyedDatabase?.let {
-           writeDataClassFile(entity=it.userInfoType, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=genDir )
+           writeDataClassFile(entity=it.userInfoType, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=genDir, topLevelEntities =allComplexTopLevelTypes )
         }
 
         module.functions.forEach {
@@ -132,6 +140,13 @@ object CreateSourceCode {
         sourceRoot: File, packageName: String, module:Module, function: Function, restPolicy: RestPolicy,
         defaultLocalServerDomain: String?
     ) {
+        val dataClasses = listOf(function.returnType).filter { !it.isValueType }
+        for (dataClass in dataClasses) {
+            val file = File(sourceRoot, "functions/${dataClass.name}.ts")
+            file.parentFile.mkdirs()
+            file.writeText(FunctionTypescriptClientTemplate.interfaceDef(dataClass))
+        }
+
         val file = File(sourceRoot, "functions/${function.name}.ts")
         file.parentFile.mkdirs()
         file.writeText(
@@ -152,7 +167,7 @@ object CreateSourceCode {
         }
     }
 
-    private fun writeDataClassFile(entity: Entity, defaultPackageTree: List<String>, defaultPackageName: String,  genDir: File) {
+    private fun writeDataClassFile(entity: Entity, defaultPackageTree: List<String>, defaultPackageName: String,  genDir: File, topLevelEntities: Set<Entity>) {
         val prefferedPackageName = entity.prefferedPackage
         val packageTree = if (prefferedPackageName==null ) defaultPackageTree else entity.prefferedPackage!!.split(".")
         val packageName = prefferedPackageName?:defaultPackageName
@@ -160,7 +175,7 @@ object CreateSourceCode {
         //val dataClassSubPath = "${packageTree.joinToString("/")}/${dataClassName}.kt"
         //val dataClassFile = File(genDir, dataClassSubPath)
         //dataClassFile.parentFile.mkdirs()
-        writeSourceFile(genDir, packageTree, dataClassName, dataClass(`package`=packageName, entity = entity))
+        writeSourceFile(genDir, packageTree, dataClassName, dataClass(`package`=packageName, entity = entity, topLevelEntities))
     }
 
     private fun generateServiceCode(
@@ -177,18 +192,15 @@ object CreateSourceCode {
         // find all the entities in the arguments
         // assume all definitions are nested
         // generate source
-        val allTopLevelConnections = restPolicy.argsFromBody.toMutableList()
-        allTopLevelConnections.addAll(restPolicy.argsFromParams)
-        allTopLevelConnections.addAll(restPolicy.argsFromEnvironment)
-        allTopLevelConnections.addAll(restPolicy.argsFromMultiPart)
+        val allTopLevelConnections = restPolicy.allTopLevelConnections
 
         //assume argFrom environment are defined elsewhere
-        val complexTopLevelTypes = allTopLevelConnections.map { it.entity2 }.filter { it !is PrimitiveType || it.connections.size>0}.toMutableSet()
+        val complexTopLevelTypes = restPolicy.complexTopLevelTypes// allTopLevelConnections.map { it.entity2 }.filter { it !is PrimitiveType || it.connections.size>0}.toMutableSet()
         println("generateServiceCode complexTopLevelTypes for function ${function.name} reviewing : ${allTopLevelConnections.joinToString(","){it.name}}")
         println("generateServiceCode complexTopLevelTypes for function ${function.name}: ${complexTopLevelTypes.joinToString(","){it.name}}")
         complexTopLevelTypes.forEach {
             writeDataClassFile(entity = it, defaultPackageTree=defaultPackageTree, defaultPackageName = defaultPackageName,
-                genDir= genDir)
+                genDir= genDir, topLevelEntities = complexTopLevelTypes)
         }
 
         if (restPolicy.argsFromMultiPart.size>0) {

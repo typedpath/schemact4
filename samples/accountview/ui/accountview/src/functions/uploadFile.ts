@@ -1,12 +1,13 @@
 
 // created by functionTypescriptClientTemplate
 import axios, { AxiosResponse } from "axios";
+import { UserInfo } from './UserInfo'; 
 
 //namespace org.testedsoftware.accountview {
 
 const urlPath = "/functions/uploadFile" 
 
-export default async function uploadFile(Authorization_in: string, file_in: File) : Promise<AxiosResponse<any, any>> { // TODO map to specified return type
+export default async function uploadFile(Authorization_in: string, file_in: File) : Promise<AxiosResponse<UserInfo, any>> { // TODO map to specified return type
     let url = urlPath
     if (window.location.href.indexOf("localhost")>=0) {
       url = 'https://accountview.testedsoftware.org' + urlPath
@@ -25,6 +26,7 @@ export default async function uploadFile(Authorization_in: string, file_in: File
        params: { }
 
      });
+        console.log('res:', res)
         return res;
      }       
 

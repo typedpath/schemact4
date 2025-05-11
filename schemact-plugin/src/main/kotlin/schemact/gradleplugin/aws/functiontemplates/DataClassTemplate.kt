@@ -4,22 +4,26 @@ import schemact.domain.Cardinality
 import schemact.domain.Connection
 import schemact.domain.Entity
 import schemact.domain.PrimitiveType
+import kotlin.reflect.jvm.internal.impl.utils.DFS.Visited
 
-fun dataClass(`package`: String?=null, entity: Entity) = """
+// TODO keep track of what has already been printed
+fun dataClass(`package`: String?=null, entity: Entity, topLevelTypes: Set<Entity>) = """
 package ${`package`}
 
 import com.fasterxml.jackson.annotation.JsonProperty
 
-${dataClassSanPackage(entity, "")}    
+${dataClassSanPackage(entity, "", visited=topLevelTypes.toMutableSet())}    
 """.trimIndent()
 
-fun dataClassSanPackage(entity: Entity, indent: String) : String {
-val complexTypes = entity.connections.map{it.entity2}.filter {it !is PrimitiveType}
+fun dataClassSanPackage(entity: Entity, indent: String, visited: MutableSet<Entity> = mutableSetOf()) : String {
+    visited.add(entity)
+    val complexTypes = entity.connections.map{it.entity2}.filter {it !is PrimitiveType}.filter{!visited.contains(it)}
 return """
+    ${"// dataClassSanPackage ${entity.name} visited: ${visited.map { it.name }.joinToString (",")}"}
 // create from template DataClassTemplate    
 ${indent}data class ${entity.name}(${asArgs(entity)}) ${if (complexTypes.isNotEmpty()) {"""{ ${
- complexTypes.joinToString { dataClassSanPackage(it, "$indent   ") }   
-}${indent}}    
+ complexTypes.joinToString(System.lineSeparator()) { dataClassSanPackage(it, "$indent   ", visited) }   
+}${indent}}
 """} else ""} 
 """
 }

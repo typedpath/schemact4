@@ -16,7 +16,7 @@ import java.time.LocalDateTime
 class UploadFileImpl {
 
     // created from template  functionSampleImpl at 2025-05-02T13:46:54.624886700       
-    fun uploadFile(userTableName: String, privateBucketName: String, Authorization: String, cognitoDetails: CognitoClientDetails, file: File, input: APIGatewayV2HTTPEvent) : String {
+    fun uploadFile(userTableName: String, privateBucketName: String, Authorization: String, cognitoDetails: CognitoClientDetails, file: File, input: APIGatewayV2HTTPEvent) : UserInfo {
          println("input ${ObjectMapper().writeValueAsString(input)}")
 
         // check authorization
@@ -32,7 +32,8 @@ class UploadFileImpl {
                 .build()
 
         // Upload to S3 with environment-specific prefix
-        val key = "uploads/$userId/${file.filename}"
+        val path = "/uploads/${file.filename}"
+        val key = "$userId$path"
         val metadata = ObjectMetadata().apply {
             this.contentType = file.contentType
             this.contentLength = file.content.size.toLong()
@@ -43,15 +44,14 @@ class UploadFileImpl {
         // Generate file URL
         val fileUrl = "https://$s3Bucket.s3.amazonaws.com/$key"
 
-        DynamoDbUtil.createOrUpdate(userTableName=userTableName,
+        return DynamoDbUtil.createOrUpdate(userTableName=userTableName,
             userId=userId, email=email, UserInfo::class.java,
             defaultData = {UserInfo(loginEvents=mutableListOf<String>())},
             update =  {data ->
-                data.uploads.add(UserInfo.Upload(filename = file.filename, s3Location = key, contentType = file.contentType, uploadTime=LocalDateTime.now().toString()))
+                data.uploads.add(UserInfo.File(filename = file.filename, location = path, contentType = file.contentType, uploadTime=LocalDateTime.now().toString()))
                 data})
 
         // Return success response
-        return fileUrl
     }
     
 }

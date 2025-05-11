@@ -7,6 +7,8 @@ import { Hub, HubPayload } from '@aws-amplify/core';
 import GridExample from './GridGxample';
 import onLogin from './functions/onLogin';
 import UploadFileClient from './functions/UploadFileClient';
+import Accounts from './Accounts';
+import { UserInfo } from './functions/UserInfo';
 
 interface AuthUserData {
   userId: string;
@@ -22,8 +24,9 @@ interface AuthHubPayload extends HubPayload {
 
 const App: React.FC = () => {
 
-  const [hasNotifiedLogin, setHasNotifiedLogin] = useState<boolean>(false)
   const [session, setSession] = useState<AuthSession | null>(null)
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+  const [Authorisation, setAuthorization] = useState<string | undefined>(undefined)
 
   useEffect(() => {
     const listener = (data: { payload: AuthHubPayload }) => {
@@ -40,14 +43,14 @@ const App: React.FC = () => {
   }/*, [navigate]*/);
 
   const handlePostLogin = async (user: any) => {
-    if (hasNotifiedLogin) return; // Prevent duplicate calls
     try {
       const session = await fetchAuthSession();
       const idToken = session.tokens?.idToken?.toString();
+      setAuthorization(idToken)
       if (!idToken) throw new Error('No ID token');
       console.log('post login x ')
-      await onLogin(idToken)
-      setHasNotifiedLogin(true);
+      let userInfo = await (await onLogin(idToken)).data
+      setUserInfo(userInfo)
     } catch (error) {
       console.error('Error calling Lambda:', error);
     }
@@ -60,13 +63,13 @@ const App: React.FC = () => {
         <div style={{ padding: '20px', textAlign: 'center' }}>
           {user ? (
             <>
+              {userInfo && Authorisation && <Accounts accounts={userInfo?.accounts} setUserInfo={setUserInfo} Authorization_in={Authorisation}></Accounts>}
               <button
                 onClick={async () => {
                   try {
                     const session = await fetchAuthSession();
                     console.log('JWT Token:', session.tokens?.idToken?.toString());
                     setSession(null);
-                    setHasNotifiedLogin(false);
                     if (signOut) await signOut();
                   } catch (error) {
                     console.error('Error during sign-out:', error);

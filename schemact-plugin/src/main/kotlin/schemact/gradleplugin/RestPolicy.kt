@@ -38,7 +38,10 @@ class RestPolicy(val paramType: Entity) {
         !useMultiPart && !subParam.isNativePassthrough  && !subParam.isFromHeader  && !subParam.isFromInfrastructure && (subParam !is PrimitiveType || argIsTooBigForParam(subParam))
     }
 
+   val allTopLevelConnections: List<Connection> =
+        argsFromBody.plus(argsFromParams).plus(argsFromEnvironment).plus(argsFromMultiPart)
 
+    val complexTopLevelTypes = allTopLevelConnections.map { it.entity2 }.filter { it !is PrimitiveType || it.connections.size>0}.toMutableSet()
 
 
 }

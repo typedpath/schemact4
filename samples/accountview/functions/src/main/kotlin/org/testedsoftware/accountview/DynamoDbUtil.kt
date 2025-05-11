@@ -9,8 +9,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.Instant
 
 object DynamoDbUtil {
-    fun <T> createOrUpdate(userTableName: String, userId: String, email: String, dataType: Class<T>, defaultData: ()-> T, update: (data: T) -> T) {
+    fun <T> createOrUpdate(userTableName: String, userId: String, email: String, dataType: Class<T>, defaultData: ()-> T, update: (data: T) -> T) : T {
         val dynamoDb = AmazonDynamoDBClientBuilder.standard().build()
+        var data: T? = null
         try {
 
             // Retrieve existing item from DynamoDB
@@ -24,7 +25,7 @@ object DynamoDbUtil {
             if (existingItem != null && existingItem.isNotEmpty()) {
                 var strData: String = existingItem.get("data")?.s!!
 
-                var data = (ObjectMapper()).readValue(strData, dataType)
+                data = (ObjectMapper()).readValue(strData, dataType)
                 data = update(data)
                 strData = (ObjectMapper().writeValueAsString(data))
                 // Item exists, update specific attributes
@@ -44,7 +45,7 @@ object DynamoDbUtil {
                 println("Updated user data in DynamoDB for user_id=$userId")
             } else {
                 // Item does not exist, create new item
-                val data = update(defaultData())
+                data = update(defaultData())
                 val strData = ObjectMapper().writeValueAsString(data)
                 val putItemRequest = PutItemRequest()
                     .withTableName(userTableName)
@@ -61,7 +62,7 @@ object DynamoDbUtil {
                 println("Created new user data in DynamoDB for user_id=$userId")
 
             }
-            return
+            return data
             //context.logger.log("Stored user data in DynamoDB for user_id=$userId")
         } catch (e: Exception) {
             e.printStackTrace()
