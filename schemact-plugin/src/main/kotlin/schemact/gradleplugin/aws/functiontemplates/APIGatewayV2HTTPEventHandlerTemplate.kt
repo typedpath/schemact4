@@ -105,8 +105,8 @@ private fun mulitiPartExtractionCode(connection: Connection) : String {
         val ${connection.name} = File(filename = ${partName}?.contentDispositionValues!!["filename"]?:throw Exception("No file provided"), content = ${partName}.body, contentType =${partName}?.contentType!!)
 """    } else
 """
-    val ${partName} = multiParts.get("${connection.name}")
-    val ${connection.name} = String(partName.body)
+    val ${partName} = multiParts.get("${connection.name}")!!
+    val ${connection.name} = String(${partName}.body)
 """
 }
 

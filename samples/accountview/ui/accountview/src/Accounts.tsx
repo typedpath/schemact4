@@ -1,26 +1,16 @@
 import React, { useCallback } from 'react';
-
+import { AgGridReact } from 'ag-grid-react';
 import { ColDef, AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
-
-
-import { AgGridReact } from 'ag-grid-react'; // React Data Grid Component
-
-
+//import ModuleRegistry from '@ag-grid-community/core';
+import { useNavigate } from 'react-router-dom';
 import AddAccount from './AddAccount';
 import addAccount, { Account } from './functions/addAccount';
 import { UserInfo } from './functions/UserInfo';
-
-
-
-
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
 
 // Register all Community features
-// Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
-
-
 
 interface AccountsProps {
   accounts: UserInfo['accounts'];
@@ -29,16 +19,16 @@ interface AccountsProps {
 }
 
 const Accounts: React.FC<AccountsProps> = ({ accounts, setUserInfo, Authorization_in }) => {
-  // Log accounts to verify data
+  const navigate = useNavigate();
+
   console.log('Accounts data:', accounts);
 
   const colDefs: ColDef<UserInfo['accounts'][number]>[] = [
-    { field: 'name', filter: true, editable: true, flex: 1, minWidth: 150 },
-    { field: 'sortCode', editable: true, width: 120 },
-    { field: 'accountNumber', editable: true, width: 150 },
+    { field: 'name', filter: true, editable: false, flex: 1, minWidth: 150 },
+    { field: 'sortCode', editable: false, width: 120 },
+    { field: 'accountNumber', editable: false, width: 150 },
   ];
 
-  // Auto-size columns when the grid is ready
   const onGridReady = useCallback((params: any) => {
     params.api.sizeColumnsToFit();
   }, []);
@@ -52,6 +42,15 @@ const Accounts: React.FC<AccountsProps> = ({ accounts, setUserInfo, Authorizatio
     }
   }
 
+  const onRowClicked = useCallback(
+    (event: any) => {
+      console.log('***************** onRowClicked')
+      const account = event.data as UserInfo['accounts'][number];
+      navigate(`/account/${account.accountNumber}`);
+    },
+    [navigate]
+  );
+
   return (
     <div>
       <h2>Accounts ({accounts.length})</h2>
@@ -61,8 +60,9 @@ const Accounts: React.FC<AccountsProps> = ({ accounts, setUserInfo, Authorizatio
           domLayout="autoHeight"
           rowData={accounts}
           columnDefs={colDefs}
-          getRowId={(params) => params.data.accountNumber /*|| String(params.node.id)*/}
+          getRowId={(params) => params.data.accountNumber}
           onGridReady={onGridReady}
+          onRowClicked={onRowClicked}
           onCellValueChanged={(event) => {
             console.log('Cell value changed:', event);
             setUserInfo(prev => {

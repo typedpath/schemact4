@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Authenticator } from '@aws-amplify/ui-react';
-import '@aws-amplify/ui-react/styles.css'; // Import default Amplify UI styles
+import '@aws-amplify/ui-react/styles.css';
 import { AuthSession, fetchAuthSession } from '@aws-amplify/auth';
 import './amplify-config';
 import { Hub, HubPayload } from '@aws-amplify/core';
-import GridExample from './GridGxample';
-import onLogin from './functions/onLogin';
-import UploadFileClient from './functions/UploadFileClient';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Accounts from './Accounts';
+import AccountDetails from './AccountDetails';
+import onLogin from './functions/onLogin';
 import { UserInfo } from './functions/UserInfo';
-
-
 
 interface AuthUserData {
   userId: string;
@@ -20,80 +18,101 @@ interface AuthUserData {
 
 interface AuthHubPayload extends HubPayload {
   event: string;
-  data?: AuthUserData; // Refine based on Amplify Gen 2 types
+  data?: AuthUserData;
 }
 
-
 const App: React.FC = () => {
-
-  const [session, setSession] = useState<AuthSession | null>(null)
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
-  const [Authorisation, setAuthorization] = useState<string | undefined>(undefined)
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [Authorization, setAuthorization] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const listener = (data: { payload: AuthHubPayload }) => {
       if (data.payload.event === 'signedIn') {
         console.log('User signed in:', data.payload.data);
-        //navigate('/protected');
         handlePostLogin(data.payload.data);
       }
     };
 
-    //tell grok
     const remove = Hub.listen('auth', listener);
     return () => remove();
-  }/*, [navigate]*/);
+  }, []);
 
   const handlePostLogin = async (user: any) => {
     try {
       const session = await fetchAuthSession();
       const idToken = session.tokens?.idToken?.toString();
-      setAuthorization(idToken)
+      setAuthorization(idToken);
       if (!idToken) throw new Error('No ID token');
-      console.log('post login x ')
-      let userInfo = await (await onLogin(idToken)).data
-      setUserInfo(userInfo)
+      console.log('post login');
+      let userInfo = await (await onLogin(idToken)).data;
+      setUserInfo(userInfo);
     } catch (error) {
       console.error('Error calling Lambda:', error);
     }
   };
 
-
   return (
     <Authenticator>
       {({ signOut, user }) => (
-        <div style={{ padding: '20px', textAlign: 'center' }}>
-          {user ? (
-            <>
-              {userInfo && Authorisation && <Accounts accounts={userInfo?.accounts} setUserInfo={setUserInfo} Authorization_in={Authorisation}></Accounts>}
-              <button
-                onClick={async () => {
-                  try {
-                    const session = await fetchAuthSession();
-                    console.log('JWT Token:', session.tokens?.idToken?.toString());
-                    setSession(null);
-                    if (signOut) await signOut();
-                  } catch (error) {
-                    console.error('Error during sign-out:', error);
-                  }
-                }}
-                style={{ padding: '10px', marginTop: '10px' }}
-              >
-                Sign Out xx
-              </button>
-              <div>
-                {/*<UploadFileClient />*/}
-                {/*<GridExample />*/}
-              </div>
-            </>
-          ) : (
-            <h1>Please sign in</h1>
-          )}
-        </div>
+        <Router>
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            {user ? (
+              <>
+                <Routes>
+                  <Route
+                    path="/"
+                    element={
+                      userInfo && Authorization ? (
+                        <Accounts
+                          accounts={userInfo.accounts}
+                          setUserInfo={setUserInfo}
+                          Authorization_in={Authorization}
+                        />
+                      ) : (
+                        <p>Loading accounts...</p>
+                      )
+                    }
+                  />
+                  <Route
+                    path="/account/:accountNumber"
+                    element={
+                      userInfo && Authorization ? (
+                        <AccountDetails
+                          userInfo={userInfo}
+                          setUserInfo={setUserInfo}
+                          Authorization_in={Authorization}
+                        />
+                      ) : (
+                        <p>Loading account details...</p>
+                      )
+                    }
+                  />
+                </Routes>
+                <button
+                  onClick={async () => {
+                    try {
+                      const session = await fetchAuthSession();
+                      console.log('JWT Token:', session.tokens?.idToken?.toString());
+                      setSession(null);
+                      if (signOut) await signOut();
+                    } catch (error) {
+                      console.error('Error during sign-out:', error);
+                    }
+                  }}
+                  style={{ padding: '10px', marginTop: '10px' }}
+                >
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <h1>Please sign in</h1>
+            )}
+          </div>
+        </Router>
       )}
     </Authenticator>
   );
 };
 
 export default App;
-

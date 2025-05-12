@@ -14,9 +14,10 @@ val file = Entity(name="File",
     string("uploadTime", "uploadTime", maxLength = 2000)
 }
 
+
 val transactionGroup = Entity(name="TransactionGroup", description="Transaction Group" ) {
-    string("fromInclusiveDate", "From Inclusive Date", maxLength = 2000)
-    string("toInclusiveDate", "To Inclusive Date", maxLength = 2000)
+    string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
+    string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
     containsOne("rawTransactionFile", "Raw Transaction File", type = file)
     // containsOne("categorizedTransactionFile", "Categorized Transaction File", type = file)
 }
@@ -64,6 +65,25 @@ val uploadFileFunction = Function("uploadFile",
     auth = auth
 )
 
+val uploadTransactionGroupFunction = Function("uploadTransactonGroup",
+    description = "uploads a transactionGroup",
+    paramType = Entity(name="param", description="Params" ) {
+        containsOne("userTableName", description="bucketName", type=InfrastructureInjectables.DynamoDBTablenameType)
+        containsOne("privateBucketName", description="bucketName", type=InfrastructureInjectables.PrivateBucketNameType)
+        containsOne("Authorization", description="Authorization header", type=InfrastructureInjectables.AuthorizationHeaderType)
+        containsOne("cognitoDetails", description="Cognito Details",
+            type=InfrastructureInjectables.CognitoClientDetails.entity)
+        containsOne(name ="file", "upload file", ReactJsInjectables.File(maxBytes=10000000))
+        string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
+        string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
+        string("accountNumber", "AccountNumber", maxLength = 20)
+
+    },
+    returnType = userInfo,
+    auth = auth
+)
+
+
 val addAccountFunction = Function("addAccount",
     description = "adds an account",
     paramType = Entity(name="param", description="Params" ) {
@@ -79,8 +99,9 @@ val addAccountFunction = Function("addAccount",
 )
 
 val functionsModule = Module(name= "functions",
-    version = "1.0.44-SNAPSHOT",
-    functions = mutableListOf(onLoginFunction, uploadFileFunction, addAccountFunction))
+    version = "1.0.46-SNAPSHOT",
+    functions = mutableListOf(onLoginFunction, uploadFileFunction,
+        addAccountFunction, uploadTransactionGroupFunction))
 
 val defaultDeployment = Deployment(subdomain = "accountview", codeBranch ="dev")
 
@@ -104,6 +125,7 @@ name = "accountview",
         client(onLoginFunction, Typescript)
         client(uploadFileFunction, Typescript)
         client(addAccountFunction, Typescript)
+        client(uploadTransactionGroupFunction, Typescript)
     }
 }
 
