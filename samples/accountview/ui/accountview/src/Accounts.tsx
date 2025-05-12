@@ -1,11 +1,26 @@
-import React from 'react';
-import { AgGridReact } from 'ag-grid-react';
-import { ColDef } from 'ag-grid-community';
+import React, { useCallback } from 'react';
+
+import { ColDef, AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+
+
+import { AgGridReact } from 'ag-grid-react'; // React Data Grid Component
+
+
 import AddAccount from './AddAccount';
 import addAccount, { Account } from './functions/addAccount';
 import { UserInfo } from './functions/UserInfo';
-import 'ag-grid-community/styles/ag-grid.css'; // Core AG Grid CSS
-import 'ag-grid-community/styles/ag-theme-alpine.css'; // Theme CSS
+
+
+
+
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+// Register all Community features
+// Register all Community features
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+
 
 interface AccountsProps {
   accounts: UserInfo['accounts'];
@@ -18,10 +33,15 @@ const Accounts: React.FC<AccountsProps> = ({ accounts, setUserInfo, Authorizatio
   console.log('Accounts data:', accounts);
 
   const colDefs: ColDef<UserInfo['accounts'][number]>[] = [
-    { field: 'name', filter: true, editable: true },
-    { field: 'sortCode', editable: true },
-    { field: 'accountNumber', editable: true },
+    { field: 'name', filter: true, editable: true, flex: 1, minWidth: 150 },
+    { field: 'sortCode', editable: true, width: 120 },
+    { field: 'accountNumber', editable: true, width: 150 },
   ];
+
+  // Auto-size columns when the grid is ready
+  const onGridReady = useCallback((params: any) => {
+    params.api.sizeColumnsToFit();
+  }, []);
 
   async function onAccountAdded(account: Account) {
     try {
@@ -35,14 +55,16 @@ const Accounts: React.FC<AccountsProps> = ({ accounts, setUserInfo, Authorizatio
   return (
     <div>
       <h2>Accounts ({accounts.length})</h2>
-      <div className="ag-theme-alpine" style={{ height: '400px', width: '100%' }}>
+      <AddAccount onAccountAdded={onAccountAdded} />
+      <div className="ag-theme-alpine" style={{ width: '100%' }}>
         <AgGridReact
+          domLayout="autoHeight"
           rowData={accounts}
           columnDefs={colDefs}
-          getRowId={(params) => params.data.accountNumber /*|| String(params.node.id)*/} // Ensure unique row IDs
+          getRowId={(params) => params.data.accountNumber /*|| String(params.node.id)*/}
+          onGridReady={onGridReady}
           onCellValueChanged={(event) => {
             console.log('Cell value changed:', event);
-            // Update userInfo when a cell is edited
             setUserInfo(prev => {
               if (!prev || event.rowIndex == null) return prev;
               const updatedAccounts = [...prev.accounts];
@@ -55,7 +77,6 @@ const Accounts: React.FC<AccountsProps> = ({ accounts, setUserInfo, Authorizatio
           }}
         />
       </div>
-      <AddAccount onAccountAdded={onAccountAdded} />
     </div>
   );
 };

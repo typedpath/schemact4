@@ -10,6 +10,8 @@ import UploadFileClient from './functions/UploadFileClient';
 import Accounts from './Accounts';
 import { UserInfo } from './functions/UserInfo';
 
+
+
 interface AuthUserData {
   userId: string;
   signInDetails?: { loginId: string };
@@ -80,9 +82,8 @@ const App: React.FC = () => {
                 Sign Out xx
               </button>
               <div>
-                <UploadFileClient />
-                <GridExample />
-
+                {/*<UploadFileClient />*/}
+                {/*<GridExample />*/}
               </div>
             </>
           ) : (

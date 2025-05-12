@@ -79,7 +79,9 @@ const AddAccount: React.FC<AddAccountProps> = ({ onAccountAdded }) => {
   return (
     <form onSubmit={handleSubmit} style={{ marginBottom: '20px' }}>
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-        helllo
+        <button type="submit" disabled={isSubmitting} style={{ padding: '5px 10px' }}>
+          {isSubmitting ? 'Adding...' : 'Add Account'}
+        </button>
         <input
           type="text"
           name="name"
@@ -107,9 +109,6 @@ const AddAccount: React.FC<AddAccountProps> = ({ onAccountAdded }) => {
           disabled={isSubmitting}
           style={{ padding: '5px' }}
         />
-        <button type="submit" disabled={isSubmitting} style={{ padding: '5px 10px' }}>
-          {isSubmitting ? 'Adding...' : 'Add Account'}
-        </button>
       </div>
       {error && <p style={{ color: 'red' }}>{error}</p>}
     </form>
