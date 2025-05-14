@@ -9,6 +9,7 @@ import Accounts from './Accounts';
 import AccountDetails from './AccountDetails';
 import onLogin from './functions/onLogin';
 import { UserInfo } from './functions/UserInfo';
+import TransactionGroupDetail from './TransactionGroupDetail';
 
 interface AuthUserData {
   userId: string;
@@ -44,8 +45,8 @@ const App: React.FC = () => {
       const idToken = session.tokens?.idToken?.toString();
       setAuthorization(idToken);
       if (!idToken) throw new Error('No ID token');
-      console.log('post login');
-      let userInfo = await (await onLogin(idToken)).data;
+      console.log('post login idToken:', idToken);
+      let userInfo = (await onLogin(idToken)).data;
       setUserInfo(userInfo);
     } catch (error) {
       console.error('Error calling Lambda:', error);
@@ -87,6 +88,10 @@ const App: React.FC = () => {
                         <p>Loading account details...</p>
                       )
                     }
+                  />
+                  <Route
+                    path="/accounts/:accountNumber/transactions/:group/:fromDate/:toDate"
+                    element={<TransactionGroupDetail />}
                   />
                 </Routes>
                 <button

@@ -42,6 +42,12 @@ export interface Account   {
             contentType: string
             uploadTime: string
              } 
+        transactions:  {
+             date: string
+            subcategory: string
+            amount: number
+            memo: string
+             } []
          } []
      } 
 

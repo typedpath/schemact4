@@ -1,13 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { UserInfo } from './functions/UserInfo';
 import uploadTransactonGroup from './functions/uploadTransactonGroup';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-quartz.css'; // Match Accounts.tsx
+import { ColDef, RowClickedEvent } from 'ag-grid-community';
+import { TransactionGroup } from './functions/TransactionGroup';
 
 interface AccountDetailsProps {
   userInfo: UserInfo | null;
   setUserInfo: React.Dispatch<React.SetStateAction<UserInfo | null>>;
   Authorization_in: string;
 }
+
 
 const AccountDetails: React.FC<AccountDetailsProps> = ({ userInfo, setUserInfo, Authorization_in }) => {
   const { accountNumber } = useParams<{ accountNumber: string }>();
@@ -25,6 +31,48 @@ const AccountDetails: React.FC<AccountDetailsProps> = ({ userInfo, setUserInfo, 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const account = userInfo?.accounts.find(acc => acc.accountNumber === accountNumber);
+
+  // Column definitions for AgGridReact
+  const columnDefs: ColDef<TransactionGroup>[] = useMemo(
+    () => [
+      {
+        field: 'fromInclusiveDate',
+        headerName: 'From Date',
+        sortable: true,
+        filter: 'agDateColumnFilter',
+        minWidth: 150,
+      },
+      {
+        field: 'toInclusiveDate',
+        headerName: 'To Date',
+        sortable: true,
+        filter: 'agDateColumnFilter',
+        minWidth: 150,
+      },
+      {
+        field: 'rawTransactionFile.filename',
+        headerName: 'File Name',
+        sortable: true,
+        filter: 'agTextColumnFilter',
+        minWidth: 200,
+      },
+      {
+        field: 'rawTransactionFile.contentType',
+        headerName: 'Content Type',
+        sortable: true,
+        filter: 'agTextColumnFilter',
+        minWidth: 150,
+      },
+      {
+        field: 'rawTransactionFile.uploadTime',
+        headerName: 'Upload Time',
+        sortable: true,
+        filter: 'agDateColumnFilter',
+        minWidth: 200,
+      },
+    ],
+    []
+  );
 
   if (!account) {
     return (
@@ -53,7 +101,6 @@ const AccountDetails: React.FC<AccountDetailsProps> = ({ userInfo, setUserInfo, 
     e.preventDefault();
     const { file, fromInclusiveDate, toInclusiveDate } = formData;
 
-    // Validation
     if (!file) {
       setError('Please select a file');
       return;
@@ -75,34 +122,23 @@ const AccountDetails: React.FC<AccountDetailsProps> = ({ userInfo, setUserInfo, 
     setError(null);
 
     try {
-      /*const formDataToSend = new FormData();
-      formDataToSend.append('file', file);
-      formDataToSend.append('accountNumber', accountNumber!);
-      formDataToSend.append('fromInclusiveDate', fromInclusiveDate);
-      formDataToSend.append('toInclusiveDate', toInclusiveDate);
+      const response = await uploadTransactonGroup(
+        Authorization_in,
+        file,
+        fromInclusiveDate,
+        toInclusiveDate,
+        accountNumber!
+      );
 
-      const response = await fetch('/api/uploadTransactionFile', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${Authorization_in}`,
-        },
-        body: formDataToSend,
-      });
-*/
-      const response = await uploadTransactonGroup(Authorization_in, file,
-        fromInclusiveDate, toInclusiveDate, accountNumber!!)
-
-
-      if (response.status != 200) {
-        const errorData = await response.statusText;
+      if (response.status !== 200) {
+        const errorData = response.statusText;
         console.error('Upload error:', errorData);
         throw new Error(errorData || 'Failed to upload file');
       }
 
-      const updatedUserInfo: UserInfo = response.data
+      const updatedUserInfo: UserInfo = response.data;
       setUserInfo(updatedUserInfo);
 
-      // Reset form
       setFormData({ file: null, fromInclusiveDate: '', toInclusiveDate: '' });
       (e.target as HTMLFormElement).reset();
     } catch (err) {
@@ -110,6 +146,25 @@ const AccountDetails: React.FC<AccountDetailsProps> = ({ userInfo, setUserInfo, 
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Handle row click to navigate to Transactions.tsx
+  const handleRowClickx = (params: { data: UserInfo['accounts'][number]['transactionGroups'][number] }) => {
+    const { fromInclusiveDate, toInclusiveDate } = params.data;
+    // Use "all" as group if subcategory isn't directly available
+    const group = 'all'; // Adjust if transactions have a specific subcategory
+    navigate(`/accounts/${accountNumber}/transactions/${group}/${fromInclusiveDate}/${toInclusiveDate}`);
+  };
+
+  const handleRowClick = (event: RowClickedEvent<TransactionGroup>) => {
+    console.log('handleRowClick')
+    if (!event.data) {
+      console.warn('No data available for clicked row');
+      return;
+    }
+    const { fromInclusiveDate, toInclusiveDate, transactions } = event.data;
+    console.log('handleRowClick here ', event.data)
+    navigate(`/accounts/${accountNumber}/transactions/${event.data.rawTransactionFile.filename}/${fromInclusiveDate}/${toInclusiveDate}`);
   };
 
   return (
@@ -124,14 +179,25 @@ const AccountDetails: React.FC<AccountDetailsProps> = ({ userInfo, setUserInfo, 
         <p><strong>Account Number:</strong> {account.accountNumber}</p>
         <h3>Transaction Groups ({account.transactionGroups.length})</h3>
         {account.transactionGroups.length > 0 ? (
-          <ul>
-            {account.transactionGroups.map((group, index) => (
-              <li key={index}>
-                From: {group.fromInclusiveDate}, To: {group.toInclusiveDate}, File: {group.rawTransactionFile.filename} (
-                {group.rawTransactionFile.contentType})
-              </li>
-            ))}
-          </ul>
+          <div
+            className="ag-theme-quartz"
+            style={{ height: '300px', width: '100%' }}
+          >
+            <AgGridReact
+              rowData={account.transactionGroups}
+              columnDefs={columnDefs}
+              defaultColDef={{
+                resizable: true,
+                sortable: true,
+                filter: true,
+              }}
+              onRowClicked={handleRowClick}
+              rowSelection="single"
+              animateRows={true}
+              pagination={true}
+              paginationPageSize={10}
+            />
+          </div>
         ) : (
           <p>No transaction groups</p>
         )}
@@ -171,7 +237,10 @@ const AccountDetails: React.FC<AccountDetailsProps> = ({ userInfo, setUserInfo, 
               accept=".csv,.pdf,.txt"
             />
           </div>
-          <button type="submit" disabled={isSubmitting || !formData.file || !formData.fromInclusiveDate || !formData.toInclusiveDate}>
+          <button
+            type="submit"
+            disabled={isSubmitting || !formData.file || !formData.fromInclusiveDate || !formData.toInclusiveDate}
+          >
             {isSubmitting ? 'Uploading...' : 'Upload File'}
           </button>
         </div>
