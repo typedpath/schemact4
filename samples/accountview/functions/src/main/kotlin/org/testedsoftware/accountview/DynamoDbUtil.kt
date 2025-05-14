@@ -9,25 +9,20 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.Instant
 
 object DynamoDbUtil {
+    val dynamoDb = AmazonDynamoDBClientBuilder.standard().build()
+
     fun <T> createOrUpdate(userTableName: String, userId: String, email: String, dataType: Class<T>, defaultData: ()-> T, update: (data: T) -> T) : T {
-        val dynamoDb = AmazonDynamoDBClientBuilder.standard().build()
         var data: T? = null
         try {
 
             // Retrieve existing item from DynamoDB
-            val getItemRequest = GetItemRequest()
-                .withTableName(userTableName)
-                .withKey(mapOf("user_id" to AttributeValue().withS(userId)))
-                .withConsistentRead(true) // Ensure latest data
-            val getItemResult = dynamoDb.getItem(getItemRequest)
-            val existingItem = getItemResult.item
+            val existingData = getUserData(userTableName=userTableName, userId=userId,
+                email=email, dataType=dataType)
 
-            if (existingItem != null && existingItem.isNotEmpty()) {
-                var strData: String = existingItem.get("data")?.s!!
-
-                data = (ObjectMapper()).readValue(strData, dataType)
+            if (existingData != null) {
+                data = existingData
                 data = update(data)
-                strData = (ObjectMapper().writeValueAsString(data))
+                val strData = (ObjectMapper().writeValueAsString(data))
                 // Item exists, update specific attributes
                 val updateItemRequest = UpdateItemRequest()
                     .withTableName(userTableName)
@@ -73,6 +68,23 @@ object DynamoDbUtil {
         }
 
 
+    }
+
+    fun <T> getUserData(userTableName: String, userId: String, email: String, dataType: Class<T>) : T? {
+
+
+        val getItemRequest = GetItemRequest()
+            .withTableName(userTableName)
+            .withKey(mapOf("user_id" to AttributeValue().withS(userId)))
+            .withConsistentRead(true) // Ensure latest data
+        val getItemResult = dynamoDb.getItem(getItemRequest)
+        val existingItem = getItemResult.item
+
+        return if (existingItem != null && existingItem.isNotEmpty()) {
+            var strData: String = existingItem.get("data")?.s!!
+
+             (ObjectMapper()).readValue(strData, dataType)
+        } else null
     }
 
 }
