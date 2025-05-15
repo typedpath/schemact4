@@ -4,18 +4,42 @@ import { getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 import getTransactionGroup from './functions/getTransactionGroup';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-quartz.css'; // Consistent with Accounts.tsx
-import { ColDef } from 'ag-grid-community';
-import './Transactions.css'; // Add custom CSS
+import 'ag-grid-community/styles/ag-theme-quartz.css';
+import { ColDef, RowClassParams } from 'ag-grid-community';
+import './Transactions.css';
 import AmountHeaderComponent from './AmountHeaderComponent';
-
 
 interface Transaction {
   date: string;
   subcategory: string;
-  amount: number;
+  amount: number; // In pence
   memo: string;
 }
+
+const getRowBackgroundColor = (amountInPence: number): string => {
+  const amountInPounds = amountInPence / 100;
+
+  if (amountInPounds <= -1000) {
+    return '#FF0000'; // Pure red
+  }
+  if (amountInPounds >= 1000) {
+    return '#00FF00'; // Pure green
+  }
+
+  if (amountInPounds < 0) {
+    const t = Math.abs(amountInPounds) / 1000;
+    const r = 255;
+    const g = Math.round(255 * (1 - t));
+    const b = Math.round(255 * (1 - t));
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  } else {
+    const t = amountInPounds / 1000;
+    const r = Math.round(255 * (1 - t));
+    const g = 255;
+    const b = Math.round(255 * (1 - t));
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
+};
 
 const TransactionGroupDetail: React.FC = () => {
   const { accountNumber, group, fromDate, toDate } = useParams<{
@@ -28,7 +52,6 @@ const TransactionGroupDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Column definitions to match Accounts.tsx style
   const columnDefs: ColDef<Transaction>[] = useMemo(
     () => [
       {
@@ -58,7 +81,7 @@ const TransactionGroupDetail: React.FC = () => {
         valueFormatter: (params) => {
           const amountInPence = params.value as number;
           const amountInPounds = amountInPence / 100;
-          return amountInPounds.toFixed(2); // e.g., -155 → -1.55
+          return amountInPounds.toFixed(2);
         },
         headerComponent: AmountHeaderComponent,
         cellClass: 'cell-right',
@@ -92,11 +115,12 @@ const TransactionGroupDetail: React.FC = () => {
         const response = await getTransactionGroup(fromDate!, toDate!, accountNumber!, idToken);
         const transactionGroup = response.data;
 
-        const filteredTransactions = group === 'all'
-          ? transactionGroup.transactions
-          : transactionGroup.transactions.filter(
-            (tx: Transaction) => tx.subcategory.toLowerCase() === group?.toLowerCase()
-          );
+        /* const filteredTransactions = group === 'all'
+           ? transactionGroup.transactions
+           : transactionGroup.transactions.filter(
+             (tx: Transaction) => tx.subcategory.toLowerCase() === group?.toLowerCase()
+           );
+           */
 
         setRowData(transactionGroup.transactions);
         setLoading(false);
@@ -142,13 +166,16 @@ const TransactionGroupDetail: React.FC = () => {
               field: 'date',
               minWidth: 200,
               cellRendererParams: {
-                suppressCount: true, // Cleaner group labels
+                suppressCount: true,
               },
             }}
             groupDisplayType="groupRows"
             animateRows={true}
             pagination={true}
             paginationPageSize={20}
+            getRowStyle={(params: RowClassParams<Transaction, any>) => ({
+              backgroundColor: getRowBackgroundColor(params.data?.amount ?? 0),
+            })}
           />
         </div>
       )}
