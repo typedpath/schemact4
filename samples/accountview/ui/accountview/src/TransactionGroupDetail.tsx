@@ -6,6 +6,9 @@ import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css'; // Consistent with Accounts.tsx
 import { ColDef } from 'ag-grid-community';
+import './Transactions.css'; // Add custom CSS
+import AmountHeaderComponent from './AmountHeaderComponent';
+
 
 interface Transaction {
   date: string;
@@ -33,8 +36,10 @@ const TransactionGroupDetail: React.FC = () => {
         headerName: 'Date',
         sortable: true,
         filter: 'agDateColumnFilter',
-        rowGroup: true, // Group by date
+        rowGroup: true,
         minWidth: 200,
+        headerClass: 'header-left',
+        cellClass: 'cell-left',
       },
       {
         field: 'subcategory',
@@ -42,13 +47,21 @@ const TransactionGroupDetail: React.FC = () => {
         sortable: true,
         filter: 'agTextColumnFilter',
         minWidth: 150,
+        headerClass: 'header-left',
+        cellClass: 'cell-left',
       },
       {
         field: 'amount',
-        headerName: 'Amount',
+        headerName: 'Amount / £',
         sortable: true,
         filter: 'agNumberColumnFilter',
-        valueFormatter: (params) => `£${params.value.toFixed(2)}`,
+        valueFormatter: (params) => {
+          const amountInPence = params.value as number;
+          const amountInPounds = amountInPence / 100;
+          return amountInPounds.toFixed(2); // e.g., -155 → -1.55
+        },
+        headerComponent: AmountHeaderComponent,
+        cellClass: 'cell-right',
         minWidth: 120,
       },
       {
@@ -56,8 +69,10 @@ const TransactionGroupDetail: React.FC = () => {
         headerName: 'Memo',
         sortable: true,
         filter: 'agTextColumnFilter',
-        flex: 1, // Expand to fill space
+        flex: 1,
         minWidth: 200,
+        headerClass: 'header-center',
+        cellClass: 'cell-center',
       },
     ],
     []

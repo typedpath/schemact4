@@ -1,0 +1,26 @@
+/* src/Transactions.css */
+.ag-theme-quartz .ag-cell.cell-right {
+  text-align: right !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  padding-right: 8px !important;
+}
+
+.ag-theme-quartz .ag-cell.cell-center {
+  text-align: center !important;
+  display: flex !important;
+  justify-content: center !important;
+  padding: 0 8px !important;
+}
+
+.ag-theme-quartz .ag-cell.cell-left {
+  text-align: left !important;
+  display: flex !important;
+  justify-content: flex-start !important;
+  padding-left: 8px !important;
+}
+
+/* Optional: General cell styling */
+.ag-theme-quartz .ag-cell {
+  align-items: center !important;
+}
