@@ -25,6 +25,10 @@ export interface UserInfo   {
                 subcategory: string
                 amount: number
                 memo: string
+                category: string
+                frequency: string
+                sourceCategory: string
+                categorized: boolean
                  } []
              } []
          } []

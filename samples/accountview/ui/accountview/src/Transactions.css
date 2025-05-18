@@ -33,3 +33,18 @@
   justify-content: flex-end !important;
   padding-right: 8px !important;
 }
+
+/* src/Transactions.css */
+.uncategorized-cell {
+  border: 2px solid red !important; /* Thick red outline, override AG Grid defaults */
+}
+
+/* Existing styles */
+.header-left { text-align: left; }
+.cell-left { text-align: left; }
+.header-center { text-align: center; }
+.cell-center { text-align: center; }
+.cell-right { text-align: right; }
+.ag-theme-quartz .ag-row:hover {
+  filter: brightness(90%);
+}

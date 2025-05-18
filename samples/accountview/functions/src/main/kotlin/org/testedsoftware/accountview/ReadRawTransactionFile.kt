@@ -24,7 +24,10 @@ object ReadRawTransactionFile {
                       Account.TransactionGroup.Transaction(
                          date = cells[1], subcategory =  cells[4],
                          amount =  (cells[3].toDouble() * 100).toInt(),
-                         memo = cells[5]
+                         memo = cells[5],
+                         sourceCategory = "",
+                         category = "",
+                         frequency = ""
                       ))
               }
         }

@@ -19,6 +19,10 @@ val transaction = Entity(name="Transaction", description = "Transaction") {
     string("subcategory", "subcategory", maxLength = 30)
     int("amount", "amount in pence")
     string("memo", "what i sit", maxLength = 1000)
+    string("category", "e.g. coffee", maxLength = 200)
+    string("frequency", "e.g. monthly", maxLength = 200)
+    string("sourceCategory", "e.g. creditcard", maxLength = 200)
+    bool(name="categorized", "has the transaction been catogorized")
 }
 
 val transactionGroup = Entity(name="TransactionGroup", description="Transaction Group" ) {

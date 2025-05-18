@@ -5,16 +5,12 @@ import getTransactionGroup from './functions/getTransactionGroup';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css';
-import { ColDef, RowClassParams } from 'ag-grid-community';
+import { ColDef, RowClassParams, CellValueChangedEvent } from 'ag-grid-community';
 import './Transactions.css';
 import AmountHeaderComponent from './AmountHeaderComponent';
+import { UserInfo } from './functions/UserInfo';
 
-interface Transaction {
-  date: string;
-  subcategory: string;
-  amount: number; // In pence
-  memo: string;
-}
+type Transaction = UserInfo['accounts'][number]['transactionGroups'][number]['transactions'][number];
 
 const getRowBackgroundColor = (amountInPence: number): string => {
   const amountInPounds = amountInPence / 100;
@@ -59,8 +55,8 @@ const TransactionGroupDetail: React.FC = () => {
         headerName: 'Date',
         sortable: true,
         filter: 'agDateColumnFilter',
-        rowGroup: true,
-        minWidth: 200,
+        width: 120,
+        minWidth: 100,
         headerClass: 'header-left',
         cellClass: 'cell-left',
       },
@@ -97,6 +93,43 @@ const TransactionGroupDetail: React.FC = () => {
         headerClass: 'header-center',
         cellClass: 'cell-center',
       },
+      {
+        field: 'category',
+        headerName: 'Category',
+        sortable: true,
+        filter: 'agTextColumnFilter',
+        editable: true,
+        minWidth: 150,
+        headerClass: 'header-center',
+        cellClass: (params) => [
+          'cell-center',
+          !(params && params.data && params.data.categorized) ? 'uncategorized-cell' : '',
+        ],
+      },
+      {
+        field: 'frequency',
+        headerName: 'Frequency',
+        sortable: true,
+        filter: 'agTextColumnFilter',
+        minWidth: 150,
+        headerClass: 'header-center',
+        cellClass: (params) => [
+          'cell-center',
+          !(params && params.data && params.data.categorized) ? 'uncategorized-cell' : '',
+        ],
+      },
+      {
+        field: 'sourceCategory',
+        headerName: 'Source Category',
+        sortable: true,
+        filter: 'agTextColumnFilter',
+        minWidth: 150,
+        headerClass: 'header-center',
+        cellClass: (params) => [
+          'cell-center',
+          !(params && params.data && params.data.categorized) ? 'uncategorized-cell' : '',
+        ],
+      },
     ],
     []
   );
@@ -115,13 +148,6 @@ const TransactionGroupDetail: React.FC = () => {
         const response = await getTransactionGroup(fromDate!, toDate!, accountNumber!, idToken);
         const transactionGroup = response.data;
 
-        /* const filteredTransactions = group === 'all'
-           ? transactionGroup.transactions
-           : transactionGroup.transactions.filter(
-             (tx: Transaction) => tx.subcategory.toLowerCase() === group?.toLowerCase()
-           );
-           */
-
         setRowData(transactionGroup.transactions);
         setLoading(false);
       } catch (err: any) {
@@ -132,6 +158,41 @@ const TransactionGroupDetail: React.FC = () => {
 
     fetchTransactions();
   }, [accountNumber, group, fromDate, toDate]);
+
+  const onCellValueChanged = async (event: CellValueChangedEvent<Transaction>) => {
+    if (event.colDef.field === 'category') {
+      console.log('onCellValueChanged: event:', event);
+      const updatedTransaction = {
+        ...event.data,
+        category: event.newValue,
+        categorized: !!event.newValue // Set categorized to true if category is non-empty
+      };
+      const updatedRowData = rowData.map(tx =>
+        tx === event.data ? updatedTransaction : tx
+      );
+      setRowData(updatedRowData);
+
+      // Optionally save to backend
+      /*try {
+        const session = await fetchAuthSession();
+        const idToken = session.tokens?.idToken?.toString();
+        if (!idToken) throw new Error('No ID token available');
+
+        await fetch('/functions/updateTransaction', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({
+            accountNumber,
+            fromDate,
+            toDate,
+            transaction: updatedTransaction,
+          }),
+        });
+      } catch (err: any) {
+        setError(err.message || 'Failed to save category');
+      }*/
+    }
+  };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -164,7 +225,7 @@ const TransactionGroupDetail: React.FC = () => {
             autoGroupColumnDef={{
               headerName: 'Date',
               field: 'date',
-              minWidth: 200,
+              minWidth: 120,
               cellRendererParams: {
                 suppressCount: true,
               },
@@ -176,6 +237,7 @@ const TransactionGroupDetail: React.FC = () => {
             getRowStyle={(params: RowClassParams<Transaction, any>) => ({
               backgroundColor: getRowBackgroundColor(params.data?.amount ?? 0),
             })}
+            onCellValueChanged={onCellValueChanged}
           />
         </div>
       )}

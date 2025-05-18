@@ -13,5 +13,9 @@ export interface TransactionGroup   {
         subcategory: string
         amount: number
         memo: string
+        category: string
+        frequency: string
+        sourceCategory: string
+        categorized: boolean
          } []
      } 

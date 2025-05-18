@@ -21,10 +21,6 @@ class GetTransactionGroupImpl {
         val key = "${userId}${transactionGroup.rawTransactionFile.location}"
          val transactions = ReadRawTransactionFile.read(privateBucketName, key)
 
-        val dummyTransactions = mutableListOf(
-            Account.TransactionGroup.Transaction(date= "12/5/24", subcategory="CreditCard",
-                amount=12345, memo="fishing equipment")
-        )
          return Account.TransactionGroup(fromInclusiveDate=fromInclusiveDate,
              toInclusiveDate=toInclusiveDate, rawTransactionFile = Account.TransactionGroup.File(
                  filename="a filename", location="alocation", uploadTime="14/5/24",
