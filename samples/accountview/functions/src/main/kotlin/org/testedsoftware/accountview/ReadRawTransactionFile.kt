@@ -27,7 +27,8 @@ object ReadRawTransactionFile {
                          memo = cells[5],
                          sourceCategory = "",
                          category = "",
-                         frequency = ""
+                         frequency = "",
+                          categorized = false
                       ))
               }
         }

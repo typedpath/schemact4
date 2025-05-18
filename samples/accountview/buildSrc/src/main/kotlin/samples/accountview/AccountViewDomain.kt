@@ -124,7 +124,7 @@ val addAccountFunction = Function("addAccount",
 )
 
 val functionsModule = Module(name= "functions",
-    version = "1.0.48-SNAPSHOT",
+    version = "1.0.49-SNAPSHOT",
     functions = mutableListOf(onLoginFunction, uploadFileFunction,
         addAccountFunction, uploadTransactionGroupFunction, getTransactionGroup))
 

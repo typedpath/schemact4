@@ -25,7 +25,7 @@ class GetTransactionGroupImpl {
              toInclusiveDate=toInclusiveDate, rawTransactionFile = Account.TransactionGroup.File(
                  filename="a filename", location="alocation", uploadTime="14/5/24",
                  contentType = "Test content type"),
-             transactions = transactions.toMutableList()
+             transactions = transactions.onEach { if (!it.categorized) AutoCat.autoCat(it) }.toMutableList()
          )
     }
     
