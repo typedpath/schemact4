@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { UserInfo } from './functions/UserInfo';
-import uploadTransactonGroup from './functions/uploadTransactonGroup';
+import uploadTransactionGroup from './functions/uploadTransactionGroup';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css'; // Match Accounts.tsx
@@ -122,7 +122,7 @@ const AccountDetails: React.FC<AccountDetailsProps> = ({ userInfo, setUserInfo, 
     setError(null);
 
     try {
-      const response = await uploadTransactonGroup(
+      const response = await uploadTransactionGroup(
         Authorization_in,
         file,
         fromInclusiveDate,

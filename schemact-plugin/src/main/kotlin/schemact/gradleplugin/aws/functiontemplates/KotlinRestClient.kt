@@ -6,7 +6,7 @@ import schemact.gradleplugin.RestPolicy
 import schemact.gradleplugin.aws.functiontemplates.CodeLocations.dataClassName
 
 fun kotlinRestClient(module: Module, function: Function, packageName: String, className: String) : String  {
-    val restPolicy = RestPolicy(function.paramType)
+    val restPolicy = RestPolicy(function.paramType, function.returnType)
     val visited = mutableSetOf<Entity>()
     return """
 package ${packageName}

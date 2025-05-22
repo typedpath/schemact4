@@ -33,9 +33,7 @@ fun topLevelFieldsAsArgs(functionId: String, connections: List<Connection>) : St
         {"$functionId.${it.name}"}.joinToString(", ")}")
     }
 
-    return connections.map {"${it.name}: ${
-        if ( it.entity2 is PrimitiveType) { (it.entity2 as PrimitiveType).kotlinName } else { it.entity2.name }
-    }"}.joinToString (", ")
+    return connections.map {"${it.name}: ${CodeLocations.kotlinTypeName(it)}"}.joinToString (", ")
 }
 
 

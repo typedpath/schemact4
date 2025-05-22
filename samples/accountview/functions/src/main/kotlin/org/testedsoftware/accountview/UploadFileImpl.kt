@@ -9,6 +9,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata
 import com.fasterxml.jackson.databind.ObjectMapper
 import schemact.aws.VerifyCognito.verifyCognitoJwt
 import schemact.react.File
+import schemact.react.UploadFile
 import java.io.ByteArrayInputStream
 import java.time.LocalDateTime
 
@@ -48,7 +49,7 @@ class UploadFileImpl {
             userId=userId, email=email, UserInfo::class.java,
             defaultData = {UserInfo(loginEvents=mutableListOf<String>())},
             update =  {data ->
-                data.uploads.add(UserInfo.File(filename = file.filename, location = path, contentType = file.contentType, uploadTime=LocalDateTime.now().toString()))
+                data.uploads.add(UserInfo.RandomFile(filename = file.filename, location = path, contentType = file.contentType, uploadTime=LocalDateTime.now().toString()))
                 data})
 
         // Return success response

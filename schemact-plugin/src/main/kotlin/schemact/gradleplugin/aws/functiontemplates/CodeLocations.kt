@@ -35,4 +35,10 @@ object CodeLocations {
         } else {
             "${function.name.capitalized()}_${entity.name}"
         }
+
+    fun kotlinTypeName(connection: Connection): String {
+        val entity = connection.entity2
+        val result = if (entity is PrimitiveType) entity.kotlinName else entity.name
+        return if (connection.cardinality==Cardinality.OneToOne) result else "List<$result>"
+    }
 }

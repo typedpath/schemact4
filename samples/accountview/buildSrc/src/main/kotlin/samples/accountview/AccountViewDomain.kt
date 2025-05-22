@@ -3,10 +3,27 @@ package samples.accountview
 import schemact.domain.*
 import schemact.domain.Language.Typescript
 
+val functionModuleVersion="1.0.58-SNAPSHOT"
 
 val auth =  Auth()
 
-val file = Entity(name="File",
+val transactionFile = Entity(name="TransactionFile",
+    "uploaded file") {
+    string("filename", "file name", maxLength = 2000)
+    string("location", "where in the s3", maxLength = 2000)
+    string("contentType", "what i sit", maxLength = 2000)
+    string("uploadTime", "uploadTime", maxLength = 2000)
+}
+
+val randomFile = Entity(name="RandomFile",
+    "uploaded file") {
+    string("filename", "file name", maxLength = 2000)
+    string("location", "where in the s3", maxLength = 2000)
+    string("contentType", "what i sit", maxLength = 2000)
+    string("uploadTime", "uploadTime", maxLength = 2000)
+}
+
+val rawTransactionFile = Entity(name="RawTransactionFile",
     "uploaded file") {
     string("filename", "file name", maxLength = 2000)
     string("location", "where in the s3", maxLength = 2000)
@@ -28,10 +45,22 @@ val transaction = Entity(name="Transaction", description = "Transaction") {
 val transactionGroup = Entity(name="TransactionGroup", description="Transaction Group" ) {
     string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
     string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
-    containsOne("rawTransactionFile", "Raw Transaction File", type = file)
+    containsOne("rawTransactionFile", "Raw Transaction File", type = rawTransactionFile)
+    containsOne("transactionFile", "Transaction File", type = transactionFile)
+    //containsOne("rawTransactionFile", "Raw Transaction File", type = file)
     containsMany("transactions", "transactions", type= transaction)
     // containsOne("categorizedTransactionFile", "Categorized Transaction File", type = file)
 }
+
+/*val transactionGroupCreateParams = Entity(name="TransactionGroupCreateParams", description="Transaction Group Create Params" ) {
+    string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
+    string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
+    containsOne("rawTransactionFile", "Raw Transaction File", type = file)
+    //containsOne("rawTransactionFile", "Raw Transaction File", type = file)
+    //containsMany("transactions", "transactions", type= transaction)
+    // containsOne("categorizedTransactionFile", "Categorized Transaction File", type = file)
+}*/
+
 
 val account = Entity(name="Account","accounts") {
     string("name", "file name", maxLength = 200)
@@ -42,7 +71,7 @@ val account = Entity(name="Account","accounts") {
 
 val userInfo = Entity(name = "UserInfo", description="UserInfo") {
     containsMany(name = "loginEvents", type = StringType(maxLength=200))
-    containsMany(name = "uploads", type = file)
+    containsMany(name = "uploads", type = randomFile)
     containsMany(name= "accounts", type= account)
 }
 
@@ -59,6 +88,9 @@ val onLoginFunction = Function("onLogin",
     auth = auth
 )
 
+val smallUploadFile = ReactJsInjectables.File(name ="File",
+    description="Random Uploaded File", maxBytes=10000000)
+
 val uploadFileFunction = Function("uploadFile",
     description = "uploads a file",
     paramType = Entity(name="param", description="Params" ) {
@@ -67,7 +99,7 @@ val uploadFileFunction = Function("uploadFile",
         containsOne("Authorization", description="Authorization header", type=InfrastructureInjectables.AuthorizationHeaderType)
         containsOne("cognitoDetails", description="Cognito Details",
             type=InfrastructureInjectables.CognitoClientDetails.entity)
-        containsOne(name ="file", "upload file", ReactJsInjectables.File(maxBytes=10000000))
+        containsOne(name ="file", "upload file", smallUploadFile)
 // for debug / development
         containsOne("input", description="native input details",
             type=InfrastructureInjectables.APIGatewayV2HTTPEventEntity)
@@ -76,7 +108,7 @@ val uploadFileFunction = Function("uploadFile",
     auth = auth
 )
 
-val uploadTransactionGroupFunction = Function("uploadTransactonGroup",
+val uploadTransactionGroupFunction = Function("uploadTransactionGroup",
     description = "uploads a transactionGroup",
     paramType = Entity(name="param", description="Params" ) {
         containsOne("userTableName", description="bucketName", type=InfrastructureInjectables.DynamoDBTablenameType)
@@ -84,7 +116,7 @@ val uploadTransactionGroupFunction = Function("uploadTransactonGroup",
         containsOne("Authorization", description="Authorization header", type=InfrastructureInjectables.AuthorizationHeaderType)
         containsOne("cognitoDetails", description="Cognito Details",
             type=InfrastructureInjectables.CognitoClientDetails.entity)
-        containsOne(name ="file", "upload file", ReactJsInjectables.File(maxBytes=10000000))
+        containsOne(name ="file", description = "upload file", type = smallUploadFile)
         string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
         string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
         string("accountNumber", "AccountNumber", maxLength = 20)
@@ -109,6 +141,23 @@ val getTransactionGroup = Function("getTransactionGroup",
     auth = auth
 )
 
+val categorizeTransactions = Function("categorizeTransactions",
+    description = "gets a transactionGroup",
+    paramType = Entity(name="param", description="Params" ) {
+        containsOne("userTableName", description="bucketName", type=InfrastructureInjectables.DynamoDBTablenameType)
+        containsOne("privateBucketName", description="bucketName", type=InfrastructureInjectables.PrivateBucketNameType)
+        containsOne("Authorization", description="Authorization header", type=InfrastructureInjectables.AuthorizationHeaderType)
+        containsOne("cognitoDetails", description="Cognito Details", type=InfrastructureInjectables.CognitoClientDetails.entity)
+        string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
+        string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
+        string("accountNumber", "AccountNumber", maxLength = 20)
+        containsMany("transactions", "transactions2Update", type= transaction)
+    },
+    returnType = transactionGroup,
+    auth = auth
+)
+
+
 val addAccountFunction = Function("addAccount",
     description = "adds an account",
     paramType = Entity(name="param", description="Params" ) {
@@ -124,9 +173,9 @@ val addAccountFunction = Function("addAccount",
 )
 
 val functionsModule = Module(name= "functions",
-    version = "1.0.49-SNAPSHOT",
+    version = functionModuleVersion,
     functions = mutableListOf(onLoginFunction, uploadFileFunction,
-        addAccountFunction, uploadTransactionGroupFunction, getTransactionGroup))
+        addAccountFunction, uploadTransactionGroupFunction, getTransactionGroup, categorizeTransactions))
 
 val defaultDeployment = Deployment(subdomain = "accountview", codeBranch ="dev")
 
@@ -152,6 +201,7 @@ name = "accountview",
         client(addAccountFunction, Typescript)
         client(uploadTransactionGroupFunction, Typescript)
         client(getTransactionGroup, Typescript)
+        client(categorizeTransactions, Typescript)
     }
 }
 

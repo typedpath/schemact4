@@ -35,13 +35,14 @@ object CreateSourceCode {
 //        val topLevelEntities = schemact.entities
 
         val allComplexTopLevelTypes = module.functions.flatMap {
-           RestPolicy(it.paramType).complexTopLevelTypes }.toMutableSet()
+           RestPolicy(it.paramType, it.returnType).complexTopLevelTypes }.toMutableSet()
         // TODO - add return types
 
         schemact.userKeyedDatabase?.let {
+            println("userKeyedDatabase writing userType based on allComplexTopLevelTypes=${allComplexTopLevelTypes.map { it.name }.joinToString (",")}")
            writeDataClassFile(entity=it.userInfoType, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=genDir, topLevelEntities =allComplexTopLevelTypes )
         }
-
+        // TODO
         module.functions.forEach {
             println("creating service code for function ${it.name} + client code for these websites: " +
                         functionToStaticWebsite.flatMap { it.value }.joinToString(",") { it.name }
@@ -58,7 +59,8 @@ object CreateSourceCode {
                 packageTree = packageTree,
                 staticWebSites = functionToStaticWebsite.get(it) ?: emptyList(),
                 staticWebSiteToSourceRoot = staticWebSiteToSourceRoot,
-                defaultLocalServerDomain=defaultLocalServerDomain
+                defaultLocalServerDomain=defaultLocalServerDomain,
+                allComplexTopLevelTypes=allComplexTopLevelTypes
             )
         }
         module.functionClients.forEach {
@@ -94,7 +96,8 @@ object CreateSourceCode {
         mainKotlinSourceDir: File,
         staticWebSites: List<StaticWebsite>,
         staticWebSiteToSourceRoot: Map<StaticWebsite, File>,
-        defaultLocalServerDomain: String?
+        defaultLocalServerDomain: String?,
+        allComplexTopLevelTypes: Set<Entity>
     ) {
         println("creating code for function ${function.name} in ${genDir.absolutePath}")
 
@@ -104,7 +107,7 @@ object CreateSourceCode {
         // TODO non string args
         val implClassName = CodeLocations.implClassName(function.name)
         val handlerClassName = CodeLocations.handlerClassName(function.name)
-        val restPolicy = RestPolicy(function.paramType)
+        val restPolicy = RestPolicy(function.paramType, function.returnType)
 
         generateServiceCode(
             function,
@@ -115,7 +118,8 @@ object CreateSourceCode {
             implClassName,
             handlerClassName,
             restPolicy,
-            mainKotlinSourceDir
+            mainKotlinSourceDir,
+            allComplexTopLevelTypes
         )
 
 
@@ -187,7 +191,8 @@ object CreateSourceCode {
         implClassName: String,
         handlerClassName: String,
         restPolicy: RestPolicy,
-        mainKotlinSourceDir: File
+        mainKotlinSourceDir: File,
+        allComplexTopLevelTypes: Set<Entity>
     ) {
         // find all the entities in the arguments
         // assume all definitions are nested
@@ -195,7 +200,7 @@ object CreateSourceCode {
         val allTopLevelConnections = restPolicy.allTopLevelConnections
 
         //assume argFrom environment are defined elsewhere
-        val complexTopLevelTypes = restPolicy.complexTopLevelTypes// allTopLevelConnections.map { it.entity2 }.filter { it !is PrimitiveType || it.connections.size>0}.toMutableSet()
+        val complexTopLevelTypes = allComplexTopLevelTypes//restPolicy.complexTopLevelTypes// allTopLevelConnections.map { it.entity2 }.filter { it !is PrimitiveType || it.connections.size>0}.toMutableSet()
         println("generateServiceCode complexTopLevelTypes for function ${function.name} reviewing : ${allTopLevelConnections.joinToString(","){it.name}}")
         println("generateServiceCode complexTopLevelTypes for function ${function.name}: ${complexTopLevelTypes.joinToString(","){it.name}}")
         complexTopLevelTypes.forEach {

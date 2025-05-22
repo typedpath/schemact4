@@ -10,7 +10,7 @@ object AutoCat {
     val groceryStorePrefixes = setOf(Morrisons, Waitrose, Tesco, Marks, Sainsburys)
 
 
-    fun autoCat(transaction: Account.TransactionGroup.Transaction) {
+    fun autoCat(transaction: Transaction) {
        val lMemo = transaction.memo.lowercase()
         when  {
            groceryStorePrefixes.any { lMemo.startsWith(it.lowercase()) } -> {

@@ -47,6 +47,21 @@ const TransactionGroupDetail: React.FC = () => {
   const [rowData, setRowData] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [transactionUpdates, setTransactionUpdates] = useState<Map<number, Transaction>>(new Map());
+
+  // Function to update transactionUpdates and rowData
+  const updateTransaction = (key: number, updatedTransaction: Transaction) => {
+    setTransactionUpdates((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(key, updatedTransaction);
+      return newMap;
+    });
+    console.log("transactionUpdates", transactionUpdates)
+    setRowData((prev) =>
+      prev.map((tx, index) => (index === key ? updatedTransaction : tx))
+    );
+  };
+
 
   const columnDefs: ColDef<Transaction>[] = useMemo(
     () => [
@@ -90,6 +105,19 @@ const TransactionGroupDetail: React.FC = () => {
         filter: 'agTextColumnFilter',
         flex: 1,
         minWidth: 200,
+        headerClass: 'header-center',
+        cellClass: 'cell-center',
+      },
+      {
+        field: 'categorized',
+        headerName: 'Categorized',
+        sortable: true,
+        filter: 'agSetColumnFilter',
+        editable: true,
+        cellRenderer: 'agCheckboxCellRenderer',
+        cellEditor: 'agCheckboxCellEditor',
+        width: 120,
+        minWidth: 100,
         headerClass: 'header-center',
         cellClass: 'cell-center',
       },
@@ -160,38 +188,52 @@ const TransactionGroupDetail: React.FC = () => {
   }, [accountNumber, group, fromDate, toDate]);
 
   const onCellValueChanged = async (event: CellValueChangedEvent<Transaction>) => {
-    if (event.colDef.field === 'category') {
+    if (/*event.colDef.field === 'category' ||*/ event.colDef.field === 'categorized') {
       console.log('onCellValueChanged: event:', event);
       const updatedTransaction = {
         ...event.data,
-        category: event.newValue,
-        categorized: !!event.newValue // Set categorized to true if category is non-empty
+        //category: event.colDef.field === 'category' ? event.newValue : event.data.category,
+        categorized:
+          event.colDef.field === 'categorized'
+
       };
       const updatedRowData = rowData.map(tx =>
         tx === event.data ? updatedTransaction : tx
       );
       setRowData(updatedRowData);
 
-      // Optionally save to backend
-      /*try {
-        const session = await fetchAuthSession();
-        const idToken = session.tokens?.idToken?.toString();
-        if (!idToken) throw new Error('No ID token available');
+      const key = event.rowIndex!!
+      updateTransaction(key, updatedTransaction); // Collect in transactionUpdates
+      /*setTransactionMap((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(key, updatedTransaction);
+        return newMap;
+      });*/
 
-        await fetch('/functions/updateTransaction', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${idToken}` },
-          body: JSON.stringify({
-            accountNumber,
-            fromDate,
-            toDate,
-            transaction: updatedTransaction,
-          }),
-        });
-      } catch (err: any) {
-        setError(err.message || 'Failed to save category');
-      }*/
     }
+
+
+
+    // Optionally save to backend
+    /*try {
+      const session = await fetchAuthSession();
+      const idToken = session.tokens?.idToken?.toString();
+      if (!idToken) throw new Error('No ID token available');
+
+      await fetch('/functions/updateTransaction', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({
+          accountNumber,
+          fromDate,
+          toDate,
+          transaction: updatedTransaction,
+        }),
+      });
+    } catch (err: any) {
+      setError(err.message || 'Failed to save category');
+    }
+  }*/
   };
 
   if (loading) {
@@ -241,6 +283,7 @@ const TransactionGroupDetail: React.FC = () => {
           />
         </div>
       )}
+      <div>transactionUpdates: {transactionUpdates.size}</div>
     </div>
   );
 };

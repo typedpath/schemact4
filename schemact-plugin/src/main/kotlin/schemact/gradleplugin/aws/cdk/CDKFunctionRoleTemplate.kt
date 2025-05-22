@@ -45,8 +45,12 @@ object CDKFunctionRoleTemplate {
                         "Action" to listOf("s3:PutObject", "s3:*"),
                         "Effect" to "Allow",
                         "Resource" to listOf("arn:aws:s3:::$bucketName/*")
-                    )
-                ),
+                    ),
+                    mapOf(
+                        "Action" to listOf("s3:ListBucket"),
+                        "Effect" to "Allow",
+                        "Resource" to listOf("arn:aws:s3:::$bucketName")
+                    ),                ),
                 "Version" to "2012-10-17"
             )
         )

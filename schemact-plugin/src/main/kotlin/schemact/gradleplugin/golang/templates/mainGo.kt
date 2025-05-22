@@ -60,18 +60,18 @@ ${module.functions.map {
 val function = it
     """
     case functionId == "${functionId(module, it)}" :
-             ${RestPolicy(it.paramType).argsFromParams.map {
+             ${RestPolicy(it.paramType, it.returnType).argsFromParams.map {
     """
         var ${it.name} = r.QueryStringParameters["${it.name}"]"""
 }.joinToString ()} 
-${if (RestPolicy(function.paramType).argsFromBody.size>0)"""
+${if (RestPolicy(function.paramType, function.returnType).argsFromBody.size>0)"""
         type ${function.name}_Body struct{ 
-              ${RestPolicy(function.paramType).argsFromBody.map{ """ 
+              ${RestPolicy(function.paramType, function.returnType).argsFromBody.map{ """ 
               ${it.name.capitalized()} ${cardinalityToken(it)}${propertyTypeName(module, function, it.entity2)} `json:"${it.name}"`""".trimIndent()   }.joinToString (System.lineSeparator())}
         }
         var body ${function.name}_Body 
         json.Unmarshal([]byte(r.Body), &body)  
- ${RestPolicy(function.paramType).argsFromBody.map{ """
+ ${RestPolicy(function.paramType, function.returnType).argsFromBody.map{ """
         var ${it.name} = body.${it.name.capitalized()}"""   }.joinToString (System.lineSeparator())}
 """ else 
 """""" }    

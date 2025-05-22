@@ -5,9 +5,9 @@ import { UserInfo } from './UserInfo';
 
 //namespace org.testedsoftware.accountview {
 
-const urlPath = "/functions/uploadTransactonGroup" 
+const urlPath = "/functions/uploadTransactionGroup" 
 
-export default async function uploadTransactonGroup(Authorization_in: string, file_in: File, fromInclusiveDate_in: string, toInclusiveDate_in: string, accountNumber_in: string) : Promise<AxiosResponse<UserInfo, any>> { // TODO map to specified return type
+export default async function uploadTransactionGroup(Authorization_in: string, file_in: File, fromInclusiveDate_in: string, toInclusiveDate_in: string, accountNumber_in: string) : Promise<AxiosResponse<UserInfo, any>> { // TODO map to specified return type
     let url = urlPath
     if (window.location.href.indexOf("localhost")>=0) {
       url = 'https://accountview.testedsoftware.org' + urlPath

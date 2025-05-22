@@ -8,6 +8,12 @@ export interface TransactionGroup   {
         contentType: string
         uploadTime: string
          } 
+    transactionFile:  {
+         filename: string
+        location: string
+        contentType: string
+        uploadTime: string
+         } 
     transactions:  {
          date: string
         subcategory: string

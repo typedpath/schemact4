@@ -9,7 +9,7 @@ import kotlin.reflect.jvm.internal.impl.utils.DFS.Visited
 // TODO keep track of what has already been printed
 fun dataClass(`package`: String?=null, entity: Entity, topLevelTypes: Set<Entity>) = """
 package ${`package`}
-
+// dataClass topLevelTypes: ${topLevelTypes.map { "${it.name}-${it.description}-${it.hashCode()}" }.joinToString(", ")}
 import com.fasterxml.jackson.annotation.JsonProperty
 
 ${dataClassSanPackage(entity, "", visited=topLevelTypes.toMutableSet())}    

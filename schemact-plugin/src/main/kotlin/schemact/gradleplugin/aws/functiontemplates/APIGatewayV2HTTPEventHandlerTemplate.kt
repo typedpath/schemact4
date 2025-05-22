@@ -102,7 +102,7 @@ private fun mulitiPartExtractionCode(connection: Connection) : String {
     val partName = "${connection.name}Part"
     return if (connection.entity2 is ReactJsInjectables.File) {
 """        val ${partName} = multiParts.get("${connection.name}")
-        val ${connection.name} = File(filename = ${partName}?.contentDispositionValues!!["filename"]?:throw Exception("No file provided"), content = ${partName}.body, contentType =${partName}?.contentType!!)
+        val ${connection.name} = ${connection.entity2.name}(filename = ${partName}?.contentDispositionValues!!["filename"]?:throw Exception("No file provided"), content = ${partName}.body, contentType =${partName}?.contentType!!)
 """    } else
 """
     val ${partName} = multiParts.get("${connection.name}")!!
@@ -111,6 +111,7 @@ private fun mulitiPartExtractionCode(connection: Connection) : String {
 }
 
 
-private fun asDataClassField(connection: Connection) = """@JsonProperty("${connection.name}") val ${connection.name}:${kotlinTypeName(connection.entity2)} """
+private fun asDataClassField(connection: Connection) = """@JsonProperty("${connection.name}") val ${connection.name}:${CodeLocations.kotlinTypeName(connection)} """
 
 private fun kotlinTypeName(entity: Entity) = if (entity is PrimitiveType) entity.kotlinName else entity.name
+

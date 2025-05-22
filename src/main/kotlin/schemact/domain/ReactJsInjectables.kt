@@ -3,7 +3,7 @@ package schemact.domain
 import com.amazonaws.transform.MapEntry
 
 object ReactJsInjectables {
-    class File(maxBytes: Long) : Entity("File", "File") {
+    class File(name: String, description: String, maxBytes: Long) : Entity(name=name, description=description) {
         init {
             string(name = "filename", maxLength = 1000)
             containsOne("content", "bytes", BlobType("blob", maxBytes = maxBytes))

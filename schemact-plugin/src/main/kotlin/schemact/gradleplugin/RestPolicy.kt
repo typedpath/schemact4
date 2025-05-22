@@ -3,7 +3,7 @@ package schemact.gradleplugin
 import schemact.domain.*
 
 // TODO this has no REST related parts e.g. argsFromEnvironment, argsPassedthoughNatively - maybe rename ?
-class RestPolicy(val paramType: Entity) {
+class RestPolicy(val paramType: Entity, val returnType: Entity) {
     val argsPassedthoughNatively : List<Connection> = paramType.connections.filter {
         val subParam = it.entity2
         subParam.isNativePassthrough
@@ -32,6 +32,7 @@ class RestPolicy(val paramType: Entity) {
                 subParam
             )
         }
+
     // assign big args to body
     val argsFromBody: List<Connection> = paramType.connections.filter {
         val subParam = it.entity2
@@ -41,7 +42,7 @@ class RestPolicy(val paramType: Entity) {
    val allTopLevelConnections: List<Connection> =
         argsFromBody.plus(argsFromParams).plus(argsFromEnvironment).plus(argsFromMultiPart)
 
-    val complexTopLevelTypes = allTopLevelConnections.map { it.entity2 }.filter { it !is PrimitiveType || it.connections.size>0}.toMutableSet()
+    val complexTopLevelTypes = allTopLevelConnections.map { it.entity2 }.plus(returnType).filter { it !is PrimitiveType || it.connections.size>0}.toMutableSet()
 
 
 }
