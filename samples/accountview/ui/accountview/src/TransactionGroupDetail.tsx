@@ -51,6 +51,7 @@ const TransactionGroupDetail: React.FC = () => {
 
   // Function to update transactionUpdates and rowData
   const updateTransaction = (key: number, updatedTransaction: Transaction) => {
+
     setTransactionUpdates((prev) => {
       const newMap = new Map(prev);
       newMap.set(key, updatedTransaction);
@@ -193,22 +194,12 @@ const TransactionGroupDetail: React.FC = () => {
       const updatedTransaction = {
         ...event.data,
         //category: event.colDef.field === 'category' ? event.newValue : event.data.category,
-        categorized:
-          event.colDef.field === 'categorized'
-
+        //categorized:  event.colDef.field === 'categorized' 
       };
-      const updatedRowData = rowData.map(tx =>
-        tx === event.data ? updatedTransaction : tx
-      );
-      setRowData(updatedRowData);
 
       const key = event.rowIndex!!
       updateTransaction(key, updatedTransaction); // Collect in transactionUpdates
-      /*setTransactionMap((prev) => {
-        const newMap = new Map(prev);
-        newMap.set(key, updatedTransaction);
-        return newMap;
-      });*/
+
 
     }
 
