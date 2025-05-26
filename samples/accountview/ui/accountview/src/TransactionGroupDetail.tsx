@@ -1,27 +1,26 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
 import getTransactionGroup from './functions/getTransactionGroup';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css';
-import { ColDef, RowClassParams, CellValueChangedEvent } from 'ag-grid-community';
+import { ColDef, RowClassParams, CellValueChangedEvent, ICellRendererParams } from 'ag-grid-community';
 import './Transactions.css';
 import AmountHeaderComponent from './AmountHeaderComponent';
 import { UserInfo } from './functions/UserInfo';
+import { useCategories } from './CategoryContext';
 
 type Transaction = UserInfo['accounts'][number]['transactionGroups'][number]['transactions'][number];
 
 const getRowBackgroundColor = (amountInPence: number): string => {
   const amountInPounds = amountInPence / 100;
-
   if (amountInPounds <= -1000) {
-    return '#FF0000'; // Pure red
+    return '#FF0000';
   }
   if (amountInPounds >= 1000) {
-    return '#00FF00'; // Pure green
+    return '#00FF00';
   }
-
   if (amountInPounds < 0) {
     const t = Math.abs(amountInPounds) / 1000;
     const r = 255;
@@ -44,25 +43,24 @@ const TransactionGroupDetail: React.FC = () => {
     fromDate: string;
     toDate: string;
   }>();
+  const navigate = useNavigate();
   const [rowData, setRowData] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [transactionUpdates, setTransactionUpdates] = useState<Map<number, Transaction>>(new Map());
+  const { categoryOptions } = useCategories();
 
-  // Function to update transactionUpdates and rowData
   const updateTransaction = (key: number, updatedTransaction: Transaction) => {
-
     setTransactionUpdates((prev) => {
       const newMap = new Map(prev);
       newMap.set(key, updatedTransaction);
       return newMap;
     });
-    console.log("transactionUpdates", transactionUpdates)
+    console.log('transactionUpdates', transactionUpdates);
     setRowData((prev) =>
       prev.map((tx, index) => (index === key ? updatedTransaction : tx))
     );
   };
-
 
   const columnDefs: ColDef<Transaction>[] = useMemo(
     () => [
@@ -134,6 +132,21 @@ const TransactionGroupDetail: React.FC = () => {
           'cell-center',
           !(params && params.data && params.data.categorized) ? 'uncategorized-cell' : '',
         ],
+        cellEditor: 'agSelectCellEditor',
+        cellEditorParams: {
+          values: ['', ...categoryOptions], // Include empty string for "no selection"
+        },
+        valueSetter: (params) => {
+          console.log('category valueSetter called, newValue:', params.newValue, 'oldValue:', params.oldValue);
+          if (params.newValue !== params.oldValue) {
+            params.data.category = params.newValue || null;
+            return true;
+          }
+          return false;
+        },
+        cellRenderer: (params: ICellRendererParams<Transaction>) => {
+          return params.value || 'Select...';
+        },
       },
       {
         field: 'frequency',
@@ -160,7 +173,7 @@ const TransactionGroupDetail: React.FC = () => {
         ],
       },
     ],
-    []
+    [categoryOptions]
   );
 
   useEffect(() => {
@@ -189,42 +202,18 @@ const TransactionGroupDetail: React.FC = () => {
   }, [accountNumber, group, fromDate, toDate]);
 
   const onCellValueChanged = async (event: CellValueChangedEvent<Transaction>) => {
-    if (/*event.colDef.field === 'category' ||*/ event.colDef.field === 'categorized') {
-      console.log('onCellValueChanged: event:', event);
+    console.log('onCellValueChanged triggered for field:', event.colDef.field, 'newValue:', event.newValue, 'oldValue:', event.oldValue);
+    if (event.colDef.field === 'category' || event.colDef.field === 'categorized') {
       const updatedTransaction = {
         ...event.data,
-        //category: event.colDef.field === 'category' ? event.newValue : event.data.category,
-        //categorized:  event.colDef.field === 'categorized' 
+        category: event.colDef.field === 'category' ? event.newValue || null : event.data.category,
+        categorized: event.colDef.field === 'categorized' ? event.newValue : event.data.categorized,
       };
-
-      const key = event.rowIndex!!
-      updateTransaction(key, updatedTransaction); // Collect in transactionUpdates
-
-
+      const key = event.rowIndex!;
+      console.log('Updating transaction for row:', key, 'with:', updatedTransaction);
+      updateTransaction(key, updatedTransaction);
+      event.api.refreshCells({ force: true });
     }
-
-
-
-    // Optionally save to backend
-    /*try {
-      const session = await fetchAuthSession();
-      const idToken = session.tokens?.idToken?.toString();
-      if (!idToken) throw new Error('No ID token available');
-
-      await fetch('/functions/updateTransaction', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${idToken}` },
-        body: JSON.stringify({
-          accountNumber,
-          fromDate,
-          toDate,
-          transaction: updatedTransaction,
-        }),
-      });
-    } catch (err: any) {
-      setError(err.message || 'Failed to save category');
-    }
-  }*/
   };
 
   if (loading) {
@@ -240,13 +229,16 @@ const TransactionGroupDetail: React.FC = () => {
       <h2>Transactions for Account {accountNumber}</h2>
       <p>Group: {group}</p>
       <p>From: {fromDate} To: {toDate}</p>
+      <button
+        onClick={() => navigate('/categories')}
+        style={{ marginBottom: '10px', padding: '5px 10px' }}
+      >
+        Manage Categories
+      </button>
       {rowData.length === 0 ? (
         <p>No transactions found.</p>
       ) : (
-        <div
-          className="ag-theme-quartz"
-          style={{ height: '500px', width: '100%' }}
-        >
+        <div className="ag-theme-quartz" style={{ height: '500px', width: '100%' }}>
           <AgGridReact
             rowData={rowData}
             columnDefs={columnDefs}
@@ -254,6 +246,7 @@ const TransactionGroupDetail: React.FC = () => {
               resizable: true,
               sortable: true,
               filter: true,
+              editable: true,
             }}
             autoGroupColumnDef={{
               headerName: 'Date',
@@ -267,10 +260,14 @@ const TransactionGroupDetail: React.FC = () => {
             animateRows={true}
             pagination={true}
             paginationPageSize={20}
-            getRowStyle={(params: RowClassParams<Transaction, any>) => ({
+            getRowStyle={(params: RowClassParams<Transaction>) => ({
               backgroundColor: getRowBackgroundColor(params.data?.amount ?? 0),
             })}
             onCellValueChanged={onCellValueChanged}
+            singleClickEdit={true}
+            onCellClicked={(event) => console.log('Cell clicked:', event.colDef.field, event.rowIndex)}
+            onCellEditingStarted={(event) => console.log('Cell editing started:', event.colDef.field, event.rowIndex)}
+            onCellEditingStopped={(event) => console.log('Cell editing stopped:', event.colDef.field, event.rowIndex, 'newValue:', event.newValue)}
           />
         </div>
       )}

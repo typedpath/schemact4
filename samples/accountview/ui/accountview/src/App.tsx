@@ -10,6 +10,9 @@ import AccountDetails from './AccountDetails';
 import onLogin from './functions/onLogin';
 import { UserInfo } from './functions/UserInfo';
 import TransactionGroupDetail from './TransactionGroupDetail';
+import CategoryEditScreen from './CategoryEditScreen';
+import { CategoryProvider } from './CategoryContext';
+
 
 interface AuthUserData {
   userId: string;
@@ -56,65 +59,70 @@ const App: React.FC = () => {
   return (
     <Authenticator>
       {({ signOut, user }) => (
-        <Router>
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-            {user ? (
-              <>
-                <Routes>
-                  <Route
-                    path="/"
-                    element={
-                      userInfo && Authorization ? (
-                        <Accounts
-                          accounts={userInfo.accounts}
-                          setUserInfo={setUserInfo}
-                          Authorization_in={Authorization}
-                        />
-                      ) : (
-                        <p>Loading accounts...</p>
-                      )
-                    }
-                  />
-                  <Route
-                    path="/account/:accountNumber"
-                    element={
-                      userInfo && Authorization ? (
-                        <AccountDetails
-                          userInfo={userInfo}
-                          setUserInfo={setUserInfo}
-                          Authorization_in={Authorization}
-                        />
-                      ) : (
-                        <p>Loading account details...</p>
-                      )
-                    }
-                  />
-                  <Route
-                    path="/accounts/:accountNumber/transactions/:group/:fromDate/:toDate"
-                    element={<TransactionGroupDetail />}
-                  />
-                </Routes>
-                <button
-                  onClick={async () => {
-                    try {
-                      const session = await fetchAuthSession();
-                      console.log('JWT Token:', session.tokens?.idToken?.toString());
-                      setSession(null);
-                      if (signOut) await signOut();
-                    } catch (error) {
-                      console.error('Error during sign-out:', error);
-                    }
-                  }}
-                  style={{ padding: '10px', marginTop: '10px' }}
-                >
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <h1>Please sign in</h1>
-            )}
-          </div>
-        </Router>
+        <CategoryProvider>
+          <Router>
+            <div style={{ padding: '20px', textAlign: 'center' }}>
+              {user ? (
+                <>
+                  <Routes>
+                    <Route
+                      path="/"
+                      element={
+                        userInfo && Authorization ? (
+                          <Accounts
+                            accounts={userInfo.accounts}
+                            setUserInfo={setUserInfo}
+                            Authorization_in={Authorization}
+                          />
+                        ) : (
+                          <p>Loading accounts...</p>
+                        )
+                      }
+                    />
+                    <Route
+                      path="/account/:accountNumber"
+                      element={
+                        userInfo && Authorization ? (
+                          <AccountDetails
+                            userInfo={userInfo}
+                            setUserInfo={setUserInfo}
+                            Authorization_in={Authorization}
+                          />
+                        ) : (
+                          <p>Loading account details...</p>
+                        )
+                      }
+                    />
+                    <Route
+                      path="/accounts/:accountNumber/transactions/:group/:fromDate/:toDate"
+                      element={<TransactionGroupDetail />}
+                    />
+                    <Route path="/categories" element={<CategoryEditScreen />} />
+
+
+                  </Routes>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const session = await fetchAuthSession();
+                        console.log('JWT Token:', session.tokens?.idToken?.toString());
+                        setSession(null);
+                        if (signOut) await signOut();
+                      } catch (error) {
+                        console.error('Error during sign-out:', error);
+                      }
+                    }}
+                    style={{ padding: '10px', marginTop: '10px' }}
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <h1>Please sign in</h1>
+              )}
+            </div>
+          </Router>
+        </CategoryProvider>
       )}
     </Authenticator>
   );
