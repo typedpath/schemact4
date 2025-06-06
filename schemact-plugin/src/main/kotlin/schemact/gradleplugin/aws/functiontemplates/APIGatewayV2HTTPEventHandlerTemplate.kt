@@ -56,7 +56,7 @@ class ${handlerClassName} : RequestHandler<${APIGatewayV2HTTPEventEntity.name}, 
     """    
     val ${it.name} = ${getFromSystemEnvCode(it)}"""
 }.joinToString(System.lineSeparator())}       
-      ${if (restPolicy.argsFromMultiPart.size==0 && restPolicy.argsFromBody.size>0) "val body = ObjectMapper().readValue(input!!.body, Body::class.java)" else ""}
+      ${if (restPolicy.argsFromMultiPart.size==0 && restPolicy.argsFromBody.size>0) "val body = ObjectMapper().readValue($inputParamName.body, Body::class.java)" else ""}
       ${restPolicy.argsFromBody.joinToString(System.lineSeparator()) {"""
       val ${it.name}=body.${it.name}"""   }} 
        ${restPolicy.argsFromParams.map { 

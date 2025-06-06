@@ -10,8 +10,13 @@ open class Entity(val name: String, val description: String, val isValueType: Bo
                   var isNativePassthrough: Boolean = false,
                   var connections: MutableList<Connection> = mutableListOf(),
                   var prefferedPackage: String? = null,
+                  var version: String = DefaultVersion,
                   init: Entity.() -> Unit = {}) {
     init { init() }
+    companion object {
+        const val DefaultVersion="0"
+    }
+
     fun containsMany(name: String, description: String=name, type: Entity, optional : Boolean = true) : Connection {
         val c = Connection( name=name, description = description,  entity1 = this, entity2 = type,
             type = ConnectionType.Contains,

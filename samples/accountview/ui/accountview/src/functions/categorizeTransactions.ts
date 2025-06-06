@@ -7,7 +7,7 @@ import { TransactionGroup } from './TransactionGroup';
 
 const urlPath = "/functions/categorizeTransactions" 
 
-export default async function categorizeTransactions(fromInclusiveDate_in: string, toInclusiveDate_in: string, accountNumber_in: string, transactions_in: Transaction, Authorization_in: string) : Promise<AxiosResponse<TransactionGroup, any>> { // TODO map to specified return type
+export default async function categorizeTransactions(fromInclusiveDate_in: string, toInclusiveDate_in: string, accountNumber_in: string, transactionUpdates_in: TransactionUpdate[], Authorization_in: string) : Promise<AxiosResponse<TransactionGroup, any>> { // TODO map to specified return type
     let url = urlPath
     if (window.location.href.indexOf("localhost")>=0) {
       url = 'https://accountview.testedsoftware.org' + urlPath
@@ -17,7 +17,7 @@ export default async function categorizeTransactions(fromInclusiveDate_in: strin
         headers['Authorization']=Authorization_in;
 
       
-    let body = {transactions: transactions_in}; 
+    let body = {transactionUpdates: transactionUpdates_in}; 
 
     let fromInclusiveDate = fromInclusiveDate_in;
     let toInclusiveDate = toInclusiveDate_in;
@@ -31,15 +31,18 @@ export default async function categorizeTransactions(fromInclusiveDate_in: strin
      }       
 
 
-export interface Transaction   {
-     date: string
-    subcategory: string
-    amount: number
-    memo: string
-    category: string
-    frequency: string
-    sourceCategory: string
-    categorized: boolean
+export interface TransactionUpdate   {
+     index: number
+    transaction:  {
+         date: string
+        subcategory: string
+        amount: number
+        memo: string
+        category: string
+        frequency: string
+        sourceCategory: string
+        categorized: boolean
+         } 
      } 
 
 

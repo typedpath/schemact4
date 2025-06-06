@@ -2,6 +2,7 @@
 package org.testedsoftware.accountview
 // created by template functionSampleImpl
 import org.testedsoftware.accountview.DynamoDbUtil.getUserData
+import org.testedsoftware.accountview.UserInfoDeserializer.deserialize
 import schemact.aws.CognitoClientDetails
 import schemact.aws.VerifyCognito.verifyCognitoJwt
 
@@ -14,7 +15,7 @@ class GetTransactionGroupImpl {
         val userId = cognitoData.sub
         val email = cognitoData.email!!
         val existingData = getUserData<UserInfo>(userTableName=userTableName, userId=userId,
-            email=email, dataType=UserInfo::class.java)
+             dataType=UserInfo::class.java, deserialize= UserInfoDeserializer::deserialize)
         val account = existingData?.accounts?.find { accountNumber.equals(it.accountNumber)  }?:throw Exception("Account Number not found $accountNumber for user email:$email userId: $userId")
         val transactionGroup = account.transactionGroups.find { it.fromInclusiveDate == fromInclusiveDate && it.toInclusiveDate == toInclusiveDate }?:throw Exception("Transaction Group not found $fromInclusiveDate to $toInclusiveDate for accountNumber $accountNumber for user email:$email userId: $userId")
         val key = "${userId}${transactionGroup.transactionFile.location}/${transactionGroup.transactionFile.filename}"
@@ -29,6 +30,8 @@ class GetTransactionGroupImpl {
                 rawTransactionFile = transactionGroup.rawTransactionFile,
                 transactionFile = transactionGroup.transactionFile,
                 transactions = transactions.onEach { if (!it.categorized) AutoCat.autoCat(it) }
+                    .map { TransactionGroup.Transaction(date=it.date, subcategory = it.subcategory, amount = it.amount,
+                        memo=it.memo, category = it.category, categorized =  it.categorized, frequency = it.frequency, sourceCategory = it.sourceCategory) }
                     .toMutableList()
             )
         } catch (ex: Exception) {

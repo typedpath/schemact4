@@ -41,6 +41,10 @@ object CreateSourceCode {
         schemact.userKeyedDatabase?.let {
             println("userKeyedDatabase writing userType based on allComplexTopLevelTypes=${allComplexTopLevelTypes.map { it.name }.joinToString (",")}")
            writeDataClassFile(entity=it.userInfoType, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=genDir, topLevelEntities =allComplexTopLevelTypes )
+           it.previousUserInfoTypes.forEach {
+               println("userKeyedDatabase writing previous type ${it.name}")
+               writeDataClassFile(entity=it, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=genDir, topLevelEntities =allComplexTopLevelTypes )
+           }
         }
         // TODO
         module.functions.forEach {

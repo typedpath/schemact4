@@ -1,5 +1,5 @@
 
-export interface UserInfo   {
+export interface UserInfo1   {
      loginEvents: string[]
     uploads:  {
          filename: string
@@ -38,5 +38,5 @@ export interface UserInfo   {
                  } []
              } []
          } []
-    categories: string[]
+    catagories: string[]
      } 

@@ -11,36 +11,52 @@ import java.time.Instant
 object DynamoDbUtil {
     val dynamoDb = AmazonDynamoDBClientBuilder.standard().build()
 
-    fun <T> createOrUpdate(userTableName: String, userId: String, email: String, dataType: Class<T>, defaultData: ()-> T, update: (data: T) -> T) : T {
+    fun <T> createOrUpdate(userTableName: String, userId: String, email: String, dataType: Class<T>, defaultData: ()-> T,
+                           update: ((data: T) -> T) ? = null,
+                           deserialize: (str: String, version: String) -> T,
+                           version: String
+                           ) : T {
         var data: T? = null
         try {
 
             // Retrieve existing item from DynamoDB
             val existingData = getUserData(userTableName=userTableName, userId=userId,
-                email=email, dataType=dataType)
+                 dataType=dataType, deserialize=deserialize)
 
             if (existingData != null) {
                 data = existingData
-                data = update(data)
-                val strData = (ObjectMapper().writeValueAsString(data))
-                // Item exists, update specific attributes
-                val updateItemRequest = UpdateItemRequest()
-                    .withTableName(userTableName)
-                    .withKey(mapOf("user_id" to AttributeValue().withS(userId)))
-                    .withUpdateExpression("SET email = :email, username = :username, #data = :data, #updated_at=:updated_at")
-                    .withExpressionAttributeNames(mapOf("#data" to "data", "#updated_at" to "updated_at")) // Avoid reserved keyword
-                    .withExpressionAttributeValues(mapOf(
-                        ":email" to AttributeValue().withS(email),
-                        ":username" to AttributeValue().withS(email),
-                        ":data" to AttributeValue().withS(strData),
-                        ":updated_at" to AttributeValue().withS(Instant.now().toString())
+                if (update!=null) {
+                    data = update(data)
+                    val strData = (ObjectMapper().writeValueAsString(data))
+                    // Item exists, update specific attributes
+                    val updateItemRequest = UpdateItemRequest()
+                        .withTableName(userTableName)
+                        .withKey(mapOf("user_id" to AttributeValue().withS(userId)))
+                        .withUpdateExpression("SET email = :email, username = :username, #data = :data, #version=:version, #updated_at=:updated_at")
+                        .withExpressionAttributeNames(
+                            mapOf(
+                                "#data" to "data",
+                                "#version" to "version",
+                                "#updated_at" to "updated_at"
+                            )
+                        ) // Avoid reserved keyword
+                        .withExpressionAttributeValues(
+                            mapOf(
+                                ":email" to AttributeValue().withS(email),
+                                ":username" to AttributeValue().withS(email),
+                                ":data" to AttributeValue().withS(strData),
+                                ":version" to AttributeValue().withS(version),
+                                ":updated_at" to AttributeValue().withS(Instant.now().toString())
 
-                    ))
-                dynamoDb.updateItem(updateItemRequest)
+                            )
+                        )
+                    dynamoDb.updateItem(updateItemRequest)
+                }
                 println("Updated user data in DynamoDB for user_id=$userId")
             } else {
                 // Item does not exist, create new item
-                data = update(defaultData())
+                data = defaultData()
+                if (update!=null) data = update(data)
                 val strData = ObjectMapper().writeValueAsString(data)
                 val putItemRequest = PutItemRequest()
                     .withTableName(userTableName)
@@ -50,6 +66,7 @@ object DynamoDbUtil {
                             "email" to AttributeValue().withS(email),
                             "username" to AttributeValue().withS(email),
                             "data" to AttributeValue().withS(strData),
+                            "version" to AttributeValue().withS(version),
                             "created_at" to AttributeValue().withS(Instant.now().toString())
                         )
                     )
@@ -70,7 +87,9 @@ object DynamoDbUtil {
 
     }
 
-    fun <T> getUserData(userTableName: String, userId: String, email: String, dataType: Class<T>) : T? {
+    fun <T> getUserData(userTableName: String, userId: String,
+                        dataType: Class<T>,
+                        deserialize: (str: String, version: String) -> T) : T? {
 
 
         val getItemRequest = GetItemRequest()
@@ -81,9 +100,9 @@ object DynamoDbUtil {
         val existingItem = getItemResult.item
 
         return if (existingItem != null && existingItem.isNotEmpty()) {
+            var version = existingItem.get("version")?.s?:"0"
             var strData: String = existingItem.get("data")?.s!!
-
-             (ObjectMapper()).readValue(strData, dataType)
+             deserialize(strData, version)
         } else null
     }
 

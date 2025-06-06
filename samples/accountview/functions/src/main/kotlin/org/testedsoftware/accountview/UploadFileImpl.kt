@@ -26,7 +26,6 @@ class UploadFileImpl {
         val userId = cognitoData.sub
         val email = cognitoData.email?:"unknown"
 
-
         val s3: AmazonS3 =
             AmazonS3ClientBuilder.standard()
                 .withRegion(cognitoDetails.region)
@@ -45,14 +44,11 @@ class UploadFileImpl {
         // Generate file URL
         val fileUrl = "https://$s3Bucket.s3.amazonaws.com/$key"
 
-        return DynamoDbUtil.createOrUpdate(userTableName=userTableName,
-            userId=userId, email=email, UserInfo::class.java,
-            defaultData = {UserInfo(loginEvents=mutableListOf<String>())},
+        return UserInfoUpdater.update(userTableName=userTableName,
+            userId=userId, email=email,
             update =  {data ->
                 data.uploads.add(UserInfo.RandomFile(filename = file.filename, location = path, contentType = file.contentType, uploadTime=LocalDateTime.now().toString()))
                 data})
-
-        // Return success response
     }
     
 }

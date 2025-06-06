@@ -3,7 +3,7 @@ package samples.accountview
 import schemact.domain.*
 import schemact.domain.Language.Typescript
 
-val functionModuleVersion="1.0.58-SNAPSHOT"
+val functionModuleVersion="1.0.68-SNAPSHOT"
 
 val auth =  Auth()
 
@@ -52,16 +52,6 @@ val transactionGroup = Entity(name="TransactionGroup", description="Transaction 
     // containsOne("categorizedTransactionFile", "Categorized Transaction File", type = file)
 }
 
-/*val transactionGroupCreateParams = Entity(name="TransactionGroupCreateParams", description="Transaction Group Create Params" ) {
-    string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
-    string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
-    containsOne("rawTransactionFile", "Raw Transaction File", type = file)
-    //containsOne("rawTransactionFile", "Raw Transaction File", type = file)
-    //containsMany("transactions", "transactions", type= transaction)
-    // containsOne("categorizedTransactionFile", "Categorized Transaction File", type = file)
-}*/
-
-
 val account = Entity(name="Account","accounts") {
     string("name", "file name", maxLength = 200)
     string("sortCode", "where in the s3", maxLength = 10)
@@ -69,10 +59,18 @@ val account = Entity(name="Account","accounts") {
     containsMany("transactionGroups", "Transaction Groups", type= transactionGroup)
 }
 
-val userInfo = Entity(name = "UserInfo", description="UserInfo") {
+val userInfo0 = Entity(name = "UserInfo0", description="UserInfo0") {
     containsMany(name = "loginEvents", type = StringType(maxLength=200))
     containsMany(name = "uploads", type = randomFile)
     containsMany(name= "accounts", type= account)
+}
+
+val userInfo1 = Entity(name = "UserInfo", description="UserInfo",
+    version="1") {
+    containsMany(name = "loginEvents", type = StringType(maxLength=200))
+    containsMany(name = "uploads", type = randomFile)
+    containsMany(name= "accounts", type= account)
+    containsMany(name="categories", type = StringType(maxLength=200))
 }
 
 val onLoginFunction = Function("onLogin",
@@ -84,7 +82,7 @@ val onLoginFunction = Function("onLogin",
         containsOne("cognitoDetails", description="Cognito Details",
             type=InfrastructureInjectables.CognitoClientDetails.entity)
     },
-    returnType = userInfo,
+    returnType = userInfo1,
     auth = auth
 )
 
@@ -104,7 +102,7 @@ val uploadFileFunction = Function("uploadFile",
         containsOne("input", description="native input details",
             type=InfrastructureInjectables.APIGatewayV2HTTPEventEntity)
     },
-    returnType = userInfo,
+    returnType = userInfo1,
     auth = auth
 )
 
@@ -122,7 +120,7 @@ val uploadTransactionGroupFunction = Function("uploadTransactionGroup",
         string("accountNumber", "AccountNumber", maxLength = 20)
 
     },
-    returnType = userInfo,
+    returnType = userInfo1,
     auth = auth
 )
 
@@ -151,12 +149,14 @@ val categorizeTransactions = Function("categorizeTransactions",
         string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
         string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
         string("accountNumber", "AccountNumber", maxLength = 20)
-        containsMany("transactions", "transactions2Update", type= transaction)
+        containsMany("transactionUpdates", "transaction updates", type= Entity(name="TransactionUpdate", description="Transaction Update") {
+             int("index", "index in file")
+             containsOne("transaction", description="Transaction", type=transaction)
+        } )
     },
     returnType = transactionGroup,
     auth = auth
 )
-
 
 val addAccountFunction = Function("addAccount",
     description = "adds an account",
@@ -168,7 +168,7 @@ val addAccountFunction = Function("addAccount",
         containsOne("account", description="Account", type= account)
 
     },
-    returnType = userInfo,
+    returnType = userInfo1,
     auth = auth
 )
 
@@ -190,7 +190,7 @@ val accountview = Schemact(
 name = "accountview",
     domains = listOf(rootDomain),
     modules = mutableListOf(functionsModule),
-    userKeyedDatabase = UserKeyedDatabase(userInfo),
+    userKeyedDatabase = UserKeyedDatabase(userInfoType = userInfo1, previousUserInfoTypes = listOf(userInfo0)),
     defaultLocalClientDeployment = defaultDeployment,
     privateBucket = PrivateBucket(),
     auth =  auth

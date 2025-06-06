@@ -10,6 +10,7 @@ import './Transactions.css';
 import AmountHeaderComponent from './AmountHeaderComponent';
 import { UserInfo } from './functions/UserInfo';
 import { useCategories } from './CategoryContext';
+import categorizeTransactions, { TransactionUpdate } from './functions/categorizeTransactions';
 
 type Transaction = UserInfo['accounts'][number]['transactionGroups'][number]['transactions'][number];
 
@@ -60,6 +61,58 @@ const TransactionGroupDetail: React.FC = () => {
     setRowData((prev) =>
       prev.map((tx, index) => (index === key ? updatedTransaction : tx))
     );
+  };
+
+  const handleSaveUpdates = async () => {
+    if (transactionUpdates.size === 0) {
+      alert('No updates to save.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const session = await fetchAuthSession();
+      const idToken = session.tokens?.idToken?.toString();
+
+      if (!idToken) {
+        throw new Error('No ID token available');
+      }
+
+      // Transform transactionUpdates to TransactionUpdate[]
+      const updates: TransactionUpdate[] = Array.from(transactionUpdates.entries()).map(([index, tx]) => ({
+        index,
+        transaction: {
+          date: tx.date,
+          subcategory: tx.subcategory,
+          amount: tx.amount,
+          memo: tx.memo,
+          category: tx.category || '', // Convert null to empty string
+          frequency: tx.frequency || '',
+          sourceCategory: tx.sourceCategory || '',
+          categorized: tx.categorized,
+        },
+      }));
+
+      const response = await categorizeTransactions(
+        fromDate!,
+        toDate!,
+        accountNumber!,
+        updates,
+        idToken
+      );
+
+      // Update grid with response data
+      setRowData(response.data.transactions);
+      setTransactionUpdates(new Map()); // Clear updates
+      setLoading(false);
+      console.log('categorizeTransactions success:', response.data);
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to save transaction updates';
+      setError(errorMessage);
+      setLoading(false);
+      console.error('categorizeTransactions error:', err);
+    }
   };
 
   const columnDefs: ColDef<Transaction>[] = useMemo(
@@ -234,6 +287,13 @@ const TransactionGroupDetail: React.FC = () => {
         style={{ marginBottom: '10px', padding: '5px 10px' }}
       >
         Manage Categories
+      </button>
+      <button
+        onClick={handleSaveUpdates}
+        style={{ padding: '5px 10px' }}
+        disabled={transactionUpdates.size === 0}
+      >
+        Save Updates
       </button>
       {rowData.length === 0 ? (
         <p>No transactions found.</p>
