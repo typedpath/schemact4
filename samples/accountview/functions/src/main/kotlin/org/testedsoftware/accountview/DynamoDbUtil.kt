@@ -12,6 +12,7 @@ object DynamoDbUtil {
     val dynamoDb = AmazonDynamoDBClientBuilder.standard().build()
 
     fun <T> createOrUpdate(userTableName: String, userId: String, email: String, dataType: Class<T>, defaultData: ()-> T,
+                           preSaveFilter: ((data: T) -> T),
                            update: ((data: T) -> T) ? = null,
                            deserialize: (str: String, version: String) -> T,
                            version: String
@@ -27,6 +28,7 @@ object DynamoDbUtil {
                 data = existingData
                 if (update!=null) {
                     data = update(data)
+                    data = preSaveFilter(data)
                     val strData = (ObjectMapper().writeValueAsString(data))
                     // Item exists, update specific attributes
                     val updateItemRequest = UpdateItemRequest()

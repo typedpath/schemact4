@@ -72,34 +72,43 @@ class CategorizeTransactionsImpl {
         readUserDataPrivateBucket : (key: String) -> String,
         fromInclusiveDate: String, toInclusiveDate: String, accountNumber: String,
         transactionUpdates: List<TransactionUpdate>  ) : TransactionGroup {
-        val userInfo = updateUserInfo(null)
-        val account = userInfo.accounts.find { it.accountNumber.equals(accountNumber) }?:throw Exception("Account not found $accountNumber")
-        val transactionGroup = account.transactionGroups.find { it.fromInclusiveDate.equals(fromInclusiveDate) && it.toInclusiveDate.equals(toInclusiveDate) }?:throw
-               Exception("Transaction group not found account: $accountNumber fromInclusiveDate: $fromInclusiveDate toInclusiveDate: $toInclusiveDate")
-        val strTransactions = readUserDataPrivateBucket(transactionGroup.transactionFile.path())
-        // TODO make 1 transaction def only !!
-        val transactions = ObjectMapper().readValue(strTransactions,  object : TypeReference<List<TransactionUpdate.Transaction>>() {}).toMutableList()
-        println("updating ${transactionUpdates.size} transactions ")
-        transactionUpdates.forEach {
-            if (it.index<0 ||  it.index>transactions.size) {
-                throw IllegalArgumentException("Transaction update index out of bounds: ${it.index} - size: ${transactions.size}")
+
+        var transactionGroup: TransactionGroup?=null
+        var transactionGroupTransactions = mutableListOf<TransactionGroup.Transaction>()
+        val update: (userInfo: UserInfo) -> UserInfo = {
+            userInfo ->
+            val account = userInfo.accounts.find { it.accountNumber.equals(accountNumber) }?:throw Exception("Account not found $accountNumber")
+            transactionGroup = account.transactionGroups.find { it.fromInclusiveDate.equals(fromInclusiveDate) && it.toInclusiveDate.equals(toInclusiveDate) }?:throw
+            Exception("Transaction group not found account: $accountNumber fromInclusiveDate: $fromInclusiveDate toInclusiveDate: $toInclusiveDate")
+            val strTransactions = readUserDataPrivateBucket(transactionGroup.transactionFile.path())
+            // TODO make 1 transaction def only !!
+            val transactions = ObjectMapper().readValue(strTransactions,  object : TypeReference<List<TransactionUpdate.Transaction>>() {}).toMutableList()
+            println("updating ${transactionUpdates.size} transactions ")
+            transactionUpdates.forEach {
+                if (it.index<0 ||  it.index>transactions.size) {
+                    throw IllegalArgumentException("Transaction update index out of bounds: ${it.index} - size: ${transactions.size}")
+                }
+                println("updating ${it.index} transactions to ${ObjectMapper().writeValueAsString(it)}")
+                transactions[it.index] = it.transaction
             }
-            println("updating ${it.index} transactions to ${ObjectMapper().writeValueAsString(it)}")
-            transactions[it.index] = it.transaction
+
+            writeToUserToDataPrivateBucket(transactionGroup.transactionFile.path(),  transactions)
+            transactionGroupTransactions=transactions.map { TransactionGroup.Transaction(
+                date=it.date,
+                subcategory=it.subcategory,
+                amount=it.amount,
+                memo=it.memo,
+                category=it.category,
+                frequency=it.frequency,
+                sourceCategory=it.sourceCategory,
+                categorized=it.categorized
+            ) }.toMutableList()
+            userInfo
         }
 
-        writeToUserToDataPrivateBucket(transactionGroup.transactionFile.path(),  transactions)
-        transactionGroup.transactions=transactions.map { TransactionGroup.Transaction(
-            date=it.date,
-            subcategory=it.subcategory,
-            amount=it.amount,
-            memo=it.memo,
-            category=it.category,
-            frequency=it.frequency,
-            sourceCategory=it.sourceCategory,
-            categorized=it.categorized
-        ) }.toMutableList()
-        return transactionGroup;
+        val userInfo = updateUserInfo(update)
+        transactionGroup!!.transactions=transactionGroupTransactions
+        return transactionGroup
 
     }
 

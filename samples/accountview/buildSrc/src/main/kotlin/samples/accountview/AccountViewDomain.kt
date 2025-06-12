@@ -3,14 +3,9 @@ package samples.accountview
 import schemact.domain.*
 import schemact.domain.Language.Typescript
 
-val functionModuleVersion="1.0.72-SNAPSHOT"
+val functionModuleVersion="1.0.74-SNAPSHOT"
 
 val auth =  Auth()
-
-val functionsModule = Module(name= "functions",
-    version = functionModuleVersion,
-    functions = mutableListOf(onLoginFunction, uploadFileFunction,
-        addAccountFunction, uploadTransactionGroupFunction, getTransactionGroup, categorizeTransactions))
 
 val defaultDeployment = Deployment(subdomain = "accountview", codeBranch ="dev")
 
@@ -37,6 +32,7 @@ name = "accountview",
         client(uploadTransactionGroupFunction, Typescript)
         client(getTransactionGroup, Typescript)
         client(categorizeTransactions, Typescript)
+        client(saveCategoriesFunction, Typescript)
     }
 }
 

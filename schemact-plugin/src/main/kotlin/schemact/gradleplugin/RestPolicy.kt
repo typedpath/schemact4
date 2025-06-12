@@ -28,15 +28,16 @@ class RestPolicy(val paramType: Entity, val returnType: Entity) {
     // assign small args to params
     val argsFromParams: List<Connection> = paramType.connections.filter {
             val subParam = it.entity2
-            !useMultiPart && !subParam.isNativePassthrough && !subParam.isFromInfrastructure && subParam is PrimitiveType && !argIsTooBigForParam(
-                subParam
-            )
+            !useMultiPart && !subParam.isNativePassthrough && !subParam.isFromInfrastructure &&
+                    (subParam is PrimitiveType && it.cardinality == Cardinality.OneToOne)
+                    && !argIsTooBigForParam(subParam)
         }
 
     // assign big args to body
     val argsFromBody: List<Connection> = paramType.connections.filter {
         val subParam = it.entity2
-        !useMultiPart && !subParam.isNativePassthrough  && !subParam.isFromHeader  && !subParam.isFromInfrastructure && (subParam !is PrimitiveType || argIsTooBigForParam(subParam))
+        !useMultiPart && !subParam.isNativePassthrough  && !subParam.isFromHeader  && !subParam.isFromInfrastructure &&
+                (!(subParam is PrimitiveType && it.cardinality == Cardinality.OneToOne)|| argIsTooBigForParam(subParam))
     }
 
    val allTopLevelConnections: List<Connection> =

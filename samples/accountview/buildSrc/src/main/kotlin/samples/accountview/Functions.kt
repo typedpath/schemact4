@@ -3,7 +3,9 @@ package samples.accountview
 import schemact.domain.Entity
 import schemact.domain.Function
 import schemact.domain.InfrastructureInjectables
+import schemact.domain.Module
 import schemact.domain.ReactJsInjectables
+import schemact.domain.StringType
 import schemact.domain.int
 import schemact.domain.string
 
@@ -206,3 +208,35 @@ val addAccountFunction = Function(
     returnType = userInfo1,
     auth = auth
 )
+
+val saveCategoriesFunction = Function(
+    "saveCategories",
+    description = "saves categories",
+    paramType = Entity(name = "param", description = "Params") {
+        containsOne(
+            "userTableName",
+            description = "table name",
+            type = InfrastructureInjectables.DynamoDBTablenameType
+        )
+        containsOne(
+            "Authorization",
+            description = "Authorization header",
+            type = InfrastructureInjectables.AuthorizationHeaderType
+        )
+        containsOne(
+            "cognitoDetails",
+            description = "Cognito Details",
+            type = InfrastructureInjectables.CognitoClientDetails.entity
+        )
+        containsMany("categories", description = "cats", type = StringType(maxLength = 50))
+    },
+    returnType = userInfo1,
+    auth = auth
+)
+
+
+val functionsModule = Module(name= "functions",
+    version = functionModuleVersion,
+    functions = mutableListOf(onLoginFunction, uploadFileFunction,
+        addAccountFunction, uploadTransactionGroupFunction, getTransactionGroup,
+        categorizeTransactions, saveCategoriesFunction))
