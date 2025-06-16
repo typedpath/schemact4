@@ -3,7 +3,7 @@ package samples.accountview
 import schemact.domain.*
 import schemact.domain.Language.Typescript
 
-val functionModuleVersion="1.0.74-SNAPSHOT"
+val functionModuleVersion="1.0.84-SNAPSHOT"
 
 val auth =  Auth()
 
@@ -20,7 +20,7 @@ val accountview = Schemact(
 name = "accountview",
     domains = listOf(rootDomain),
     modules = mutableListOf(functionsModule),
-    userKeyedDatabase = UserKeyedDatabase(userInfoType = userInfo1, previousUserInfoTypes = listOf(userInfo0)),
+    userKeyedDatabase = UserKeyedDatabase(userInfoType = userInfoLatest, previousUserInfoTypes = listOf(userInfo0, userInfo1)),
     defaultLocalClientDeployment = defaultDeployment,
     privateBucket = PrivateBucket(),
     auth =  auth

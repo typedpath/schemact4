@@ -2,6 +2,7 @@
 package org.testedsoftware.accountview
 
 
+import org.testedsoftware.accountview.AutoCatFiltersExtra.defaultAutoCatFilters
 import org.testedsoftware.accountview.DynamoDbUtil.createOrUpdate
 import schemact.aws.CognitoClientDetails
 import java.time.LocalDateTime
@@ -15,6 +16,8 @@ class OnLoginImpl {
         UserInfoUpdater.updateSecure(Authorization=Authorization, userTableName=userTableName, cognitoDetails =  cognitoDetails,
             update = {data ->
                 data.loginEvents.add(LocalDateTime.now().toString())
+                // TODO should be part of a structured update
+                data.autoCatFilters = defaultAutoCatFilters().toMutableList()
                 data})
 
     }

@@ -4,21 +4,25 @@ import org.testedsoftware.accountview.UserInfoListener.preSaveFilter
 import schemact.aws.CognitoClientDetails
 import schemact.aws.VerifyCognito.verifyCognitoJwt
 
+//TODO autogen
 object UserInfoUpdater {
 
     fun updateSecure(Authorization: String, cognitoDetails: CognitoClientDetails,
                      userTableName: String,
-                     update: ((data: UserInfo) -> UserInfo)? ) : UserInfo{
+                     update: ((data: UserInfo) -> UserInfo)? ) : UserInfo {
         // check authorization
         val cognitoData = verifyCognitoJwt(Authorization, cognitoDetails)
         println(cognitoData)
         val userId = cognitoData.sub
-        val email = cognitoData.email?:"unknown"
-        return update(userTableName=userTableName, userId=userId, email=email,
-            update = update)
+        val email = cognitoData.email ?: "unknown"
+        return update(
+            userTableName = userTableName, userId = userId, email = email,
+            update = update
+        )
     }
 
     fun update(userTableName: String, userId: String, email: String,
+                version: String="2",
                 update: ((data: UserInfo) -> UserInfo ) ?)=
         DynamoDbUtil.createOrUpdate(userTableName=userTableName,
             userId=userId, email=email, UserInfo::class.java,
@@ -26,7 +30,7 @@ object UserInfoUpdater {
             update =  update,
             preSaveFilter = UserInfoListener::preSaveFilter,
             deserialize = UserInfoDeserializer::deserialize,
-            version = "1"
+            version = version
         )
 
 }

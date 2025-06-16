@@ -9,6 +9,8 @@ import schemact.domain.StringType
 import schemact.domain.int
 import schemact.domain.string
 
+val userInfoLatest = userInfo2
+
 val onLoginFunction = schemact.domain.Function(
     "onLogin",
     description = "updates the auth table on login",
@@ -33,7 +35,7 @@ val onLoginFunction = schemact.domain.Function(
             type = InfrastructureInjectables.CognitoClientDetails.entity
         )
     },
-    returnType = userInfo1,
+    returnType = userInfoLatest,
     auth = auth
 )
 
@@ -70,7 +72,7 @@ val uploadFileFunction = schemact.domain.Function(
             type = InfrastructureInjectables.APIGatewayV2HTTPEventEntity
         )
     },
-    returnType = userInfo1,
+    returnType = userInfoLatest,
     auth = auth
 )
 
@@ -103,7 +105,7 @@ val uploadTransactionGroupFunction = schemact.domain.Function(
         string("accountNumber", "AccountNumber", maxLength = 20)
 
     },
-    returnType = userInfo1,
+    returnType = userInfoLatest,
     auth = auth
 )
 
@@ -205,7 +207,7 @@ val addAccountFunction = Function(
         containsOne("account", description = "Account", type = account)
 
     },
-    returnType = userInfo1,
+    returnType = userInfoLatest,
     auth = auth
 )
 
@@ -230,7 +232,7 @@ val saveCategoriesFunction = Function(
         )
         containsMany("categories", description = "cats", type = StringType(maxLength = 50))
     },
-    returnType = userInfo1,
+    returnType = userInfoLatest,
     auth = auth
 )
 

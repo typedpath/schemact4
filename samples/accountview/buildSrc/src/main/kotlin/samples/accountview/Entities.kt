@@ -64,10 +64,28 @@ val userInfo0 = Entity(name = "UserInfo0", description="UserInfo0") {
     containsMany(name= "accounts", type= account)
 }
 
-val userInfo1 = Entity(name = "UserInfo", description="UserInfo",
+val userInfo1 = Entity(name = "UserInfo1", description="UserInfo",
     version="1") {
     containsMany(name = "loginEvents", type = StringType(maxLength=200))
     containsMany(name = "uploads", type = randomFile)
     containsMany(name= "accounts", type= account)
     containsMany(name="categories", type = StringType(maxLength=200))
+}
+
+val autoCatFilter = Entity(name = "AutoCatFilter", description = "AutoCatFilter") {
+    string("name", "name", maxLength = 200)
+    string("pattern", "pattern", maxLength = 400)
+    string("type", "kotlin type", maxLength = 400)
+    string("category", "e.g. coffee", maxLength = 200)
+    string("frequency", "e.g. monthly", maxLength = 200)
+    string("sourceCategory", "e.g. creditcard", maxLength = 200)
+}
+
+val userInfo2 = Entity(name = "UserInfo", description="UserInfo",
+    version="2") {
+    containsMany(name = "loginEvents", type = StringType(maxLength=200))
+    containsMany(name = "uploads", type = randomFile)
+    containsMany(name= "accounts", type= account)
+    containsMany(name="categories", type = StringType(maxLength=200))
+    containsMany(name="autoCatFilters", type = autoCatFilter)
 }

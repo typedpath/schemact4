@@ -39,4 +39,12 @@ export interface UserInfo   {
              } []
          } []
     categories: string[]
+    autoCatFilters:  {
+         name: string
+        pattern: string
+        type: string
+        category: string
+        frequency: string
+        sourceCategory: string
+         } []
      } 

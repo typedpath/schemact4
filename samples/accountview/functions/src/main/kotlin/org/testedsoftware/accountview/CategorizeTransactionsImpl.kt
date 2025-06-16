@@ -9,7 +9,10 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import schemact.aws.CognitoClientDetails
+import schemact.aws.ReadUserDataPrivateBucket
+import schemact.aws.UpdateUserInfo
 import schemact.aws.VerifyCognito.verifyCognitoJwt
+import schemact.aws.WriteToUserToDataPrivateBucket
 
 
 class CategorizeTransactionsImpl {
@@ -21,14 +24,14 @@ class CategorizeTransactionsImpl {
 
         val cognitoData = verifyCognitoJwt(Authorization, cognitoDetails)
 
-        val updateUserInfo:   (update: ((data: UserInfo) -> UserInfo ) ?) -> UserInfo =
+        val updateUserInfo:   UpdateUserInfo =
                 {
                     update ->
                     UserInfoUpdater.update(userTableName=userTableName, userId=cognitoData.sub,
                         email = cognitoData.email?:"noemail", update=update)
                 }
 
-        val writeToUserToDataPrivateBucket : (key: String, value: Any) -> Unit =
+        val writeToUserToDataPrivateBucket : WriteToUserToDataPrivateBucket =
             {
                 key, value ->
                     val s3 = AmazonS3ClientBuilder.standard().withRegion("us-east-1").build()
@@ -41,7 +44,7 @@ class CategorizeTransactionsImpl {
             }
 
 
-        val readUserDataPrivateBucket : (key: String) -> String =
+        val readUserDataPrivateBucket : ReadUserDataPrivateBucket =
             {
             key ->
                      val s3 = AmazonS3ClientBuilder.standard().withRegion("us-east-1").build()
@@ -67,9 +70,9 @@ class CategorizeTransactionsImpl {
     }
 
     fun categorizeTransactions(
-        updateUserInfo:   (update: ((data: UserInfo) -> UserInfo ) ?) -> UserInfo,
-        writeToUserToDataPrivateBucket: (key: String, value: Any) -> Unit,
-        readUserDataPrivateBucket : (key: String) -> String,
+        updateUserInfo:   UpdateUserInfo,
+        writeToUserToDataPrivateBucket:WriteToUserToDataPrivateBucket,
+        readUserDataPrivateBucket : ReadUserDataPrivateBucket,
         fromInclusiveDate: String, toInclusiveDate: String, accountNumber: String,
         transactionUpdates: List<TransactionUpdate>  ) : TransactionGroup {
 
