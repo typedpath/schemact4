@@ -14,7 +14,7 @@ object InjectablesFactory {
                                      val readUserDataPrivateBucket : ReadUserDataPrivateBucket?
         )
     fun create(Authorization: String, cognitoDetails: CognitoClientDetails, userTableName: String,
-               privateBucketName: String?) : SecureUserInjectables {
+               privateBucketName: String?=null) : SecureUserInjectables {
 
         val cognitoData = verifyCognitoJwt(Authorization, cognitoDetails)
 

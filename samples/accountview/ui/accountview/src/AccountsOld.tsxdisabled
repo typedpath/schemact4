@@ -1,0 +1,62 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { UserInfo } from './functions/UserInfo';
+
+interface AccountsProps {
+  accounts: UserInfo['accounts'];
+  setUserInfo: React.Dispatch<React.SetStateAction<UserInfo | null>>;
+  Authorization_in: string | undefined;
+}
+
+const Accounts: React.FC<AccountsProps> = ({ accounts, setUserInfo, Authorization_in }) => {
+  return (
+    <div style={{ padding: '20px', textAlign: 'center' }}>
+      <h2>Accounts</h2>
+      <div style={{ marginBottom: '20px' }}>
+        <Link
+          to="/categories"
+          style={{
+            padding: '8px 16px',
+            marginRight: '10px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: '4px',
+          }}
+        >
+          Manage Categories
+        </Link>
+        <Link
+          to="/autocfilters"
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: '4px',
+          }}
+        >
+          Manage Auto-Categorization Filters
+        </Link>
+      </div>
+      {accounts.length === 0 ? (
+        <p>No accounts available.</p>
+      ) : (
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          {accounts.map((account, index) => (
+            <li
+              key={`${account.sortCode}-${account.accountNumber}`}
+              style={{ marginBottom: '10px', padding: '10px', border: '1px solid #ddd' }}
+            >
+              <Link to={`/account/${account.accountNumber}`}>
+                {account.name} ({account.sortCode} - {account.accountNumber})
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+export default Accounts;

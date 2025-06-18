@@ -236,9 +236,35 @@ val saveCategoriesFunction = Function(
     auth = auth
 )
 
+val saveAutoCatFilters = Function(
+    "saveAutoCatFilters",
+    description = "saves autoCatFilters",
+    paramType = Entity(name = "param", description = "Params") {
+        containsOne(
+            "userTableName",
+            description = "table name",
+            type = InfrastructureInjectables.DynamoDBTablenameType
+        )
+        containsOne(
+            "Authorization",
+            description = "Authorization header",
+            type = InfrastructureInjectables.AuthorizationHeaderType
+        )
+        containsOne(
+            "cognitoDetails",
+            description = "Cognito Details",
+            type = InfrastructureInjectables.CognitoClientDetails.entity
+        )
+        containsMany("autoCatFilters", description = "autoCatFilters", type =autoCatFilter)
+    },
+    returnType = userInfoLatest,
+    auth = auth
+)
+
+
 
 val functionsModule = Module(name= "functions",
     version = functionModuleVersion,
     functions = mutableListOf(onLoginFunction, uploadFileFunction,
         addAccountFunction, uploadTransactionGroupFunction, getTransactionGroup,
-        categorizeTransactions, saveCategoriesFunction))
+        categorizeTransactions, saveCategoriesFunction, saveAutoCatFilters))

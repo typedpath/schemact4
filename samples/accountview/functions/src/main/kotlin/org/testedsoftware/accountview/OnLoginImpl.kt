@@ -17,7 +17,8 @@ class OnLoginImpl {
             update = {data ->
                 data.loginEvents.add(LocalDateTime.now().toString())
                 // TODO should be part of a structured update
-                data.autoCatFilters = defaultAutoCatFilters().toMutableList()
+                if(data.autoCatFilters.isEmpty())
+                    data.autoCatFilters = defaultAutoCatFilters().toMutableList()
                 data})
 
     }

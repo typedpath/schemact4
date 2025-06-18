@@ -1,6 +1,5 @@
 package org.testedsoftware.accountview
 
-import org.testedsoftware.accountview.UserInfo.AutoCatFilter
 import java.lang.System.lineSeparator
 
 object AutoCat {
@@ -19,7 +18,9 @@ println("autoCat:in ${autoCatFilters.map{"${lineSeparator()}autoCat.pattern : ${
         println()
         println("autoCat:transaction.category ${transaction.category}")
         println("autoCat:transaction.memo ${transaction.memo}")
-        autoCatFilters.find { transaction.memo.contains(Regex(it.pattern)) }?.apply {
+        autoCatFilters.find {
+            it.type=="regex" && transaction.memo.contains(Regex(it.pattern))
+                    || it.type=="contains" && transaction.memo.contains(it.pattern)}?.apply {
 println("autoCat:hit")
             transaction.category=category
             transaction.frequency=frequency

@@ -9,7 +9,7 @@ object UserInfoDeserializer {
         } else if (version.equals("1")) {
             val userInfo1 = ObjectMapper().readValue<UserInfo1>(str, UserInfo1::class.java)
             UserInfo(loginEvents=userInfo1.loginEvents, uploads= mutableListOf(), accounts=userInfo1.accounts,
-                       categories =  userInfo1.categories, autoCatFilters = mutableListOf<UserInfo.AutoCatFilter>())
+                       categories =  userInfo1.categories, autoCatFilters = mutableListOf())
         }else if (version.equals("0")) {
             val userInfo0 = ObjectMapper().readValue<UserInfo0>(str, UserInfo0::class.java)
             UserInfo(loginEvents=userInfo0.loginEvents, uploads= mutableListOf(), accounts=userInfo0.accounts, categories =  mutableListOf())

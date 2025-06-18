@@ -1,4 +1,6 @@
 import React, { useCallback } from 'react';
+import { Link } from 'react-router-dom';
+
 import { AgGridReact } from 'ag-grid-react';
 import { ColDef, AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 //import ModuleRegistry from '@ag-grid-community/core';
@@ -54,6 +56,33 @@ const Accounts: React.FC<AccountsProps> = ({ accounts, setUserInfo, Authorizatio
   return (
     <div>
       <h2>Accounts ({accounts.length})</h2>
+       <div style={{ marginBottom: '20px' }}>
+              <Link
+                to="/categories"
+                style={{
+                  padding: '8px 16px',
+                  marginRight: '10px',
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  textDecoration: 'none',
+                  borderRadius: '4px',
+                }}
+              >
+                Manage Categories
+              </Link>
+              <Link
+                to="/autocfilters"
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  textDecoration: 'none',
+                  borderRadius: '4px',
+                }}
+              >
+                Manage Auto-Categorization Filters
+              </Link>
+            </div>
       <AddAccount onAccountAdded={onAccountAdded} />
       <div className="ag-theme-alpine" style={{ width: '100%' }}>
         <AgGridReact
