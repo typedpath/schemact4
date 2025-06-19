@@ -130,13 +130,6 @@ console.log('handleSaveAutoCatFilters network')
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <h2>{editingId !== null ? 'Edit Auto-Categorization Filter' : 'Manage Auto-Categorization Filters'}</h2>
-      <button
-        onClick={() => navigate(-1)}
-        style={{ marginBottom: '10px', padding: '8px' }}
-        disabled={loading}
-      >
-        Back to Transactions
-      </button>
       {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
       {success && <div style={{ color: 'green', marginBottom: '10px' }}>{success}</div>}
       <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>

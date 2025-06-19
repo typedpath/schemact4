@@ -11,8 +11,9 @@ import onLogin from './functions/onLogin';
 import { UserInfo } from './functions/UserInfo';
 import TransactionGroupDetail from './TransactionGroupDetail';
 import CategoryEditScreen from './CategoryEditScreen';
-import AutoCatFiltersEditScreen from './AutoCatFiltersEditScreen'; // New component
+import AutoCatFiltersEditScreen from './AutoCatFiltersEditScreen';
 import { CategoryProvider, useCategories } from './CategoryContext';
+import NavBar from './NavBar';
 
 interface AuthUserData {
   userId: string;
@@ -93,12 +94,13 @@ const AuthenticatedApp: React.FC<{
   signOut: (() => void) | undefined;
   userInfo: UserInfo | null;
   Authorization: string | undefined;
-  setUserInfo: React.Dispatch<React.SetStateAction<UserInfo | null>>;
+  setUserInfo: React.Dispatch<React.SetStateAction<UserInfo | null>>; // Fixed type
   setSession: React.Dispatch<React.SetStateAction<AuthSession | null>>;
   setAuthorization: React.Dispatch<React.SetStateAction<string | undefined>>;
 }> = ({ user, signOut, userInfo, Authorization, setUserInfo, setSession, setAuthorization }) => {
   const { setCategoryOptions } = useCategories();
   const [error, setError] = useState<string | null>(null);
+
   useAuthListener(setUserInfo, setAuthorization, setCategoryOptions, setError);
 
   console.log('AuthenticatedApp rendering, user:', user);
@@ -109,67 +111,57 @@ const AuthenticatedApp: React.FC<{
 
   return (
     <Router>
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              userInfo && Authorization ? (
-                <Accounts
-                  accounts={userInfo.accounts}
-                  setUserInfo={setUserInfo}
-                  Authorization_in={Authorization}
-                />
-              ) : (
-                <p>Loading accounts...</p>
-              )
-            }
-          />
-          <Route
-            path="/account/:accountNumber"
-            element={
-              userInfo && Authorization ? (
-                <AccountDetails
-                  userInfo={userInfo}
-                  setUserInfo={setUserInfo}
-                  Authorization_in={Authorization}
-                />
-              ) : (
-                <p>Loading account details...</p>
-              )
-            }
-          />
-          <Route
-            path="/accounts/:accountNumber/transactions/:group/:fromDate/:toDate"
-            element={<TransactionGroupDetail />}
-          />
-          <Route
-            path="/categories"
-            element={<CategoryEditScreen setUserInfo={setUserInfo} />}
-          />
-          <Route
-            path="/autocfilters"
-            element={<AutoCatFiltersEditScreen userInfo={userInfo} setUserInfo={setUserInfo} />}
-          />
-        </Routes>
-        <button
-          onClick={async () => {
-            try {
-              const session = await fetchAuthSession();
-              console.log('JWT Token:', session.tokens?.idToken?.toString());
-              setSession(null);
-              setUserInfo(null);
-              setAuthorization(undefined);
-              setCategoryOptions([]); // Reset categories on sign-out
-              if (signOut) await signOut();
-            } catch (error) {
-              console.error('Error during sign-out:', error);
-            }
-          }}
-          style={{ padding: '10px', marginTop: '10px' }}
-        >
-          Sign Out
-        </button>
+      <div style={{ padding: '20px' }}>
+        <NavBar
+          signOut={signOut}
+          setUserInfo={setUserInfo}
+          setAuthorization={setAuthorization}
+          setSession={setSession}
+        />
+        <div style={{ textAlign: 'center' }}>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                userInfo && Authorization ? (
+                  <Accounts
+                    accounts={userInfo.accounts}
+                    setUserInfo={setUserInfo}
+                    Authorization_in={Authorization}
+                  />
+                ) : (
+                  <p>Loading accounts...</p>
+                )
+              }
+            />
+            <Route
+              path="/account/:accountNumber"
+              element={
+                userInfo && Authorization ? (
+                  <AccountDetails
+                    userInfo={userInfo}
+                    setUserInfo={setUserInfo}
+                    Authorization_in={Authorization}
+                  />
+                ) : (
+                  <p>Loading account details...</p>
+                )
+              }
+            />
+            <Route
+              path="/accounts/:accountNumber/transactions/:group/:fromDate/:toDate"
+              element={<TransactionGroupDetail />}
+            />
+            <Route
+              path="/categories"
+              element={<CategoryEditScreen setUserInfo={setUserInfo} />} // Added setUserInfo prop
+            />
+            <Route
+              path="/autocfilters"
+              element={<AutoCatFiltersEditScreen userInfo={userInfo} setUserInfo={setUserInfo} />}
+            />
+          </Routes>
+        </div>
       </div>
     </Router>
   );
