@@ -14,7 +14,7 @@ class GetTransactionsTest {
     val target = GetTransactionGroupImpl()
     @Test
     fun testGetTransactions() {
-        val tescoTransaction = Transaction(date="",
+        val tescoTransaction = Transaction(date="12/03/2025",
              subcategory="",
             amount=123, memo="TESCO-STORES whatever", category="", frequency="", sourceCategory="", categorized=false)
         val startTransactions = listOf(tescoTransaction)

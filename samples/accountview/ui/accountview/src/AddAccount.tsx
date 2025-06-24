@@ -64,7 +64,8 @@ const AddAccount: React.FC<AddAccountProps> = ({ onAccountAdded }) => {
         name: formData.name,
         sortCode: formData.sortCode,
         accountNumber: formData.accountNumber,
-        transactionGroups: []
+        transactionGroups: [],
+        pivotTables:[]
       });
 
       // Reset form

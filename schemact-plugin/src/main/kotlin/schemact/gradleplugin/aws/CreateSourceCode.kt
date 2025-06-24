@@ -36,13 +36,24 @@ object CreateSourceCode {
 
         val allComplexTopLevelTypes = module.functions.flatMap {
            RestPolicy(it.paramType, it.returnType).complexTopLevelTypes }.toMutableSet()
+        // TODO add in type from userKeyedDatabase
+
+        // TODO add all types referenced by >1 parent
+        val allEntitiesWithMoreThan1Connection = getAllConnections(allComplexTopLevelTypes).groupBy { it.entity2 }.filter {it.value.size > 1}.map { it.key }.filter { it !is PrimitiveType }
+        println("createSourceCode allEntitiesWithMoreThan1Connection=${allEntitiesWithMoreThan1Connection.map { it.name }.joinToString(",")}")
+        allComplexTopLevelTypes.addAll(allEntitiesWithMoreThan1Connection)
+       // println("createSourceCode allComplexTopLevelTypes=${allComplexTopLevelTypes.map { it.name }.joinToString(",")}")
+
         // TODO - add return types
+        allComplexTopLevelTypes.forEach {
+            writeDataClassFile(entity=it, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=genDir, topLevelEntities =allComplexTopLevelTypes )
+        }
 
         schemact.userKeyedDatabase?.let {
             println("userKeyedDatabase writing userType based on allComplexTopLevelTypes=${allComplexTopLevelTypes.map { it.name }.joinToString (",")}")
            writeDataClassFile(entity=it.userInfoType, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=genDir, topLevelEntities =allComplexTopLevelTypes )
            it.previousUserInfoTypes.forEach {
-               println("userKeyedDatabase writing previous type ${it.name}")
+               println("userKeyedDatabase writing previous type ${it.name}.${it.version}")
                writeDataClassFile(entity=it, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=genDir, topLevelEntities =allComplexTopLevelTypes )
            }
         }
@@ -91,6 +102,17 @@ object CreateSourceCode {
               writer.write(kotlinRestClient(serviceModule, functionClient.function, packageName, clientClassName))
           }
     }
+
+    fun getAllConnections(topLevelTypes: Set<Entity>, visited: MutableSet<Connection> = mutableSetOf()) : Set<Connection>{
+        topLevelTypes.forEach {
+            it.connections.filter {!visited.contains(it)}.forEach { connection ->
+                visited.add(connection)
+                getAllConnections(setOf(connection.entity2), visited)
+            }
+        }
+        return visited
+    }
+
 
     private fun createFunctionCode(
         function: Function,

@@ -4,6 +4,7 @@ package org.testedsoftware.accountview
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.testedsoftware.accountview.DynamoDbUtil.getUserData
+import org.testedsoftware.accountview.pivot.PivotCalc
 import schemact.aws.CognitoClientDetails
 import schemact.aws.InjectablesFactory
 import schemact.aws.ReadUserDataPrivateBucket
@@ -50,9 +51,10 @@ class GetTransactionGroupImpl {
                 rawTransactionFile = transactionGroup.rawTransactionFile,
                 transactionFile = transactionGroup.transactionFile,
                 transactions = transactions.onEach { if (!it.categorized) AutoCat.autoCat(it, existingData.autoCatFilters) }
-                    .map { TransactionGroup.Transaction(date=it.date, subcategory = it.subcategory, amount = it.amount,
+                    .map { Transaction(date=it.date, subcategory = it.subcategory, amount = it.amount,
                         memo=it.memo, category = it.category, categorized =  it.categorized, frequency = it.frequency, sourceCategory = it.sourceCategory) }
-                    .toMutableList()
+                    .toMutableList(),
+                pivotTables = listOf(PivotCalc.pivotCategories(transactions)).toMutableList()
                 )
                 existingData
             }

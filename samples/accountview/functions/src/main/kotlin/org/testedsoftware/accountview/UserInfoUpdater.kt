@@ -22,7 +22,7 @@ object UserInfoUpdater {
     }
 
     fun update(userTableName: String, userId: String, email: String,
-                version: String="2",
+                version: String=UserInfoVersion.latest,
                 update: ((data: UserInfo) -> UserInfo ) ?)=
         DynamoDbUtil.createOrUpdate(userTableName=userTableName,
             userId=userId, email=email, UserInfo::class.java,

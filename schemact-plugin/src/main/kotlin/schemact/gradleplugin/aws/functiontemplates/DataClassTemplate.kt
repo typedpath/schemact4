@@ -12,15 +12,19 @@ package ${`package`}
 // dataClass topLevelTypes: ${topLevelTypes.map { "${it.name}-${it.description}-${it.hashCode()}" }.joinToString(", ")}
 import com.fasterxml.jackson.annotation.JsonProperty
 
-${dataClassSanPackage(entity, "", visited=topLevelTypes.toMutableSet())}    
+${dataClassSanPackage(entity, "", visited=topLevelTypes.minus(entity).toMutableSet())}    
 """.trimIndent()
 
 fun dataClassSanPackage(entity: Entity, indent: String, visited: MutableSet<Entity> = mutableSetOf()) : String {
+    if (visited.contains(entity)) {
+        return ""
+    }
     visited.add(entity)
     val complexTypes = entity.connections.map{it.entity2}.filter {it !is PrimitiveType}.filter{!visited.contains(it)}
 return """
     ${"// dataClassSanPackage ${entity.name} visited: ${visited.map { it.name }.joinToString (",")}"}
-// create from template DataClassTemplate    
+// create from template DataClassTemplate
+// version= ${entity.version}    
 ${indent}data class ${entity.name}(${asArgs(entity)}) ${if (complexTypes.isNotEmpty()) {"""{ ${
  complexTypes.joinToString(System.lineSeparator()) { dataClassSanPackage(it, "$indent   ", visited) }   
 }${indent}}

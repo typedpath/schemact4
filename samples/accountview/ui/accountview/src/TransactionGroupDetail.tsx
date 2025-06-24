@@ -8,11 +8,15 @@ import 'ag-grid-community/styles/ag-theme-quartz.css';
 import { ColDef, RowClassParams, CellValueChangedEvent, ICellRendererParams } from 'ag-grid-community';
 import './Transactions.css';
 import AmountHeaderComponent from './AmountHeaderComponent';
-import { UserInfo } from './functions/UserInfo';
+import { TransactionGroup } from './functions/TransactionGroup'; // Updated import
+import { UserInfo } from './functions/UserInfo'; // Updated import
+
 import { useCategories } from './CategoryContext';
 import categorizeTransactions, { TransactionUpdate } from './functions/categorizeTransactions';
+import PivotTable from './PivotTable'; // Import PivotTable component
 
 type Transaction = UserInfo['accounts'][number]['transactionGroups'][number]['transactions'][number];
+
 
 const getRowBackgroundColor = (amountInPence: number): string => {
   const amountInPounds = amountInPence / 100;
@@ -45,7 +49,7 @@ const TransactionGroupDetail: React.FC = () => {
     toDate: string;
   }>();
   const navigate = useNavigate();
-  const [rowData, setRowData] = useState<Transaction[]>([]);
+  const [transactionGroup, setTransactionGroup] = useState<TransactionGroup | null>(null); // Store full TransactionGroup
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [transactionUpdates, setTransactionUpdates] = useState<Map<number, Transaction>>(new Map());
@@ -57,10 +61,13 @@ const TransactionGroupDetail: React.FC = () => {
       newMap.set(key, updatedTransaction);
       return newMap;
     });
-    console.log('transactionUpdates', transactionUpdates);
-    setRowData((prev) =>
-      prev.map((tx, index) => (index === key ? updatedTransaction : tx))
-    );
+    setTransactionGroup((prev) => {
+      if (!prev) return prev;
+      const updatedTransactions = prev.transactions.map((tx, index) =>
+        index === key ? updatedTransaction : tx
+      );
+      return { ...prev, transactions: updatedTransactions };
+    });
   };
 
   const handleSaveUpdates = async () => {
@@ -79,7 +86,6 @@ const TransactionGroupDetail: React.FC = () => {
         throw new Error('No ID token available');
       }
 
-      // Transform transactionUpdates to TransactionUpdate[]
       const updates: TransactionUpdate[] = Array.from(transactionUpdates.entries()).map(([index, tx]) => ({
         index,
         transaction: {
@@ -87,7 +93,7 @@ const TransactionGroupDetail: React.FC = () => {
           subcategory: tx.subcategory,
           amount: tx.amount,
           memo: tx.memo,
-          category: tx.category || '', // Convert null to empty string
+          category: tx.category || '',
           frequency: tx.frequency || '',
           sourceCategory: tx.sourceCategory || '',
           categorized: tx.categorized,
@@ -102,9 +108,8 @@ const TransactionGroupDetail: React.FC = () => {
         idToken
       );
 
-      // Update grid with response data
-      setRowData(response.data.transactions);
-      setTransactionUpdates(new Map()); // Clear updates
+      setTransactionGroup(response.data); // Update entire TransactionGroup
+      setTransactionUpdates(new Map());
       setLoading(false);
       console.log('categorizeTransactions success:', response.data);
     } catch (err: any) {
@@ -187,7 +192,7 @@ const TransactionGroupDetail: React.FC = () => {
         ],
         cellEditor: 'agSelectCellEditor',
         cellEditorParams: {
-          values: ['', ...categoryOptions], // Include empty string for "no selection"
+          values: ['', ...categoryOptions],
         },
         valueSetter: (params) => {
           console.log('category valueSetter called, newValue:', params.newValue, 'oldValue:', params.oldValue);
@@ -241,9 +246,7 @@ const TransactionGroupDetail: React.FC = () => {
         }
 
         const response = await getTransactionGroup(fromDate!, toDate!, accountNumber!, idToken);
-        const transactionGroup = response.data;
-
-        setRowData(transactionGroup.transactions);
+        setTransactionGroup(response.data); // Set full TransactionGroup
         setLoading(false);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch transactions');
@@ -255,7 +258,6 @@ const TransactionGroupDetail: React.FC = () => {
   }, [accountNumber, group, fromDate, toDate]);
 
   const onCellValueChanged = async (event: CellValueChangedEvent<Transaction>) => {
-    console.log('onCellValueChanged triggered for field:', event.colDef.field, 'newValue:', event.newValue, 'oldValue:', event.oldValue);
     if (event.colDef.field === 'category' || event.colDef.field === 'categorized') {
       const updatedTransaction = {
         ...event.data,
@@ -263,7 +265,6 @@ const TransactionGroupDetail: React.FC = () => {
         categorized: event.colDef.field === 'categorized' ? event.newValue : event.data.categorized,
       };
       const key = event.rowIndex!;
-      console.log('Updating transaction for row:', key, 'with:', updatedTransaction);
       updateTransaction(key, updatedTransaction);
       event.api.refreshCells({ force: true });
     }
@@ -275,6 +276,10 @@ const TransactionGroupDetail: React.FC = () => {
 
   if (error) {
     return <div style={{ color: 'red' }}>Error: {error}</div>;
+  }
+
+  if (!transactionGroup) {
+    return <div>No transaction group data available.</div>;
   }
 
   return (
@@ -290,17 +295,17 @@ const TransactionGroupDetail: React.FC = () => {
       </button>
       <button
         onClick={handleSaveUpdates}
-        style={{ padding: '5px 10px' }}
+        style={{ padding: '5px 10px', marginLeft: '10px' }}
         disabled={transactionUpdates.size === 0}
       >
         Save Updates
       </button>
-      {rowData.length === 0 ? (
+      {transactionGroup.transactions.length === 0 ? (
         <p>No transactions found.</p>
       ) : (
-        <div className="ag-theme-quartz" style={{ height: '500px', width: '100%' }}>
+        <div className="ag-theme-quartz" style={{ height: '500px', width: '100%', marginBottom: '20px' }}>
           <AgGridReact
-            rowData={rowData}
+            rowData={transactionGroup.transactions}
             columnDefs={columnDefs}
             defaultColDef={{
               resizable: true,
@@ -332,6 +337,15 @@ const TransactionGroupDetail: React.FC = () => {
         </div>
       )}
       <div>transactionUpdates: {transactionUpdates.size}</div>
+
+      {/* Render Pivot Tables */}
+      {transactionGroup.pivotTables.length > 0 && (
+        <div style={{ marginTop: '20px' }}>
+          {transactionGroup.pivotTables.map((pivotTable, index) => (
+            <PivotTable key={index} pivotTable={pivotTable} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

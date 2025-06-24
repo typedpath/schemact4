@@ -77,7 +77,7 @@ class CategorizeTransactionsImpl {
         transactionUpdates: List<TransactionUpdate>  ) : TransactionGroup {
 
         var transactionGroup: TransactionGroup?=null
-        var transactionGroupTransactions = mutableListOf<TransactionGroup.Transaction>()
+        var transactionGroupTransactions = mutableListOf<Transaction>()
         val update: (userInfo: UserInfo) -> UserInfo = {
             userInfo ->
             val account = userInfo.accounts.find { it.accountNumber.equals(accountNumber) }?:throw Exception("Account not found $accountNumber")
@@ -85,7 +85,7 @@ class CategorizeTransactionsImpl {
             Exception("Transaction group not found account: $accountNumber fromInclusiveDate: $fromInclusiveDate toInclusiveDate: $toInclusiveDate")
             val strTransactions = readUserDataPrivateBucket(transactionGroup.transactionFile.path())
             // TODO make 1 transaction def only !!
-            val transactions = ObjectMapper().readValue(strTransactions,  object : TypeReference<List<TransactionUpdate.Transaction>>() {}).toMutableList()
+            val transactions = ObjectMapper().readValue(strTransactions,  object : TypeReference<List<Transaction>>() {}).toMutableList()
             println("updating ${transactionUpdates.size} transactions ")
             transactionUpdates.forEach {
                 if (it.index<0 ||  it.index>transactions.size) {
@@ -96,7 +96,7 @@ class CategorizeTransactionsImpl {
             }
 
             writeToUserToDataPrivateBucket(transactionGroup.transactionFile.path(),  transactions)
-            transactionGroupTransactions=transactions.map { TransactionGroup.Transaction(
+            transactionGroupTransactions=transactions.map { Transaction(
                 date=it.date,
                 subcategory=it.subcategory,
                 amount=it.amount,

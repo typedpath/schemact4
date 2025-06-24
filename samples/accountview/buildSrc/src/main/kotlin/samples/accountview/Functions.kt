@@ -9,9 +9,11 @@ import schemact.domain.StringType
 import schemact.domain.int
 import schemact.domain.string
 
-val userInfoLatest = userInfo2
+val userInfoLatest = userInfo3
+val transactionGroupLatest = transactionGroup3
+val accountLatest = account3
 
-val onLoginFunction = schemact.domain.Function(
+val onLoginFunction = Function(
     "onLogin",
     description = "updates the auth table on login",
     paramType = Entity(name = "param", description = "Params") {
@@ -137,7 +139,7 @@ val getTransactionGroup = schemact.domain.Function(
         string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
         string("accountNumber", "AccountNumber", maxLength = 20)
     },
-    returnType = transactionGroup,
+    returnType = transactionGroupLatest,
     auth = auth
 )
 
@@ -176,7 +178,7 @@ val categorizeTransactions = schemact.domain.Function(
                 containsOne("transaction", description = "Transaction", type = transaction)
             })
     },
-    returnType = transactionGroup,
+    returnType = transactionGroupLatest,
     auth = auth
 )
 
@@ -204,7 +206,7 @@ val addAccountFunction = Function(
             description = "Cognito Details",
             type = InfrastructureInjectables.CognitoClientDetails.entity
         )
-        containsOne("account", description = "Account", type = account)
+        containsOne("account", description = "Account", type = accountLatest)
 
     },
     returnType = userInfoLatest,

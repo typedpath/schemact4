@@ -9,7 +9,6 @@ import com.amazonaws.services.s3.model.ObjectMetadata
 import com.fasterxml.jackson.databind.ObjectMapper
 import schemact.aws.VerifyCognito.verifyCognitoJwt
 import schemact.react.File
-import schemact.react.UploadFile
 import java.io.ByteArrayInputStream
 import java.time.LocalDateTime
 
