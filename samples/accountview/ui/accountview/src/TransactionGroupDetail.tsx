@@ -288,12 +288,6 @@ const TransactionGroupDetail: React.FC = () => {
       <p>Group: {group}</p>
       <p>From: {fromDate} To: {toDate}</p>
       <button
-        onClick={() => navigate('/categories')}
-        style={{ marginBottom: '10px', padding: '5px 10px' }}
-      >
-        Manage Categories
-      </button>
-      <button
         onClick={handleSaveUpdates}
         style={{ padding: '5px 10px', marginLeft: '10px' }}
         disabled={transactionUpdates.size === 0}
