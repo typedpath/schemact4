@@ -33,12 +33,19 @@ object PivotCalc {
         println("pivotCategories found  ${monthDates}")
 
         var valueColumns: MutableList<ValueColumn>
+        var totalValueColumn = ValueColumn(header="${monthFormatter.format(earliestDate)}-${monthFormatter.format(latestDate)}, ",
+                footer=0, values = MutableList(size= categories.size+1) { i->0 })
         valueColumns =  monthDates.map {
             var trs = transactionsByMonth[it]
             if (trs==null) trs = emptyList()
             val values = categories.map { cat->   trs.filter{ it.category==cat  }.map { it.amount }.sum()  }.toMutableList()
-            ValueColumn(header=monthFormatter.format(it), values=values, trs.map { it.amount }.sum())
+            val result = ValueColumn(header=monthFormatter.format(it), values=values, trs.map { it.amount }.sum())
+            values.forEachIndexed { index, value -> totalValueColumn.values[index]+=value }
+            result
         }.toMutableList()
+
+        totalValueColumn.footer = totalValueColumn.values.sum()
+        valueColumns.add(totalValueColumn)
 
         return PivotTable(name="category", header = headerColumn,  valueColumns=valueColumns)
     }

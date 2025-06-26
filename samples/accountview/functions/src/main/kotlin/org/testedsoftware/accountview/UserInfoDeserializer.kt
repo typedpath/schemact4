@@ -24,7 +24,7 @@ object UserInfoDeserializer {
 
     fun convert2to3(userInfo2: UserInfo2): UserInfo =
         UserInfo(loginEvents=userInfo2.loginEvents, uploads= mutableListOf(), accounts=userInfo2.accounts.map {acc->convertAccount2toAccount3(acc)}.toMutableList(),
-            categories =  userInfo2.categories, autoCatFilters = mutableListOf())
+            categories =  userInfo2.categories, autoCatFilters = mutableListOf()/*oops lost the autoCatFilters*/)
 
     fun convert1to2(userInfo1: UserInfo1) : UserInfo2 =
 //        val userInfo1 = ObjectMapper().readValue<UserInfo1>(str, UserInfo1::class.java)
