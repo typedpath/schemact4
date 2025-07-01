@@ -4,14 +4,15 @@ import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css';
 import { ColDef, CellClassParams, ValueFormatterParams, CellStyle } from 'ag-grid-community';
 import { UserInfo } from './functions/UserInfo';
+import './Transactions.css';
 
-type PivotTable = UserInfo['accounts'][number]['transactionGroups'][number]['pivotTables'][number];
+type PivotTable = UserInfo['accounts'][number]['pivotTables'][number];
 
 interface PivotTableProps {
   pivotTable: PivotTable;
 }
 
-const PivotTable: React.FC<PivotTableProps> = ({ pivotTable }) => {
+const PivotTableComponent: React.FC<PivotTableProps> = ({ pivotTable }) => {
   // Prepare pivot table data for AG Grid
   const pivotTableData = useMemo(() => {
     const { header, valueColumns } = pivotTable;
@@ -33,6 +34,8 @@ const PivotTable: React.FC<PivotTableProps> = ({ pivotTable }) => {
     });
     rows.push(footerRow);
 
+    console.log('PivotTable Data:', JSON.stringify(rows, null, 2)); // Debug: Log formatted data
+    console.log('Footer Value:', header.footer); // Debug: Log footer value
     return rows;
   }, [pivotTable]);
 
@@ -44,17 +47,39 @@ const PivotTable: React.FC<PivotTableProps> = ({ pivotTable }) => {
         headerName: pivotTable.header.labelTitle,
         pinned: 'left',
         width: 150,
-        cellClass: (params: CellClassParams) =>
-          params.data[pivotTable.header.labelTitle] === pivotTable.header.footer ? ['footer-cell'] : [],
+        cellClass: (params: CellClassParams) => {
+          const rowLabel = params.data[pivotTable.header.labelTitle]?.trim().toLowerCase();
+          const footerLabel = pivotTable.header.footer?.trim().toLowerCase();
+          const isFooter = rowLabel === footerLabel;
+          console.log(
+            'Label Column - Row:',
+            params.data[pivotTable.header.labelTitle],
+            'Footer:',
+            pivotTable.header.footer,
+            'Is Footer:',
+            isFooter
+          ); // Debug
+          return isFooter ? ['footer-cell'] : [];
+        },
       },
       ...pivotTable.valueColumns.map((col) => ({
         field: col.header, // e.g., "Jan 24"
         headerName: col.header,
         width: 100,
-        cellClass: (params: CellClassParams) => [
-          'cell-right',
-          params.data[pivotTable.header.labelTitle] === pivotTable.header.footer ? 'footer-cell' : '',
-        ],
+        cellClass: (params: CellClassParams) => {
+          const rowLabel = params.data[pivotTable.header.labelTitle]?.trim().toLowerCase();
+          const footerLabel = pivotTable.header.footer?.trim().toLowerCase();
+          const isFooter = rowLabel === footerLabel;
+          console.log(
+            'Value Column - Row:',
+            params.data[pivotTable.header.labelTitle],
+            'Footer:',
+            pivotTable.header.footer,
+            'Is Footer:',
+            isFooter
+          ); // Debug
+          return ['cell-right', isFooter ? 'footer-cell' : ''];
+        },
         valueFormatter: (params: ValueFormatterParams) => {
           const value = parseFloat(params.value);
           return isNaN(value) ? '' : `£${value.toFixed(2)}`;
@@ -90,4 +115,4 @@ const PivotTable: React.FC<PivotTableProps> = ({ pivotTable }) => {
   );
 };
 
-export default PivotTable;
+export default PivotTableComponent;

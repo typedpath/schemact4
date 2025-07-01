@@ -1,23 +1,34 @@
-.ag-cell {
-  display: flex;
-  align-items: center;
+/* Style header cells */
+.ag-theme-quartz .ag-header-cell {
+  background-color: #e0e0e0 !important; /* Light gray for headers, adjust as needed */
+  font-weight: bold !important;
+  text-align: center !important; /* Center headers for consistency */
 }
-.ag-cell-editor select {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 4px;
+
+/* Style footer cells */
+.ag-theme-quartz .ag-row .ag-cell.footer-cell {
+  font-weight: bold !important;
+  background-color: #f0f0f0 !important; /* Gray background for footer */
 }
-.ag-cell-editor {
-  width: 100%;
-  height: 100%;
+
+/* Align value columns to the right */
+.ag-theme-quartz .cell-right {
+  text-align: right;
 }
-button {
-  cursor: pointer;
-  border: 1px solid #ccc;
-  background: #f8f8f8;
-  padding: 5px 10px;
+
+/* Existing styles for transaction grid */
+.header-left {
+  text-align: left;
 }
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
+
+.header-center {
+  text-align: center;
+}
+
+.cell-center {
+  text-align: center;
+}
+
+.uncategorized-cell {
+  background-color: #fff3cd;
 }

@@ -8,15 +8,14 @@ import 'ag-grid-community/styles/ag-theme-quartz.css';
 import { ColDef, RowClassParams, CellValueChangedEvent, ICellRendererParams } from 'ag-grid-community';
 import './Transactions.css';
 import AmountHeaderComponent from './AmountHeaderComponent';
-import { TransactionGroup } from './functions/TransactionGroup'; // Updated import
-import { UserInfo } from './functions/UserInfo'; // Updated import
-
+import { UserInfo } from './functions/UserInfo';
 import { useCategories } from './CategoryContext';
 import categorizeTransactions, { TransactionUpdate } from './functions/categorizeTransactions';
-import PivotTable from './PivotTable'; // Import PivotTable component
+import PivotTableComponent from './PivotTable';
+import { TransactionGroup } from './functions/TransactionGroup'; // Keep for getTransactionGroup response
 
 type Transaction = UserInfo['accounts'][number]['transactionGroups'][number]['transactions'][number];
-
+type TransactionGroupType = UserInfo['accounts'][number]['transactionGroups'][number];
 
 const getRowBackgroundColor = (amountInPence: number): string => {
   const amountInPounds = amountInPence / 100;
@@ -49,7 +48,7 @@ const TransactionGroupDetail: React.FC = () => {
     toDate: string;
   }>();
   const navigate = useNavigate();
-  const [transactionGroup, setTransactionGroup] = useState<TransactionGroup | null>(null); // Store full TransactionGroup
+  const [transactionGroup, setTransactionGroup] = useState<TransactionGroup | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [transactionUpdates, setTransactionUpdates] = useState<Map<number, Transaction>>(new Map());
@@ -108,7 +107,7 @@ const TransactionGroupDetail: React.FC = () => {
         idToken
       );
 
-      setTransactionGroup(response.data); // Update entire TransactionGroup
+      setTransactionGroup(response.data);
       setTransactionUpdates(new Map());
       setLoading(false);
       console.log('categorizeTransactions success:', response.data);
@@ -197,7 +196,7 @@ const TransactionGroupDetail: React.FC = () => {
         valueSetter: (params) => {
           console.log('category valueSetter called, newValue:', params.newValue, 'oldValue:', params.oldValue);
           if (params.newValue !== params.oldValue) {
-            params.data.category = params.newValue || null;
+            params.data.category = params.newValue || '';
             return true;
           }
           return false;
@@ -246,7 +245,7 @@ const TransactionGroupDetail: React.FC = () => {
         }
 
         const response = await getTransactionGroup(fromDate!, toDate!, accountNumber!, idToken);
-        setTransactionGroup(response.data); // Set full TransactionGroup
+        setTransactionGroup(response.data);
         setLoading(false);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch transactions');
@@ -261,7 +260,7 @@ const TransactionGroupDetail: React.FC = () => {
     if (event.colDef.field === 'category' || event.colDef.field === 'categorized') {
       const updatedTransaction = {
         ...event.data,
-        category: event.colDef.field === 'category' ? event.newValue || null : event.data.category,
+        category: event.colDef.field === 'category' ? event.newValue || '' : event.data.category,
         categorized: event.colDef.field === 'categorized' ? event.newValue : event.data.categorized,
       };
       const key = event.rowIndex!;
@@ -287,6 +286,12 @@ const TransactionGroupDetail: React.FC = () => {
       <h2>Transactions for Account {accountNumber}</h2>
       <p>Group: {group}</p>
       <p>From: {fromDate} To: {toDate}</p>
+      <button
+        onClick={() => navigate('/categories')}
+        style={{ marginBottom: '10px', padding: '5px 10px' }}
+      >
+        Manage Categories
+      </button>
       <button
         onClick={handleSaveUpdates}
         style={{ padding: '5px 10px', marginLeft: '10px' }}
@@ -332,11 +337,12 @@ const TransactionGroupDetail: React.FC = () => {
       )}
       <div>transactionUpdates: {transactionUpdates.size}</div>
 
-      {/* Render Pivot Tables */}
+      {/* Render Transaction Group Pivot Tables */}
       {transactionGroup.pivotTables.length > 0 && (
         <div style={{ marginTop: '20px' }}>
+          <h3>Transaction Group Pivot Tables</h3>
           {transactionGroup.pivotTables.map((pivotTable, index) => (
-            <PivotTable key={index} pivotTable={pivotTable} />
+            <PivotTableComponent key={`group-${index}`} pivotTable={pivotTable} />
           ))}
         </div>
       )}
