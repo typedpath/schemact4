@@ -12,7 +12,7 @@ import { UserInfo } from './functions/UserInfo';
 import { useCategories } from './CategoryContext';
 import categorizeTransactions, { TransactionUpdate } from './functions/categorizeTransactions';
 import PivotTableComponent from './PivotTable';
-import { TransactionGroup } from './functions/TransactionGroup'; // Keep for getTransactionGroup response
+import { TransactionGroup } from './functions/TransactionGroup';
 
 type Transaction = UserInfo['accounts'][number]['transactionGroups'][number]['transactions'][number];
 type TransactionGroupType = UserInfo['accounts'][number]['transactionGroups'][number];
@@ -178,6 +178,37 @@ const TransactionGroupDetail: React.FC = () => {
         cellClass: 'cell-center',
       },
       {
+        headerName: 'Auto-Categorize',
+        width: 100,
+        minWidth: 80,
+        headerClass: 'header-center',
+        cellClass: 'cell-center',
+        editable: false, // Prevent editing
+        cellRenderer: (params: ICellRendererParams<Transaction>) => {
+          if (params.data?.categorized) {
+            return ''; // No button if categorized
+          }
+          return (
+            <button
+              onClick={() => navigate(`/autocfilters?pattern=${encodeURIComponent(params.data?.memo || '')}`)}
+              style={{
+                padding: '4px 8px',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '16px', // Ensure emoji renders clearly
+                lineHeight: '1', // Align emoji vertically
+              }}
+              title="Create auto-categorization rule" // Accessibility tooltip
+            >
+              💡
+            </button>
+          );
+        },
+      },
+      {
         field: 'category',
         headerName: 'Category',
         sortable: true,
@@ -246,6 +277,7 @@ const TransactionGroupDetail: React.FC = () => {
 
         const response = await getTransactionGroup(fromDate!, toDate!, accountNumber!, idToken);
         setTransactionGroup(response.data);
+        console.log('TransactionGroup Response:', JSON.stringify(response.data, null, 2)); // Debug: Log for TransactionGroup.ts evaluation
         setLoading(false);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch transactions');
@@ -346,6 +378,18 @@ const TransactionGroupDetail: React.FC = () => {
           ))}
         </div>
       )}
+
+      {/* Placeholder for Account-Level Pivot Tables */}
+      {/*
+      {account?.pivotTables.length > 0 && (
+        <div style={{ marginTop: '20px' }}>
+          <h3>Account-Level Pivot Tables</h3>
+          {account.pivotTables.map((pivotTable, index) => (
+            <PivotTableComponent key={`account-${index}`} pivotTable={pivotTable} />
+          ))}
+        </div>
+      )}
+      */}
     </div>
   );
 };

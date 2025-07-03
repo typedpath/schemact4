@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { AxiosResponse } from 'axios';
 import { useCategories } from './CategoryContext';
@@ -22,11 +22,12 @@ interface AutoCatFiltersEditScreenProps {
 
 const AutoCatFiltersEditScreen: React.FC<AutoCatFiltersEditScreenProps> = ({ userInfo, setUserInfo }) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { categoryOptions } = useCategories();
   const [filters, setFilters] = useState<AutoCatFilter[]>([]);
   const [newFilter, setNewFilter] = useState<AutoCatFilter>({
     name: '',
-    pattern: '',
+    pattern: searchParams.get('pattern') || '', // Prefill pattern from query param
     type: 'contains',
     category: categoryOptions[0] || '',
     frequency: '',
@@ -51,6 +52,12 @@ const AutoCatFiltersEditScreen: React.FC<AutoCatFiltersEditScreenProps> = ({ use
     }
   }, [categoryOptions, newFilter.category]);
 
+  // Update newFilter.pattern if query param changes (e.g., navigating back with a different pattern)
+  useEffect(() => {
+    const pattern = searchParams.get('pattern') || '';
+    setNewFilter((prev) => ({ ...prev, pattern }));
+  }, [searchParams]);
+
   const handleAddOrUpdateFilter = () => {
     if (!newFilter.name.trim() || !newFilter.pattern.trim() || !newFilter.category) {
       setError('Name, pattern, and category are required');
@@ -62,7 +69,7 @@ const AutoCatFiltersEditScreen: React.FC<AutoCatFiltersEditScreenProps> = ({ use
       setFilters(filters.map((filter) =>
         filter.name === editingId ? newFilter : filter
       ));
-      console.log('handleAddOrUpdateFilter newFilter:', newFilter)
+      console.log('handleAddOrUpdateFilter newFilter:', newFilter);
       setEditingId(null);
     } else {
       // Add new filter
@@ -97,14 +104,14 @@ const AutoCatFiltersEditScreen: React.FC<AutoCatFiltersEditScreenProps> = ({ use
     setLoading(true);
     setError(null);
     setSuccess(null);
-console.log('handleSaveAutoCatFilters')
+    console.log('handleSaveAutoCatFilters');
     try {
       const session = await fetchAuthSession();
       const idToken = session.tokens?.idToken?.toString();
       if (!idToken) throw new Error('No ID token available');
 
       if (filters.length === 0) throw new Error('No filters to save');
-console.log('handleSaveAutoCatFilters filters.length', filters)
+      console.log('handleSaveAutoCatFilters filters.length', filters);
 
       // Validate filters
       for (const filter of filters) {
@@ -112,10 +119,10 @@ console.log('handleSaveAutoCatFilters filters.length', filters)
         if (!filter.pattern.trim()) throw new Error('All filters must have a pattern');
         //if (!categoryOptions.includes(filter.category)) throw new Error(`Invalid category: ${filter.category}`);
       }
-console.log('handleSaveAutoCatFilters network')
+      console.log('handleSaveAutoCatFilters network');
 
       const response: AxiosResponse<UserInfo> = await saveAutoCatFilters(filters, idToken);
-      console.log('handleSaveAutoCatFilters response', response)
+      console.log('handleSaveAutoCatFilters response', response);
 
       setUserInfo(response.data);
       setSuccess('Auto-categorization filters saved successfully!');
@@ -151,12 +158,10 @@ console.log('handleSaveAutoCatFilters network')
         />
         <select
           value={newFilter.type}
-          onChange={(e) =>
-              {
-                 setNewFilter({ ...newFilter, type: e.target.value })
-                 console.log('changed newFilter.type ', newFilter, e.target.value)
-              }
-              }
+          onChange={(e) => {
+            setNewFilter({ ...newFilter, type: e.target.value });
+            console.log('changed newFilter.type ', newFilter, e.target.value);
+          }}
           style={{ padding: '8px' }}
           disabled={loading}
         >
