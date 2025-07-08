@@ -7,7 +7,10 @@ import schemact.domain.Module
 import schemact.domain.ReactJsInjectables
 import schemact.domain.StringType
 import schemact.domain.int
+import schemact.domain.readUserPrivateBucketDataArg
 import schemact.domain.string
+import schemact.domain.updateUserDataArg
+import schemact.domain.writeUserPrivateBucketDataArg
 
 val userInfoLatest = userInfo3
 val transactionGroupLatest = transactionGroup3
@@ -143,6 +146,22 @@ val getTransactionGroup = schemact.domain.Function(
     auth = auth
 )
 
+val getTransactionGroup2 = Function(
+    "getTransactionGroup2",
+    description = "gets a transactionGroup",
+    paramType = Entity(name = "param", description = "Params") {
+        writeUserPrivateBucketDataArg()
+        readUserPrivateBucketDataArg()
+        updateUserDataArg(userInfoLatest)
+        string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
+        string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
+        string("accountNumber", "AccountNumber", maxLength = 20)
+    },
+    returnType = transactionGroupLatest,
+    auth = auth
+)
+
+
 val categorizeTransactions = schemact.domain.Function(
     "categorizeTransactions",
     description = "gets a transactionGroup",
@@ -265,8 +284,13 @@ val saveAutoCatFilters = Function(
 
 
 
-val functionsModule = Module(name= "functions",
+val functionsModuleX = Module(name= "functions",
     version = functionModuleVersion,
     functions = mutableListOf(onLoginFunction, uploadFileFunction,
         addAccountFunction, uploadTransactionGroupFunction, getTransactionGroup,
+        getTransactionGroup2,
         categorizeTransactions, saveCategoriesFunction, saveAutoCatFilters))
+
+val functionsModule = Module(name= "functions",
+    version = functionModuleVersion,
+    functions = mutableListOf(getTransactionGroup2))

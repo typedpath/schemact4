@@ -5,7 +5,6 @@ import com.amazonaws.services.s3.model.GetObjectRequest
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.testedsoftware.accountview.UserInfoUpdater
 import schemact.aws.VerifyCognito.verifyCognitoJwt
 
 object InjectablesFactory {
@@ -21,7 +20,7 @@ object InjectablesFactory {
         val updateUserInfo:   UpdateUserInfo =
             {
                     update ->
-                UserInfoUpdater.update(userTableName=userTableName, userId=cognitoData.sub,
+                UserInfoUpdaterOld.update(userTableName=userTableName, userId=cognitoData.sub,
                     email = cognitoData.email?:"noemail", update=update)
             }
 

@@ -7,7 +7,7 @@ import { UserInfo } from './UserInfo';
 
 const urlPath = "/functions/uploadFile" 
 
-export default async function uploadFile(Authorization_in: string, file_in: File) : Promise<AxiosResponse<UserInfo, any>> { // TODO map to specified return type
+export default async function uploadFile(Authorization_in: string, cognitoDetails_in: CognitoClientDetails, file_in: File) : Promise<AxiosResponse<UserInfo, any>> { // TODO map to specified return type
     let url = urlPath
     if (window.location.href.indexOf("localhost")>=0) {
       url = 'https://accountview.testedsoftware.org' + urlPath
@@ -19,7 +19,8 @@ export default async function uploadFile(Authorization_in: string, file_in: File
        
     headers['Content-Type'] = 'multipart/form-data';     
     const body = new FormData();
-       body.append('file', file_in);
+       body.append('cognitoDetails', cognitoDetails_in);
+ body.append('file', file_in);
 
     
        let res = await axios.post(url, body, {headers : headers,
@@ -30,6 +31,13 @@ export default async function uploadFile(Authorization_in: string, file_in: File
         return res;
      }       
 
+
+export interface CognitoClientDetails   {
+     jwksUrl: string
+    userPoolId: string
+    clientId: string
+    region: string
+     } 
 
 
 

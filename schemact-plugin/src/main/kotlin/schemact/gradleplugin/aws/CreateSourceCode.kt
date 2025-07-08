@@ -7,6 +7,11 @@ import schemact.domain.Function
 import schemact.gradleplugin.RestPolicy
 import schemact.gradleplugin.aws.functiontemplates.*
 import schemact.gradleplugin.aws.functiontemplates.FunctionTypescriptClientTemplate.functionTypescriptClientTemplate
+import schemact.gradleplugin.aws.functiontemplates.injectionsupport.DynamoDbUtilTemplate
+import schemact.gradleplugin.aws.functiontemplates.injectionsupport.InjectablesFactoryTemplate
+import schemact.gradleplugin.aws.functiontemplates.injectionsupport.InjectablesTemplate
+import schemact.gradleplugin.aws.functiontemplates.injectionsupport.UserDataUpdaterTemplate
+import schemact.gradleplugin.aws.functiontemplates.injectionsupport.VerifyCognitoTemplate
 import java.io.File
 
 object CreateSourceCode {
@@ -75,7 +80,8 @@ object CreateSourceCode {
                 staticWebSites = functionToStaticWebsite.get(it) ?: emptyList(),
                 staticWebSiteToSourceRoot = staticWebSiteToSourceRoot,
                 defaultLocalServerDomain=defaultLocalServerDomain,
-                allComplexTopLevelTypes=allComplexTopLevelTypes
+                allComplexTopLevelTypes=allComplexTopLevelTypes,
+                userInfoType = schemact.userKeyedDatabase?.userInfoType
             )
         }
         module.functionClients.forEach {
@@ -123,12 +129,28 @@ object CreateSourceCode {
         staticWebSites: List<StaticWebsite>,
         staticWebSiteToSourceRoot: Map<StaticWebsite, File>,
         defaultLocalServerDomain: String?,
-        allComplexTopLevelTypes: Set<Entity>
+        allComplexTopLevelTypes: Set<Entity>,
+        userInfoType: Entity?=null
     ) {
         println("creating code for function ${function.name} in ${genDir.absolutePath}")
 
+
         genDir.mkdirs()
         val packageName = packageTree.joinToString(".")
+
+        mapOf("VerifyCognito" to VerifyCognitoTemplate.VerifyCognitoTemplate(packageName),
+            "Injectables" to InjectablesTemplate.InjectablesTemplate(packageName, if (userInfoType!=null)userInfoType.name else null),
+            "InjectablesFactory" to InjectablesFactoryTemplate.InjectablesFactoryTemplate(packageName, userInfoType),
+            ).forEach {
+            writeSourceFile(genDir, packageTree, it.key,it.value)
+        }
+        if (userInfoType!=null) {
+            mapOf("DynamoDbUtil" to DynamoDbUtilTemplate.DynamoDbUtilTemplate(packageName),
+                "${userInfoType.name}Updater" to UserDataUpdaterTemplate.UserDataUpdaterTemplate(entity = userInfoType, packageName=packageName))
+                .forEach {
+                writeSourceFile(genDir, packageTree, it.key,it.value)
+            }
+        }
 
         // TODO non string args
         val implClassName = CodeLocations.implClassName(function.name)

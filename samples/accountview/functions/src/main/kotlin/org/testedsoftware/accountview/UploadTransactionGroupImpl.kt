@@ -55,7 +55,7 @@ class UploadTransactionGroupImpl {
         RawTransactionFileIO.writeJson(s3Bucket, transactionFile.keyFromUserId(userId),  transactions)
 
 
-        return UserInfoUpdater.update(userTableName=userTableName,  userId = userId,
+        return UserInfoUpdaterOld.update(userTableName=userTableName,  userId = userId,
             email = email,
             update= { data ->
                 val account = data.accounts.find { it.accountNumber == accountNumber }

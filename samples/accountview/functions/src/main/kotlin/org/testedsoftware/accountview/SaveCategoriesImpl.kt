@@ -13,7 +13,7 @@ class SaveCategoriesImpl {
         val updateUserInfo:   (update: ((data: UserInfo) -> UserInfo ) ?) -> UserInfo =
             {
                     update ->
-                UserInfoUpdater.update(userTableName=userTableName, userId=cognitoData.sub,
+                UserInfoUpdaterOld.update(userTableName=userTableName, userId=cognitoData.sub,
                     email = cognitoData.email?:"noemail", update=update)
             }
        return  saveCategories(updateUserInfo, categories)

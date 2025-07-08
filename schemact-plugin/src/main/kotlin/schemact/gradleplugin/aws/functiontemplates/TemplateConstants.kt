@@ -1,0 +1,3 @@
+object TemplateConstants {
+    val dollarChar = '$'
+}

@@ -1,11 +1,10 @@
 package org.testedsoftware.accountview
 
-import org.testedsoftware.accountview.UserInfoListener.preSaveFilter
 import schemact.aws.CognitoClientDetails
 import schemact.aws.VerifyCognito.verifyCognitoJwt
 
 //TODO autogen
-object UserInfoUpdater {
+object UserInfoUpdaterOld {
 
     fun updateSecure(Authorization: String, cognitoDetails: CognitoClientDetails,
                      userTableName: String,

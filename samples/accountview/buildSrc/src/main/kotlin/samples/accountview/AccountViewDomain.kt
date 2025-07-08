@@ -3,7 +3,7 @@ package samples.accountview
 import schemact.domain.*
 import schemact.domain.Language.Typescript
 
-val functionModuleVersion="1.0.97-SNAPSHOT"
+val functionModuleVersion="1.0.98-SNAPSHOT"
 
 val auth =  Auth()
 

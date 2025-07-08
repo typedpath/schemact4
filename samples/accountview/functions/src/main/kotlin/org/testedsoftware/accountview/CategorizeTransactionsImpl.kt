@@ -5,7 +5,6 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.GetObjectRequest
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import schemact.aws.CognitoClientDetails
@@ -27,7 +26,7 @@ class CategorizeTransactionsImpl {
         val updateUserInfo:   UpdateUserInfo =
                 {
                     update ->
-                    UserInfoUpdater.update(userTableName=userTableName, userId=cognitoData.sub,
+                    UserInfoUpdaterOld.update(userTableName=userTableName, userId=cognitoData.sub,
                         email = cognitoData.email?:"noemail", update=update)
                 }
 

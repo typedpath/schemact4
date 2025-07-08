@@ -14,3 +14,4 @@ init { init() }
 }
 
 fun Connection?.asString() : String = if (this==null) "null" else "${this.entity1.name} =${this.name}> ${this.entity2.name}"
+

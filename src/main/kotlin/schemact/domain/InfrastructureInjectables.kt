@@ -1,5 +1,9 @@
 package schemact.domain
 
+import schemact.domain.InfrastructureInjectables.ReadUserPrivateBucketData
+import schemact.domain.InfrastructureInjectables.UpdateUserInfo
+import schemact.domain.InfrastructureInjectables.WriteUserPrivateBucketData
+
 object InfrastructureInjectables {
 // see here https://ogp.me/
 
@@ -52,4 +56,38 @@ object InfrastructureInjectables {
                 }
             }
 
+    val WriteUserPrivateBucketData = Entity(name = "WriteUserPrivateBucketData", description = "Writes to private bucket") {
+        isConstructedPreInjection = true
+        containsOne("PrivateBucketNameType", type = PrivateBucketNameType)
+        containsOne("AuthorizationHeaderType", type = AuthorizationHeaderType)
+        containsOne(name="cognitoDetails", description = "Cognito Details", type = CognitoClientDetails.entity)
+    }
+
+    val ReadUserPrivateBucketData = Entity(name = "ReadUserPrivateBucketData", description = "Read from a private bucket") {
+        isConstructedPreInjection = true
+        containsOne("PrivateBucketNameType", type = PrivateBucketNameType)
+        containsOne("AuthorizationHeaderType", type = AuthorizationHeaderType)
+        containsOne(name="cognitoDetails", description = "Cognito Details", type = CognitoClientDetails.entity)
+    }
+
+    fun UpdateUserInfo(userInfoType: Entity) = Entity(name = "Update${userInfoType.name}", description = "Updates User Data (${userInfoType.name})") {
+        isConstructedPreInjection = true
+        containsOne("DynamoDBTablenameType", type = DynamoDBTablenameType)
+        containsOne("AuthorizationHeaderType", type = AuthorizationHeaderType)
+        containsOne(name="cognitoDetails", description = "Cognito Details", type = CognitoClientDetails.entity)
+    }
+
+// to inject relationships between other injectables are needed - in the injectable resolver ?
+//     WritePrivateBucket depends on (AuthorizationHeaderType, PrivateBucketNameType)
+ //   typealias WriteToUserToDataPrivateBucket = (key: String, value: Any) -> Unit
+  //  typealias ReadUserDataPrivateBucket = (key: String) -> String
+    // gen from UserKeyedDatabase
+   // typealias UpdateUserInfo=   (update: ((data: UserInfo) -> UserInfo ) ?) -> UserInfo
+
+
 }
+
+fun Entity.writeUserPrivateBucketDataArg(): Connection = containsOne(name="WriteUserPrivateBucketData", type=WriteUserPrivateBucketData)
+fun Entity.readUserPrivateBucketDataArg(): Connection = containsOne(name="ReadUserPrivateBucketData", type=ReadUserPrivateBucketData)
+fun Entity.updateUserDataArg(userInfoType: Entity): Connection =
+    containsOne(name="Update${userInfoType.name}", type=UpdateUserInfo(userInfoType))

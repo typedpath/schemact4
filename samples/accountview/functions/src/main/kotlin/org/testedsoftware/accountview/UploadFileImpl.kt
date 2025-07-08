@@ -43,7 +43,7 @@ class UploadFileImpl {
         // Generate file URL
         val fileUrl = "https://$s3Bucket.s3.amazonaws.com/$key"
 
-        return UserInfoUpdater.update(userTableName=userTableName,
+        return UserInfoUpdaterOld.update(userTableName=userTableName,
             userId=userId, email=email,
             update =  {data ->
                 data.uploads.add(UserInfo.RandomFile(filename = file.filename, location = path, contentType = file.contentType, uploadTime=LocalDateTime.now().toString()))

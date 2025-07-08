@@ -4,6 +4,8 @@ open class Entity(val name: String, val description: String, val isValueType: Bo
                   val parent: Entity? = null,
                   //comes from the infrastructure build
                   var isFromInfrastructure: Boolean = false,
+                  // if injected, constructed from other injected stuff
+                  var isConstructedPreInjection: Boolean = false,
                   //comes from an HTTP header
                   var isFromHeader: Boolean = false,
                   // comes from the native handler
@@ -45,6 +47,8 @@ open class Entity(val name: String, val description: String, val isValueType: Bo
     }
 
     fun fieldsFromInfrastructure() :List<Connection> = connections.filter {it.type==ConnectionType.Contains && it.entity2.isFromInfrastructure}
+
+
 
     fun fieldsFromHeader() :List<Connection> = connections.filter {it.type==ConnectionType.Contains && it.entity2.isFromHeader}
 

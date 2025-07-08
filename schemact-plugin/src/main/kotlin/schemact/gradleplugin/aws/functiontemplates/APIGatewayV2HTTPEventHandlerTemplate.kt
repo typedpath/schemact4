@@ -23,6 +23,9 @@ import ${APIGatewayV2HTTPEventEntity.let { "${it.prefferedPackage}.${it.name}" }
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.annotation.JsonProperty
+
+import schemact.aws.CognitoClientDetails
+
 ${if (restPolicy.argsFromMultiPart.size>0)"import $packageName.MultiPart" else ""}
 ${function.paramType.connections.map { it.entity2 }.filter { it.prefferedPackage!=null && !it.isNativePassthrough }
     .map { "import ${it.prefferedPackage}.${it.name} " }.joinToString (System.lineSeparator()) }
@@ -75,7 +78,13 @@ class ${handlerClassName} : RequestHandler<${APIGatewayV2HTTPEventEntity.name}, 
             ${restPolicy.argsFromMultiPart.map { mulitiPartExtractionCode(it) }.joinToString(System.lineSeparator()) } 
    """ else "" } 
         //TODO 
-
+    ${if (restPolicy.constructedFields.size==0) "" else 
+    """ val injectablesContext = InjectablesFactory.createContext(mapOf(${
+        restPolicy.injectionPrecursorFields.map{""""${it.name}" to ${it.name}"""}.joinToString (", ")}))
+        ${restPolicy.constructedFields.map{
+"""      val ${it.name}=injectablesContext["${it.name}"] as ${it.name}"""}.joinToString (System.lineSeparator())}
+        """
+    }
     
     val result = ($implClassName()).${function.name}(${function.paramType.connections.map{"${it.name}=${it.name}"}.joinToString(", ")})
     System.out.println("result: ${'$'}result")
