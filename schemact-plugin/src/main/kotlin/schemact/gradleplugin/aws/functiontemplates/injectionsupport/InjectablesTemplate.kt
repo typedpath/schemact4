@@ -9,11 +9,11 @@ object InjectablesTemplate {
 
     // functions can be arguments
 // gen from private bucket
-    typealias WriteToUserToDataPrivateBucket = (key: String, value: Any) -> Unit
-    typealias ReadUserDataPrivateBucket = (key: String) -> String
+    typealias WriteUserPrivateBucketData = (key: String, value: Any) -> Unit
+    typealias ReadUserPrivateBucketData = (key: String) -> String
     // gen from UserKeyedDatabase
     ${if (userInfoClassName!=null) 
-        "typealias UpdateUserInfo = (update: ((data: ${userInfoClassName}) -> UserInfo)?, deserialize: (str: String, version: String) -> ${userInfoClassName}) -> UserInfo" else ""
+        "typealias Update${userInfoClassName} = (update: ((data: ${userInfoClassName}) -> UserInfo)?, deserialize: (str: String, version: String) -> ${userInfoClassName}) -> UserInfo" else ""
 }
     // functions can be arguments
 """

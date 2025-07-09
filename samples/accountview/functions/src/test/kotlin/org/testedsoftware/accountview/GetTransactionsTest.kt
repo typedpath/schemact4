@@ -1,13 +1,8 @@
 package org.testedsoftware.accountview
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Test
 import org.testedsoftware.accountview.AutoCatFiltersExtra.defaultAutoCatFilters
-import org.testedsoftware.accountview.TransactionGroup.RawTransactionFile
-import org.testedsoftware.accountview.TransactionGroup.TransactionFile
-import schemact.aws.ReadUserDataPrivateBucket
-import schemact.aws.UpdateUserInfo
 
 class GetTransactionsTest {
 
@@ -25,7 +20,7 @@ class GetTransactionsTest {
         }
         // TODO make this val ?
         var userInfo = UserInfo()
-        val updateUserInfo: UpdateUserInfo = {
+        val updateUserInfo: UpdateUserInfoOld = {
             update ->
             // TODO put in filter
             println("updateUserInfo.update:in")
@@ -45,13 +40,13 @@ class GetTransactionsTest {
         )
         userInfo.accounts.add(account)
         val transactionGroup = TransactionGroup(fromInclusiveDate, toInclusiveDate,
-            RawTransactionFile(
+            TransactionGroup.RawTransactionFile(
                 filename = "rawTransactionFileName",
                 location = "/transactionGroups",
                 contentType = "application/json",
                 uploadTime = "12/05/98",
             ),
-            transactionFile= TransactionFile(
+            transactionFile= TransactionGroup.TransactionFile(
                 filename = "transactionFile",
                 location = "/transactionGroups",
                 contentType = "application/json",

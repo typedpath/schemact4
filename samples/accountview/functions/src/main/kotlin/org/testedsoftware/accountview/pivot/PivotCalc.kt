@@ -2,8 +2,6 @@ package org.testedsoftware.accountview.pivot
 
 
 import org.testedsoftware.accountview.PivotTable
-import org.testedsoftware.accountview.PivotTable.LabelColumn
-import org.testedsoftware.accountview.PivotTable.ValueColumn
 import org.testedsoftware.accountview.Transaction
 import java.time.LocalDate
 import java.time.Month
@@ -26,20 +24,20 @@ object PivotCalc {
             currentDate = currentDate.plusMonths(1)
         }
 
-        val headerColumn = LabelColumn(labelTitle="category", labels = categories.toMutableList(), footer="Total")
+        val headerColumn = PivotTable.LabelColumn(labelTitle="category", labels = categories.toMutableList(), footer="Total")
 
         val monthFormatter = DateTimeFormatter.ofPattern("MMM yy")
 
         println("pivotCategories found  ${monthDates}")
 
-        var valueColumns: MutableList<ValueColumn>
-        var totalValueColumn = ValueColumn(header="${monthFormatter.format(earliestDate)}-${monthFormatter.format(latestDate)}, ",
+        var valueColumns: MutableList<PivotTable.ValueColumn>
+        var totalValueColumn = PivotTable.ValueColumn(header="${monthFormatter.format(earliestDate)}-${monthFormatter.format(latestDate)}, ",
                 footer=0, values = MutableList(size= categories.size+1) { i->0 })
         valueColumns =  monthDates.map {
             var trs = transactionsByMonth[it]
             if (trs==null) trs = emptyList()
             val values = categories.map { cat->   trs.filter{ it.category==cat  }.map { it.amount }.sum()  }.toMutableList()
-            val result = ValueColumn(header=monthFormatter.format(it), values=values, trs.map { it.amount }.sum())
+            val result = PivotTable.ValueColumn(header=monthFormatter.format(it), values=values, trs.map { it.amount }.sum())
             values.forEachIndexed { index, value -> totalValueColumn.values[index]+=value }
             result
         }.toMutableList()

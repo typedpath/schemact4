@@ -24,8 +24,8 @@ object InjectablesFactoryTemplate {
         data class SecureUserInjectables(
             ${if (userInfoClass != null) "val update${userInfoClass.name}: Update${userInfoClass.name}" else ""},
             // TODO should not be optional or better redo algo !
-            val writeToUserToDataPrivateBucket: WriteToUserToDataPrivateBucket?,
-            val readUserDataPrivateBucket: ReadUserDataPrivateBucket?
+            val writeUserPrivateBucketData: WriteUserPrivateBucketData?,
+            val readUserPrivateBucketData: ReadUserPrivateBucketData?
         )
 
         fun createContext(contextIn: Map<String, Any>) : Map<String, Any?> {
@@ -38,8 +38,8 @@ object InjectablesFactoryTemplate {
                 throw Exception("InjectablesFactoryTemplate Authorization, cognitoClientDetails and userTableName are mandatory")
             }
             val typedResult:  SecureUserInjectables = create(Authorization=Authorization, cognitoDetails=cognitoClientDetails, userTableName=userTableName, privateBucketName=privateBucketName)
-             return mapOf("WriteToUserToDataPrivateBucket" to typedResult.writeToUserToDataPrivateBucket,
-                          "ReadUserDataPrivateBucket" to typedResult.readUserDataPrivateBucket
+             return mapOf("WriteUserPrivateBucketData" to typedResult.writeUserPrivateBucketData,
+                          "ReadUserPrivateBucketData" to typedResult.readUserPrivateBucketData
                           ${if (userInfoClass!=null) """, "Update${userInfoClass.name}" to  typedResult.update${userInfoClass.name} """ else "" }
                           )
         }
@@ -61,7 +61,7 @@ object InjectablesFactoryTemplate {
                     )
                 }
 """ else ""}
-            val writeToUserToDataPrivateBucket: WriteToUserToDataPrivateBucket? =
+            val writeToUserToDataPrivateBucket: WriteUserPrivateBucketData? =
                 if (privateBucketName != null) { key, value ->
                     val s3 = AmazonS3ClientBuilder.standard().withRegion("us-east-1").build()
                     val inputStream = (ObjectMapper()).writeValueAsString(value).byteInputStream()
@@ -74,7 +74,7 @@ object InjectablesFactoryTemplate {
                 } else null
 
 
-            val readUserDataPrivateBucket: ReadUserDataPrivateBucket? =
+            val readUserDataPrivateBucket: ReadUserPrivateBucketData? =
                 if (privateBucketName != null) { key ->
                     val s3 = AmazonS3ClientBuilder.standard().withRegion("us-east-1").build()
                     val privatisedKey = "${dollarChar}{cognitoData.sub}${dollarChar}key"

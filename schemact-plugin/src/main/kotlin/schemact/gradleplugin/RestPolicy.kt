@@ -59,14 +59,14 @@ class RestPolicy(val paramType: Entity, val returnType: Entity,
     val argsFromParams: List<Connection> = paramType.connections.filter {
             val subParam = it.entity2
             !useMultiPart && !subParam.isNativePassthrough && !subParam.isFromInfrastructure && !subParam.isConstructedPreInjection
-                    (subParam is PrimitiveType && it.cardinality == Cardinality.OneToOne)
+                    && (subParam is PrimitiveType && it.cardinality == Cardinality.OneToOne)
                     && !argIsTooBigForParam(subParam)
         }
 
     // assign big args to body
     val argsFromBody: List<Connection> = paramType.connections.filter {
         val subParam = it.entity2
-        !useMultiPart && !subParam.isNativePassthrough  &&!!subParam.isConstructedPreInjection && !subParam.isFromHeader  && !subParam.isFromInfrastructure &&
+        !useMultiPart && !subParam.isNativePassthrough  && !subParam.isConstructedPreInjection && !subParam.isFromHeader  && !subParam.isFromInfrastructure &&
                 (!(subParam is PrimitiveType && it.cardinality == Cardinality.OneToOne)|| argIsTooBigForParam(subParam))
     }.minus(constructedFields)
 

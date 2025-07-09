@@ -282,15 +282,13 @@ val saveAutoCatFilters = Function(
     auth = auth
 )
 
-
-
-val functionsModuleX = Module(name= "functions",
+val functionsModule = Module(name= "functions",
     version = functionModuleVersion,
     functions = mutableListOf(onLoginFunction, uploadFileFunction,
         addAccountFunction, uploadTransactionGroupFunction, getTransactionGroup,
         getTransactionGroup2,
         categorizeTransactions, saveCategoriesFunction, saveAutoCatFilters))
 
-val functionsModule = Module(name= "functions",
+val functionsModuleX = Module(name= "functions",
     version = functionModuleVersion,
     functions = mutableListOf(getTransactionGroup2))

@@ -24,12 +24,9 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.annotation.JsonProperty
 
-import schemact.aws.CognitoClientDetails
-
 ${if (restPolicy.argsFromMultiPart.size>0)"import $packageName.MultiPart" else ""}
-${function.paramType.connections.map { it.entity2 }.filter { it.prefferedPackage!=null && !it.isNativePassthrough }
+${function.paramType.connections.plus(restPolicy.injectionPrecursorFields).map { it.entity2 }.filter { it.prefferedPackage!=null && !it.isNativePassthrough }
     .map { "import ${it.prefferedPackage}.${it.name} " }.joinToString (System.lineSeparator()) }
-
 
 // https://docs.aws.amazon.com/lambda/latest/dg/urls-invocation.html
 // https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html#http-api-develop-integrations-lambda.proxy-format
@@ -54,7 +51,7 @@ class ${handlerClassName} : RequestHandler<${APIGatewayV2HTTPEventEntity.name}, 
           }
 
     ${inputParamName}!!
-           
+       // argsFromEnvironment    
         ${restPolicy.argsFromEnvironment.map {
     """    
     val ${it.name} = ${getFromSystemEnvCode(it)}"""
@@ -62,6 +59,7 @@ class ${handlerClassName} : RequestHandler<${APIGatewayV2HTTPEventEntity.name}, 
       ${if (restPolicy.argsFromMultiPart.size==0 && restPolicy.argsFromBody.size>0) "val body = ObjectMapper().readValue($inputParamName.body, Body::class.java)" else ""}
       ${restPolicy.argsFromBody.joinToString(System.lineSeparator()) {"""
       val ${it.name}=body.${it.name}"""   }} 
+//args from params
        ${restPolicy.argsFromParams.map { 
 """
     val ${it.name} = ${inputParamName}.queryStringParameters.get("${it.name}")!!"""       
@@ -70,14 +68,14 @@ class ${handlerClassName} : RequestHandler<${APIGatewayV2HTTPEventEntity.name}, 
     """
     val ${it.name} = ${inputParamName}.headers.get("${it.name}".lowercase())!!"""
 }.joinToString (System.lineSeparator())}
-    
+//   argsFromMultiPart  
    ${if (restPolicy.argsFromMultiPart.size>0) """
               val contentType = input.headers?.get("content-type")
             ?: throw Exception("Missing Content-Type")
         val multiParts = MultiPart.read(input.body, contentType)  
             ${restPolicy.argsFromMultiPart.map { mulitiPartExtractionCode(it) }.joinToString(System.lineSeparator()) } 
    """ else "" } 
-        //TODO 
+        // constructedFields 
     ${if (restPolicy.constructedFields.size==0) "" else 
     """ val injectablesContext = InjectablesFactory.createContext(mapOf(${
         restPolicy.injectionPrecursorFields.map{""""${it.name}" to ${it.name}"""}.joinToString (", ")}))

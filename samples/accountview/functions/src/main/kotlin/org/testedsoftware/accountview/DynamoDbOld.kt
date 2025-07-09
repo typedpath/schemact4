@@ -8,7 +8,7 @@ import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest
 import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.Instant
 
-object DynamoDbUtil {
+object DynamoDbOld {
     val dynamoDb = AmazonDynamoDBClientBuilder.standard().build()
 
     fun <T> createOrUpdate(userTableName: String, userId: String, email: String, dataType: Class<T>, defaultData: ()-> T,

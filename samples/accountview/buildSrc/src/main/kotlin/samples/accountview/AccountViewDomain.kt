@@ -3,7 +3,7 @@ package samples.accountview
 import schemact.domain.*
 import schemact.domain.Language.Typescript
 
-val functionModuleVersion="1.0.98-SNAPSHOT"
+val functionModuleVersion="1.0.101-SNAPSHOT"
 
 val auth =  Auth()
 
@@ -31,6 +31,7 @@ name = "accountview",
         client(addAccountFunction, Typescript)
         client(uploadTransactionGroupFunction, Typescript)
         client(getTransactionGroup, Typescript)
+        client(getTransactionGroup2, Typescript)
         client(categorizeTransactions, Typescript)
         client(saveCategoriesFunction, Typescript)
         client(saveAutoCatFilters, Typescript)

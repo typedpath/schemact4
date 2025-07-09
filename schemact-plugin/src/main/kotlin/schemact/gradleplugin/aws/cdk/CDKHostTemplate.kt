@@ -3,6 +3,7 @@ import PrivateBucketCdk
 import schemact.domain.*
 import schemact.domain.Function
 import schemact.gradleplugin.FunctionIdKey
+import schemact.gradleplugin.RestPolicy
 import schemact.gradleplugin.aws.cdk.CreateWebsiteResourcesCloudFrontDistribution.createWebsiteResourcesCloudFrontDistribution
 import schemact.gradleplugin.aws.functiontemplates.CodeLocations.handlerFullClassName
 import schemact.gradleplugin.functionId
@@ -76,9 +77,10 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
         createWebsiteResourcesDnsRecordSetGroup(websiteDomainName = websiteDomainName, domain=domain, cloudFrontDistribution = cfnDistribution)
     }
 
+
     fun environmentVariables(module: Module, function: Function, entityToEnvironmentVariable: Map<Entity, String>) : Map<String, String> {
         println("environmentVariables ${entityToEnvironmentVariable.entries.joinToString { "${it.key.name}=${it.value}"  }}" )
-        val result =  function.paramType.fieldsFromInfrastructure().map {
+        val result =  RestPolicy(function.paramType, function.returnType).argsFromEnvironment.map {
             if (entityToEnvironmentVariable.containsKey(it.entity2)) it.name to (entityToEnvironmentVariable[it.entity2])!!
             else throw RuntimeException("unknown infrastructure field type ${it.entity2.name} in function ${function.name}.${it.entity1.name}.${it.name}")
         }.associateBy({it.first}, {it.second}).toMutableMap()

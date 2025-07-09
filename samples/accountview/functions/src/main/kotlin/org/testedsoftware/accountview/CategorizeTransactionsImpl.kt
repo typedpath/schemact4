@@ -8,10 +8,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import schemact.aws.CognitoClientDetails
-import schemact.aws.ReadUserDataPrivateBucket
-import schemact.aws.UpdateUserInfo
 import schemact.aws.VerifyCognito.verifyCognitoJwt
-import schemact.aws.WriteToUserToDataPrivateBucket
 
 
 class CategorizeTransactionsImpl {
@@ -23,7 +20,7 @@ class CategorizeTransactionsImpl {
 
         val cognitoData = verifyCognitoJwt(Authorization, cognitoDetails)
 
-        val updateUserInfo:   UpdateUserInfo =
+        val updateUserInfo:   UpdateUserInfoOld =
                 {
                     update ->
                     UserInfoUpdaterOld.update(userTableName=userTableName, userId=cognitoData.sub,
@@ -69,7 +66,7 @@ class CategorizeTransactionsImpl {
     }
 
     fun categorizeTransactions(
-        updateUserInfo:   UpdateUserInfo,
+        updateUserInfo:   UpdateUserInfoOld,
         writeToUserToDataPrivateBucket:WriteToUserToDataPrivateBucket,
         readUserDataPrivateBucket : ReadUserDataPrivateBucket,
         fromInclusiveDate: String, toInclusiveDate: String, accountNumber: String,

@@ -11,6 +11,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTVerificationException
 import java.security.interfaces.RSAPublicKey
 import com.auth0.jwk.UrlJwkProvider
+import schemact.aws.CognitoClientDetails
 
 
 object  VerifyCognito {

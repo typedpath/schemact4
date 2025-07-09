@@ -3,14 +3,8 @@ package org.testedsoftware.accountview
 // created by template functionSampleImpl
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.testedsoftware.accountview.DynamoDbUtil.getUserData
 import org.testedsoftware.accountview.pivot.PivotCalc
 import schemact.aws.CognitoClientDetails
-import schemact.aws.InjectablesFactory
-import schemact.aws.ReadUserDataPrivateBucket
-import schemact.aws.UpdateUserInfo
-import schemact.aws.VerifyCognito.verifyCognitoJwt
-import schemact.aws.WriteToUserToDataPrivateBucket
 
 
 class GetTransactionGroupImpl {
@@ -18,7 +12,7 @@ class GetTransactionGroupImpl {
 
     fun getTransactionGroup(userTableName: String, privateBucketName: String, Authorization: String, cognitoDetails: CognitoClientDetails, fromInclusiveDate: String, toInclusiveDate: String, accountNumber: String) : TransactionGroup {
 
-        val secureUserInjectables: InjectablesFactory.SecureUserInjectables =  InjectablesFactory.create(Authorization=Authorization,
+        val secureUserInjectables: InjectablesFactoryOld.SecureUserInjectables =  InjectablesFactoryOld.create(Authorization=Authorization,
             privateBucketName=privateBucketName, cognitoDetails =  cognitoDetails, userTableName =  userTableName)
         return getTransactionGroup(readUserDataPrivateBucket = secureUserInjectables.readUserDataPrivateBucket!!,
             updateUserInfo =  secureUserInjectables.updateUserInfo,
@@ -31,7 +25,7 @@ class GetTransactionGroupImpl {
 
     // TODO autogenerate everything before this
     fun getTransactionGroup(readUserDataPrivateBucket: ReadUserDataPrivateBucket,
-                            updateUserInfo: UpdateUserInfo,
+                            updateUserInfo: UpdateUserInfoOld,
                             fromInclusiveDate: String, toInclusiveDate: String, accountNumber: String) : TransactionGroup {
 
         var result: TransactionGroup? = null

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
-import getTransactionGroup from './functions/getTransactionGroup';
+import getTransactionGroup2 from './functions/getTransactionGroup2';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css';
@@ -275,7 +275,7 @@ const TransactionGroupDetail: React.FC = () => {
           throw new Error('No ID token available');
         }
 
-        const response = await getTransactionGroup(fromDate!, toDate!, accountNumber!, idToken);
+        const response = await getTransactionGroup2(fromDate!, toDate!, accountNumber!, idToken);
         setTransactionGroup(response.data);
         console.log('TransactionGroup Response:', JSON.stringify(response.data, null, 2)); // Debug: Log for TransactionGroup.ts evaluation
         setLoading(false);

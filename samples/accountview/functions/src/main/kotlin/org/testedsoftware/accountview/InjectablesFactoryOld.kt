@@ -1,14 +1,15 @@
-package schemact.aws
+package org.testedsoftware.accountview
 
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.GetObjectRequest
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.fasterxml.jackson.databind.ObjectMapper
+import schemact.aws.CognitoClientDetails
 import schemact.aws.VerifyCognito.verifyCognitoJwt
 
-object InjectablesFactory {
-    data class SecureUserInjectables(val updateUserInfo:   UpdateUserInfo,
+object InjectablesFactoryOld {
+    data class SecureUserInjectables(val updateUserInfo:   UpdateUserInfoOld,
                                      val writeToUserToDataPrivateBucket : WriteToUserToDataPrivateBucket?,
                                      val readUserDataPrivateBucket : ReadUserDataPrivateBucket?
         )
@@ -17,7 +18,7 @@ object InjectablesFactory {
 
         val cognitoData = verifyCognitoJwt(Authorization, cognitoDetails)
 
-        val updateUserInfo:   UpdateUserInfo =
+        val updateUserInfo:   UpdateUserInfoOld =
             {
                     update ->
                 UserInfoUpdaterOld.update(userTableName=userTableName, userId=cognitoData.sub,
