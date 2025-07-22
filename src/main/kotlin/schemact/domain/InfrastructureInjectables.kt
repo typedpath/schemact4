@@ -1,7 +1,9 @@
 package schemact.domain
 
+
 import schemact.domain.InfrastructureInjectables.ReadUserPrivateBucketData
 import schemact.domain.InfrastructureInjectables.UpdateUserInfo
+import schemact.domain.InfrastructureInjectables.VerifiedCognitoUser
 import schemact.domain.InfrastructureInjectables.WriteUserPrivateBucketData
 
 object InfrastructureInjectables {
@@ -15,6 +17,7 @@ object InfrastructureInjectables {
     )
 
     const val AwsPackage = "schemact.aws"
+
 
     object CognitoClientDetails {
         lateinit var jwksUrl  : Connection
@@ -56,25 +59,40 @@ object InfrastructureInjectables {
                 }
             }
 
-    val WriteUserPrivateBucketData = Entity(name = "WriteUserPrivateBucketData", description = "Writes to private bucket") {
+    //    data class CognitoResult(val sub: String, val email: String?, val username: String?)
+    val VerifiedCognitoUser = Entity(name = "VerifiedCognitoUser", description = "user details from cognito or whatever") {
+        string(name = "sub", description="sub", 50, optional = true)
+        string(name = "email", description="email", 200, optional = true)
+        string(name = "username", description="username", 50, optional = true)
+    }
+
+    val  verifyUserSession = Function (name="verifyUserSession",
+               description = "verifies user session", paramType = Entity(name="params", description="params") {
+               containsOne("cognitoClientDetails",  description = "cognitoClientDetails", CognitoClientDetails.entity)
+        },
+        returnType = VerifiedCognitoUser)
+
+
+
+        val WriteUserPrivateBucketData = Entity(name = "WriteUserPrivateBucketData", description = "Writes to private bucket") {
         isConstructedPreInjection = true
-        containsOne("PrivateBucketNameType", type = PrivateBucketNameType)
-        containsOne("AuthorizationHeaderType", type = AuthorizationHeaderType)
-        containsOne(name="cognitoDetails", description = "Cognito Details", type = CognitoClientDetails.entity)
+        containsOne("PrivateBucketNameType", type = InfrastructureInjectables.PrivateBucketNameType)
+        containsOne("AuthorizationHeaderType", type = InfrastructureInjectables.AuthorizationHeaderType)
+        containsOne(name="verifiedCognitoUser", description = "Verified Cognito User", type = VerifiedCognitoUser)
     }
 
     val ReadUserPrivateBucketData = Entity(name = "ReadUserPrivateBucketData", description = "Read from a private bucket") {
         isConstructedPreInjection = true
-        containsOne("PrivateBucketNameType", type = PrivateBucketNameType)
-        containsOne("AuthorizationHeaderType", type = AuthorizationHeaderType)
-        containsOne(name="cognitoDetails", description = "Cognito Details", type = CognitoClientDetails.entity)
+        containsOne("PrivateBucketNameType", type = InfrastructureInjectables.PrivateBucketNameType)
+        containsOne("AuthorizationHeaderType", type = InfrastructureInjectables.AuthorizationHeaderType)
+        containsOne(name="cognitoDetails", description = "Cognito Details", type = InfrastructureInjectables.CognitoClientDetails.entity)
     }
 
     fun UpdateUserInfo(userInfoType: Entity) = Entity(name = "Update${userInfoType.name}", description = "Updates User Data (${userInfoType.name})") {
         isConstructedPreInjection = true
-        containsOne("DynamoDBTablenameType", type = DynamoDBTablenameType)
-        containsOne("AuthorizationHeaderType", type = AuthorizationHeaderType)
-        containsOne(name="cognitoDetails", description = "Cognito Details", type = CognitoClientDetails.entity)
+        containsOne("DynamoDBTablenameType", type = InfrastructureInjectables.DynamoDBTablenameType)
+        containsOne("AuthorizationHeaderType", type = InfrastructureInjectables.AuthorizationHeaderType)
+        containsOne(name="cognitoDetails", description = "Cognito Details", type = InfrastructureInjectables.CognitoClientDetails.entity)
     }
 
 // to inject relationships between other injectables are needed - in the injectable resolver ?
