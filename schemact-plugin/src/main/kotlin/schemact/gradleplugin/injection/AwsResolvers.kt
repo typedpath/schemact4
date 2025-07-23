@@ -1,11 +1,7 @@
-package schemact.gradleplugin
+package schemact.gradleplugin.injection
 
-import schemact.domain.Cardinality
-import schemact.domain.Connection
-import schemact.domain.ConnectionType
 import schemact.domain.Entity
 import schemact.domain.InfrastructureInjectables
-import schemact.domain.InfrastructureInjectables.VerifiedCognitoUser
 import schemact.domain.InfrastructureInjectables.WriteUserPrivateBucketData
 
 object AwsResolvers {
@@ -35,10 +31,10 @@ object AwsResolvers {
     }*/
 
     val WriteUserPrivateBucketDataResolver =
-        fromEntity(entity=WriteUserPrivateBucketData/*, transformName = "createWriteUserPrivateBucketData"*/ )
-
+       //fromEntity(entity = WriteUserPrivateBucketData/*, transformName = "createWriteUserPrivateBucketData"*/)
+        fromMapperFunction(mapperFunction = createWriteUserPrivateBucketData)
     val VerifiedUserResolver =
-         fromTransformFunction(transformFunction = verifyUserSession)
+        fromMapperFunction(mapperFunction = verifyUserSession)
 
     fun SystemPropertyResolver(propertyName: String, propertyType: Entity) =
         object : Resolver () {

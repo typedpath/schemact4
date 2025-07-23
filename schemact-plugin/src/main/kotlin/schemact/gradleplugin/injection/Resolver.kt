@@ -1,4 +1,4 @@
-package schemact.gradleplugin
+package schemact.gradleplugin.injection
 
 import schemact.domain.Cardinality
 import schemact.domain.Connection
@@ -19,19 +19,19 @@ fun requirement(from: Entity, to: Entity, name: String )  = Value.Requirement(na
         cardinality= Cardinality.OneToOne, type= ConnectionType.Contains)) },
 )
 
-data class TransformFunction(val function: Function, val src: String)
+data class MapperFunction(val function: Function, val src: String)
 
-fun fromTransformFunction(transformFunction: TransformFunction) = object : Resolver() {
+fun fromMapperFunction(mapperFunction: MapperFunction) = object : Resolver() {
     override fun resolve(value: Value): List<Value.Requirement>? {
         // should emit requirements not actual values
         // == test + default
 
-        if (value.connectionFrom.entity2 == transformFunction.function.returnType && value.requirements == null) {
+        if (value.connectionFrom.entity2 == mapperFunction.function.returnType && value.requirements == null) {
 
             value.renderer = object : Renderer() {
                 override fun renderKotlin(value: Value, dependencies: Map<String, Value>) : String{
                     //return "val ${value.varName} = ${transformFunction.name}(${dependencies.map { (key, value) -> "$key=${value.varName}" }.joinToString(", ")})"
-                    return "val ${value.varName} = ${transformFunction.function.name}(${dependencies.map{"${it.key}=${it.value.varName}"}.joinToString(", ")})"
+                    return "val ${value.varName} = ${mapperFunction.function.name}(${dependencies.map{"${it.key}=${it.value.varName}"}.joinToString(", ")})"
                 }
 
                 override fun requiredImports(): List<String> {
@@ -42,7 +42,7 @@ fun fromTransformFunction(transformFunction: TransformFunction) = object : Resol
 
             }
 
-            value.requirements = transformFunction.function.paramType.connections.map {
+            value.requirements = mapperFunction.function.paramType.connections.map {
                 Value.Requirement(name=it.name, match = {
                         v->v.connectionFrom.entity2==it.entity2
                 },

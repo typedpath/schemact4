@@ -1,13 +1,12 @@
-package schemact.gradleplugin
+package schemact.gradleplugin.injection
 
 import schemact.domain.Function
 import schemact.domain.InfrastructureInjectables
 import schemact.domain.asString
-import schemact.gradleplugin.AwsResolvers.VerifiedUserResolver
-//import schemact.gradleplugin.AwsResolvers.VerifiedUserResolver
-import schemact.gradleplugin.AwsResolvers.WriteUserPrivateBucketDataResolver
-import schemact.gradleplugin.ParameterResolver.expandParamRequirements
-import schemact.gradleplugin.ParameterResolver.orderLeastDependantToMost
+import schemact.gradleplugin.injection.AwsResolvers.VerifiedUserResolver
+import schemact.gradleplugin.injection.AwsResolvers.WriteUserPrivateBucketDataResolver
+import schemact.gradleplugin.injection.ParameterResolver.expandParamRequirements
+import schemact.gradleplugin.injection.ParameterResolver.orderLeastDependantToMost
 
 object Template {
     fun template(function: Function): String {
@@ -15,7 +14,7 @@ object Template {
         val resolvers = listOf<Resolver>(WriteUserPrivateBucketDataResolver, AwsAuthHeaderResolver,
             AwsResolvers.DynamoDBTablenameResolver, AwsResolvers.PrivateBucketNameResolver,
 
-            AwsResolvers.CognitoClientDetailsResolver, VerifiedUserResolver/*, VerifiedUserResolver*/    )
+            AwsResolvers.CognitoClientDetailsResolver, VerifiedUserResolver    )
 
         val context = orderLeastDependantToMost(expandParamRequirements(function, resolvers))
 

@@ -1,12 +1,11 @@
-package schemact.gradleplugin
+package schemact.gradleplugin.injection
 
 import TemplateConstants.dollarChar
-import schemact.domain.InfrastructureInjectables.VerifiedCognitoUser
 import schemact.domain.InfrastructureInjectables.verifyUserSession
 
 val dollarChar = '$'
 // TODO put src impl in a submodule (injectedtransforms, from which source is copied)
-val verifyUserSession = TransformFunction( function = verifyUserSession, src=
+val verifyUserSession = MapperFunction( function = verifyUserSession, src=
       """
            fun ${verifyUserSession.name}() (/*TODO take these off the function*/token: String, cognitoDetails: CognitoClientDetails): CognitoResult {
         // Decode JWT to get kid (key ID)

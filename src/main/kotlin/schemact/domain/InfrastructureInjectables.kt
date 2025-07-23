@@ -69,17 +69,30 @@ object InfrastructureInjectables {
     val  verifyUserSession = Function (name="verifyUserSession",
                description = "verifies user session", paramType = Entity(name="params", description="params") {
                containsOne("cognitoClientDetails",  description = "cognitoClientDetails", CognitoClientDetails.entity)
+               containsOne("AuthorizationHeaderType", type = InfrastructureInjectables.AuthorizationHeaderType)
         },
         returnType = VerifiedCognitoUser)
 
 
+// should be a function, for time being new Function WriteUserPrivateBucketDataFunction
+// somehow make it injectable - maybe add function field to ParamEntity or define native functions, types
+
 
         val WriteUserPrivateBucketData = Entity(name = "WriteUserPrivateBucketData", description = "Writes to private bucket") {
         isConstructedPreInjection = true
+            // should be paramType and returnType
         containsOne("PrivateBucketNameType", type = InfrastructureInjectables.PrivateBucketNameType)
         containsOne("AuthorizationHeaderType", type = InfrastructureInjectables.AuthorizationHeaderType)
         containsOne(name="verifiedCognitoUser", description = "Verified Cognito User", type = VerifiedCognitoUser)
     }
+
+    val createWriteUserPrivateBucketData = Function (name="createWriteUserPrivateBucketData",
+    description = "verifies user session", paramType = Entity(name="params", description="params") {
+        containsOne("verifiedCognitoUser",  description = "VerifiedCognitoUser", VerifiedCognitoUser)
+        containsOne("privateBucketName", type = InfrastructureInjectables.PrivateBucketNameType)
+    },
+    returnType = WriteUserPrivateBucketData)
+
 
     val ReadUserPrivateBucketData = Entity(name = "ReadUserPrivateBucketData", description = "Read from a private bucket") {
         isConstructedPreInjection = true

@@ -1,17 +1,12 @@
-package schemact.gradleplugin
+package schemact.gradleplugin.injection
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ParameterResolver
 import schemact.domain.Entity
 import schemact.domain.Function
-import schemact.domain.InfrastructureInjectables
-import schemact.domain.asString
 import schemact.domain.int
 import schemact.domain.string
 import schemact.domain.writeUserPrivateBucketDataArg
-import schemact.gradleplugin.ParameterResolver.expandParamRequirements
-import schemact.gradleplugin.Template.template
-import kotlin.collections.mutableListOf
+import schemact.gradleplugin.injection.Template.template
 
 class ParameterResolverTest {
 
@@ -22,22 +17,22 @@ val userInfoLatest = Entity(name = "param", description = "Params") {
 }
 
 val function  = Function(
-        "getTransactionGroup2",
-        description = "gets a transactionGroup",
-        paramType = Entity(name = "param", description = "Params") {
-            writeUserPrivateBucketDataArg()
-            /*readUserPrivateBucketDataArg()
-            updateUserDataArg(userInfoLatest)
-            string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
-            string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
-            string("accountNumber", "AccountNumber", maxLength = 20)*/
-        },
-        returnType = Entity(name="status", description="Status") {
-            int("code", "code")
-            string("description", "Status Description", maxLength = 20)
-        }
+    "getTransactionGroup2",
+    description = "gets a transactionGroup",
+    paramType = Entity(name = "param", description = "Params") {
+        writeUserPrivateBucketDataArg()
+        /*readUserPrivateBucketDataArg()
+        updateUserDataArg(userInfoLatest)
+        string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
+        string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
+        string("accountNumber", "AccountNumber", maxLength = 20)*/
+    },
+    returnType = Entity(name = "status", description = "Status") {
+        int("code", "code")
+        string("description", "Status Description", maxLength = 20)
+    }
 //        auth = auth
-    )
+)
 
 
 @Test

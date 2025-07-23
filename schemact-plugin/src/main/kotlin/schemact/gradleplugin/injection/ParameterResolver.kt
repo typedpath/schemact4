@@ -1,4 +1,4 @@
-package schemact.gradleplugin
+package schemact.gradleplugin.injection
 
 import schemact.domain.Function
 import schemact.domain.asString
