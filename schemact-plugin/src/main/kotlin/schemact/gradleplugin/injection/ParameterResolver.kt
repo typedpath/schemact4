@@ -50,19 +50,38 @@ object ParameterResolver {
     }
 
     fun orderLeastDependantToMost(values: List<Value>) : List<Value> {
-         return values.sortedWith { v1, v2 ->
-                 if (v1.requirements == null) {
-                     throw Exception("cant sort value: ${v1.varName} : unknown requirements")
-                 }
-                 if (v2.requirements == null) {
-                    throw Exception("cant sort value: ${v2.varName} : unknown requirements")
-                 }
-                 if (v1.requirements!!.any { it.match(v2)   }) {
-                     1
-                 } else if (v2.requirements!!.any { it.match(v1)   })  {
-                     -1
-                 } else {0}
-         }
+        val value2DependencyL: List<Pair<Value, List<Value>>> = values.map{
+            value ->
+            val requirements = value.requirements
+            if (requirements==null) {
+                throw Exception("cant sort value: ${value.varName} : unknown requirements")
+            }
+            Pair(value,  requirements.flatMap{requirement -> values.filter {requirement.match(it)}})
+        }
+
+        val value2Dependency = value2DependencyL.toMap()
+
+        fun isTransitivelyDependantOn(vFrom: Value, vTo: Value) : Boolean {
+            val dependencies = value2Dependency.get(vFrom)!!
+            if (dependencies.contains(vTo)) {
+                println("${vFrom.connectionFrom.name} is directly dependant on ${vTo.connectionFrom.name}")
+                return true
+            }
+            if (dependencies.any{isTransitivelyDependantOn(it, vTo)}) {
+                println("${vFrom.connectionFrom.name} is transitively dependant on ${vTo.connectionFrom.name}")
+                return true
+            }
+            println("${vFrom.connectionFrom.name} is not dependant on ${vTo.connectionFrom.name}")
+            return false
+        }
+
+         return values.sortedWith( Comparator<Value>{ v1, v2 ->
+                when {
+                    isTransitivelyDependantOn(v2, v1) -> 1
+                    isTransitivelyDependantOn(v1, v2) -> -1
+                    else -> 0
+                }
+         }).reversed()
     }
 
 }
