@@ -1,12 +1,14 @@
-package schemact.gradleplugin.injection
+package schemact.gradleplugin.injection.mappers
 
 import TemplateConstants.dollarChar
 import schemact.domain.InfrastructureInjectables.verifyUserSession
+import schemact.gradleplugin.injection.MapperFunction
 
 val dollarChar = '$'
 // TODO put src impl in a submodule (injectedtransforms, from which source is copied)
-val verifyUserSession = MapperFunction( function = verifyUserSession, src=
-      """
+val verifyUserSession = MapperFunction(
+      function = verifyUserSession, src =
+            """
            fun ${verifyUserSession.name}() (/*TODO take these off the function*/token: String, cognitoDetails: CognitoClientDetails): CognitoResult {
         // Decode JWT to get kid (key ID)
         val decodedJwt = JWT.decode(token)
@@ -36,4 +38,5 @@ val verifyUserSession = MapperFunction( function = verifyUserSession, src=
             username = verifiedJwt.getClaim("cognito:username")?.asString()
         )
     }
-      """.trimIndent() )
+      """.trimIndent()
+)

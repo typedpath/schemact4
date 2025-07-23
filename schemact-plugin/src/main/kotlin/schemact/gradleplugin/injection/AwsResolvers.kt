@@ -2,7 +2,8 @@ package schemact.gradleplugin.injection
 
 import schemact.domain.Entity
 import schemact.domain.InfrastructureInjectables
-import schemact.domain.InfrastructureInjectables.WriteUserPrivateBucketData
+import schemact.gradleplugin.injection.mappers.createWriteUserPrivateBucketData
+import schemact.gradleplugin.injection.mappers.verifyUserSession
 
 object AwsResolvers {
 
@@ -10,25 +11,6 @@ object AwsResolvers {
     val PrivateBucketNameResolver = SystemPropertyResolver(InfrastructureInjectables.PrivateBucketNameType.name,InfrastructureInjectables.PrivateBucketNameType)
     val DynamoDBTablenameResolver = AwsResolvers.SystemPropertyResolver(InfrastructureInjectables.DynamoDBTablenameType.name, InfrastructureInjectables.DynamoDBTablenameType)
     val CognitoClientDetailsResolver = AwsResolvers.SystemPropertyResolver(InfrastructureInjectables.CognitoClientDetails.entity.name, InfrastructureInjectables.CognitoClientDetails.entity)
-    /*val VerifiedUserResolver =  object : Resolver () {
-        override fun resolve(value: Value): List<Value.Requirement>? {
-            val transformName = "verifyCognitoUser"
-            if (value.connectionFrom.entity2 == VerifiedCognitoUser) {
-                val authHeaderRequirement = requirement(from = VerifiedCognitoUser, to= InfrastructureInjectables.AuthorizationHeaderType, name="token")
-                val cognitoClientDetailsRequirement = requirement(from = VerifiedCognitoUser, to= InfrastructureInjectables.CognitoClientDetails.entity, name="cognitoClientDetails")
-
-                value.renderer = object : Renderer() {
-                    override fun renderKotlin(value: Value, dependencies: Map<String, Value>) : String =
-                         "val ${value.varName} = $transformName(${dependencies.map { (key, value) -> "$key=${value.varName}" }.joinToString(", ")})"
-
-                    override fun requiredImports(): List<String> =  emptyList()
-                }
-                value.requirements = listOf(authHeaderRequirement, cognitoClientDetailsRequirement)
-                return value.requirements
-            } else return null
-        }
-
-    }*/
 
     val WriteUserPrivateBucketDataResolver =
        //fromEntity(entity = WriteUserPrivateBucketData/*, transformName = "createWriteUserPrivateBucketData"*/)

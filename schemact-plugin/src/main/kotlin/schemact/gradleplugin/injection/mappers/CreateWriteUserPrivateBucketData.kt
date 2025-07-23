@@ -1,7 +1,8 @@
-package schemact.gradleplugin.injection
+package schemact.gradleplugin.injection.mappers
 
 
 import TemplateConstants.dollarChar
+import schemact.gradleplugin.injection.MapperFunction
 
 
 //val dollarChar = '$'
