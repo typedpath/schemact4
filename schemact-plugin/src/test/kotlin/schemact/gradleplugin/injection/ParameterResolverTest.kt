@@ -21,6 +21,7 @@ val function  = Function(
     description = "gets a transactionGroup",
     paramType = Entity(name = "param", description = "Params") {
         writeUserPrivateBucketDataArg()
+        string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
         /*readUserPrivateBucketDataArg()
         updateUserDataArg(userInfoLatest)
         string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
@@ -38,7 +39,7 @@ val function  = Function(
 @Test
 fun test() {
 
-    val src = template(function)
+    val src = template(function = function)
     println("""src:
 $src""".trimMargin())
 
