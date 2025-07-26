@@ -9,7 +9,9 @@ import schemact.gradleplugin.injection.MapperFunction
 // TODO put src impl in a submodule (injectedtransforms, from which source is copied)
 val createWriteUserPrivateBucketData = MapperFunction( function =  schemact.domain.InfrastructureInjectables.createWriteUserPrivateBucketData,
     src=
-    """//TODO generate args fro function
+    """
+object CreateWriteUserPrivateBucketData {
+        //TODO generate args fro function
            fun ${schemact.domain.InfrastructureInjectables.createWriteUserPrivateBucketData.name}() (privateBucketName: String, verifiedCognitoUser: VerifiedCognitoUser): WriteUserPrivateBucketData {
                    val writeToUserToDataPrivateBucket: WriteUserPrivateBucketData? =
                  { key, value ->
@@ -23,4 +25,5 @@ val createWriteUserPrivateBucketData = MapperFunction( function =  schemact.doma
                     val s3Object = s3.putObject(writeObjectRequest)
                 }
     }
+  }
       """.trimIndent() )

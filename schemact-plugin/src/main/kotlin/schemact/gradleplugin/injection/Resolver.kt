@@ -21,12 +21,18 @@ fun requirement(from: Entity, to: Entity, name: String )  = Value.Requirement(na
 
 data class MapperFunction(val function: Function, val src: String)
 
-fun fromMapperFunction(mapperFunction: MapperFunction) = object : Resolver() {
+class MapperResolver(val mapperFunction: MapperFunction) : Resolver() {
+    fun printFunctionSrc(domainPath: List<String> ) : String {
+        return """package ${domainPath.joinToString(".")}
+${mapperFunction.src}            
+        """.trimIndent()
+    }
+
     override fun resolve(value: Value): List<Value.Requirement>? {
         // should emit requirements not actual values
         // == test + default
 
-        if (value.connectionFrom.entity2 == mapperFunction.function.returnType && value.requirements == null) {
+        if (value.connectionFrom.entity2 == mapperFunction.function.returnType /*&& value.requirements == null*/) {
 
             value.renderer = object : Renderer() {
                 override fun renderKotlin(value: Value, dependencies: Map<String, Value>) : String{
@@ -37,9 +43,7 @@ fun fromMapperFunction(mapperFunction: MapperFunction) = object : Resolver() {
                 override fun requiredImports(): List<String> {
                     TODO("Not yet implemented")
                 }
-
                 //  override fun transformFunction() : TransformFunction? = transformFunction
-
             }
 
             value.requirements = mapperFunction.function.paramType.connections.map {
@@ -54,7 +58,10 @@ fun fromMapperFunction(mapperFunction: MapperFunction) = object : Resolver() {
         } else return null
     }
 
+
 }
+
+fun fromMapperFunction(mapperFunction: MapperFunction) = MapperResolver(mapperFunction = mapperFunction)
 
 fun fromEntity(entity: Entity/*, transformFunction: TransformFunction*/) = object : Resolver () {
     override fun resolve(value: Value): List<Value.Requirement>? {

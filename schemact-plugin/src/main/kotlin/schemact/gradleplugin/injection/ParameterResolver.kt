@@ -5,8 +5,9 @@ import schemact.domain.asString
 
 object ParameterResolver {
     // distinguish between expansion and resolution
-    fun expandParamRequirements(function: Function, resolvers: List<Resolver>) : List<Value> {
-        val unexpandedValues = function.paramType.connections.map { Value(connectionFrom = it) }.toMutableList()
+    fun expandParamRequirements(function: Function, resolvers: List<Resolver>): List<Value> {
+        val unexpandedValues =
+            function.paramType.connections.map { Value(connectionFrom = it) }.toMutableList()
         val expandedValues = mutableListOf<Value>()
         var loopAlert = false
         // only top level map to REST params hene need to know iteration count
@@ -17,12 +18,12 @@ object ParameterResolver {
             val valuesExpandedThsIteration = mutableListOf<Value>()
             for (unexpandedValue in unexpandedValues) {
                 val expandedValuesResults: List<List<Value.Requirement>> =
-                    resolvers.map { it.resolve(unexpandedValue) }.filter { it!=null }.map{
+                    resolvers.map { it.resolve(unexpandedValue) }.filter { it != null }.map {
                         unexpandedValue.requirements = it
                         it as List<Value.Requirement>
                     }
-                if (expandedValuesResults.size>0) {
-                    val newRequirements = expandedValuesResults.flatMap { it  }
+                if (expandedValuesResults.size > 0) {
+                    val newRequirements = expandedValuesResults.flatMap { it }
                     // filter based on whether exists or not
                     newRequirementsThisIteration.addAll(newRequirements)
                 }
@@ -31,57 +32,122 @@ object ParameterResolver {
             unexpandedValues.removeAll(valuesExpandedThsIteration)
             expandedValues.addAll(valuesExpandedThsIteration)
             for (requirement in newRequirementsThisIteration) {
-                if (!expandedValues.any {requirement.match(it)} && !unexpandedValues.any { requirement.match(it) }) {
+                if (!expandedValues.any { requirement.match(it) } && !unexpandedValues.any {
+                        requirement.match(
+                            it
+                        )
+                    }) {
                     unexpandedValues.add(requirement.creator())
                 }
             }
 //            unexpandedValues.addAll(newValuesThisIteration)
-            if (!unexpandedValues.isEmpty() && valuesExpandedThsIteration.size ==0) {
+            if (!unexpandedValues.isEmpty() && valuesExpandedThsIteration.size == 0) {
                 loopAlert = true
             }
             iterationIndex++
         }
         if (loopAlert) {
-            throw Exception("""resolveParams: unexpandedValues for function: ${function.name}:
-                 ${unexpandedValues.map{it.connectionFrom.asString()}.joinToString(System.lineSeparator())}""".trimMargin())
+            throw Exception(
+                """resolveParams: unexpandedValues for function: ${function.name}:
+                 ${
+                unexpandedValues.map { it.connectionFrom.asString() }
+                    .joinToString(System.lineSeparator())
+            }""".trimMargin()
+            )
         }
         //now sort in dependency order ?
         return expandedValues
     }
 
-    fun orderLeastDependantToMost(values: List<Value>) : List<Value> {
-        val value2DependencyL: List<Pair<Value, List<Value>>> = values.map{
-            value ->
+    fun orderLeastDependantToMost(values: List<Value>): List<Value> {
+        val value2DependencyL: List<Pair<Value, List<Value>>> = values.map { value ->
             val requirements = value.requirements
-            if (requirements==null) {
+            if (requirements == null) {
                 throw Exception("cant sort value: ${value.varName} : unknown requirements")
             }
-            Pair(value,  requirements.flatMap{requirement -> values.filter {requirement.match(it)}})
+            Pair(
+                value,
+                requirements.flatMap { requirement -> values.filter { requirement.match(it) } })
         }
 
         val value2Dependency = value2DependencyL.toMap()
 
-        fun isTransitivelyDependantOn(vFrom: Value, vTo: Value) : Boolean {
+        fun isTransitivelyDependantOn(vFrom: Value, vTo: Value): Boolean {
             val dependencies = value2Dependency.get(vFrom)!!
             if (dependencies.contains(vTo)) {
-                println("${vFrom.connectionFrom.name} is directly dependant on ${vTo.connectionFrom.name}")
+                //("${vFrom.connectionFrom.name} is directly dependant on ${vTo.connectionFrom.name}")
                 return true
             }
-            if (dependencies.any{isTransitivelyDependantOn(it, vTo)}) {
-                println("${vFrom.connectionFrom.name} is transitively dependant on ${vTo.connectionFrom.name}")
+            if (dependencies.any { isTransitivelyDependantOn(it, vTo) }) {
+                //println("${vFrom.connectionFrom.name} is transitively dependant on ${vTo.connectionFrom.name}")
                 return true
             }
-            println("${vFrom.connectionFrom.name} is not dependant on ${vTo.connectionFrom.name}")
+            //println("${vFrom.connectionFrom.name} is not dependant on ${vTo.connectionFrom.name}")
             return false
         }
 
-         return values.sortedWith( Comparator<Value>{ v1, v2 ->
-                when {
-                    isTransitivelyDependantOn(v2, v1) -> 1
-                    isTransitivelyDependantOn(v1, v2) -> -1
-                    else -> 0
-                }
-         }).reversed()
+        return values.sortedWith(Comparator<Value> { v1, v2 ->
+            when {
+                isTransitivelyDependantOn(v2, v1) -> 1
+                isTransitivelyDependantOn(v1, v2) -> -1
+                else -> 0
+            }
+        }).reversed()
     }
+
+    // put this somewhere else
+    fun unresolvedRequirementsByValue(values: List<Value>): Map<Value, List<Value.Requirement>> {
+        val valuesToUnresolvedRequirements = mutableMapOf<Value, List<Value.Requirement>>()
+        for (value in values) {
+            if (value.requirements != null) {
+                val unresolved =
+                    value.requirements!!.filter { requirement ->
+                        !values.any {
+                            requirement.match(it)
+                        }
+                    }
+                if (unresolved.size > 0) valuesToUnresolvedRequirements.put(value, unresolved)
+            } else {
+                valuesToUnresolvedRequirements.put(value, emptyList())
+            }
+        }
+        return valuesToUnresolvedRequirements
+    }
+
+
+    fun checkForUnresolved(context: List<Value>) {
+        val unresolvedRequirementsByValue = unresolvedRequirementsByValue(context)
+
+        if (!unresolvedRequirementsByValue.isEmpty()) {
+            throw Exception(
+                """some values are not resolved : 
+                ${
+                unresolvedRequirementsByValue.map {
+                    """${it.key.connectionFrom.asString()} ${if (it.key.requirements == null) "unknown requirements " else ""} ${
+                        it.value.map { it.name }.joinToString(",")
+                    } """
+                }
+                    .joinToString(System.lineSeparator())
+            }
+            """.trimMargin())
+        }
+    }
+
+    //TODO get rid of this - renders should deal withmultiple values
+    fun assumeSingleDependencyMatches(value: Value, context: List<Value>) : Map<String, Value> {
+        return value.requirements!!.map {
+                requirement ->
+            val matches = context.filter { requirement.match(it) }
+            if (matches.size == 0) {
+                throw Exception("resolving value for ${value.connectionFrom.asString()} ${requirement.name} got no matches }")
+            }
+            if (matches.size > 1) {
+                throw Exception("resolving value for ${value.connectionFrom.asString()} ${requirement.name} got multiple matches : ${matches.map { it.connectionFrom.asString() }.joinToString (", ")}  MERGE not available")
+            }
+            Pair(requirement.name, matches[0])
+        }.toMap()
+    }
+
+
 
 }

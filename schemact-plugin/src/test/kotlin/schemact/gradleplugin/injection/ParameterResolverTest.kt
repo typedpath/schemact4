@@ -6,7 +6,7 @@ import schemact.domain.Function
 import schemact.domain.int
 import schemact.domain.string
 import schemact.domain.writeUserPrivateBucketDataArg
-import schemact.gradleplugin.injection.Template.template
+import schemact.gradleplugin.injection.APIGatewayV2HTTPEventHandlerInjectedTemplate.templateLambdaEventHandlerFiles
 
 class ParameterResolverTest {
 
@@ -38,10 +38,14 @@ val function  = Function(
 
 @Test
 fun test() {
+    val domainPath= listOf("com", "company")
+    val srcMap = templateLambdaEventHandlerFiles(function = function, domainPath = domainPath, implClassName = "testImplClassName", handlerClassName = "testHandlerClassName")
+    srcMap.forEach {  (input, output) -> println("""srcFile: $input
+*****************************
+$output
+    """.trimMargin()) }
 
-    val src = template(function = function)
-    println("""src:
-$src""".trimMargin())
+    srcMap.forEach {  (input, output) -> println("""srcFile: $input""".trimMargin()) }
 
     // sort this tree in dependency order
     //

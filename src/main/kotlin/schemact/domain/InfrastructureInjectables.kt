@@ -60,7 +60,8 @@ object InfrastructureInjectables {
             }
 
     //    data class CognitoResult(val sub: String, val email: String?, val username: String?)
-    val VerifiedCognitoUser = Entity(name = "VerifiedCognitoUser", description = "user details from cognito or whatever") {
+    val VerifiedCognitoUser = Entity(name = "VerifiedCognitoUser", description = "user details from cognito or whatever",
+        prefferedPackage= AwsPackage) {
         string(name = "sub", description="sub", 50, optional = true)
         string(name = "email", description="email", 200, optional = true)
         string(name = "username", description="username", 50, optional = true)
@@ -78,9 +79,13 @@ object InfrastructureInjectables {
 // somehow make it injectable - maybe add function field to ParamEntity or define native functions, types
 
 
-        val WriteUserPrivateBucketData = Entity(name = "WriteUserPrivateBucketData", description = "Writes to private bucket") {
+        val WriteUserPrivateBucketData = Entity(name = "WriteUserPrivateBucketData", description = "Writes to private bucket",
+            prefferedPackage= AwsPackage
+            ) {
         isConstructedPreInjection = true
+        nativeDefinition = Entity.NativeDefinition(kotlin="typealias WriteUserPrivateBucketData = (key: String, value: Any) -> Unit")
             // should be paramType and returnType
+        //TODO remove these
         containsOne("PrivateBucketNameType", type = InfrastructureInjectables.PrivateBucketNameType)
         containsOne("AuthorizationHeaderType", type = InfrastructureInjectables.AuthorizationHeaderType)
         containsOne(name="verifiedCognitoUser", description = "Verified Cognito User", type = VerifiedCognitoUser)

@@ -1,11 +1,13 @@
 package schemact.domain
 
+
 open class Entity(val name: String, val description: String, val isValueType: Boolean= false,
                   val parent: Entity? = null,
                   //comes from the infrastructure build
                   var isFromInfrastructure: Boolean = false,
                   // if injected, constructed from other injected stuff
                   var isConstructedPreInjection: Boolean = false,
+                  var nativeDefinition: NativeDefinition?=null,
                   //comes from an HTTP header
                   var isFromHeader: Boolean = false,
                   // comes from the native handler
@@ -18,6 +20,9 @@ open class Entity(val name: String, val description: String, val isValueType: Bo
     companion object {
         const val DefaultVersion="0"
     }
+
+    data class NativeDefinition(val kotlin: String)
+
 
     fun containsMany(name: String, description: String=name, type: Entity, optional : Boolean = true) : Connection {
         val c = Connection( name=name, description = description,  entity1 = this, entity2 = type,

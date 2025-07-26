@@ -2,6 +2,7 @@ package schemact.gradleplugin.injection
 
 import schemact.domain.Entity
 import schemact.domain.InfrastructureInjectables
+import schemact.domain.InfrastructureInjectables.WriteUserPrivateBucketData
 import schemact.gradleplugin.injection.mappers.createWriteUserPrivateBucketData
 import schemact.gradleplugin.injection.mappers.verifyUserSession
 
@@ -32,7 +33,7 @@ object AwsResolvers {
                     value.renderer = object : Renderer() {
                         override fun renderKotlin(value: Value, dependencies: Map<String, Value>) : String{
                             return if (propertyType.isValueType)  """val ${value.varName} = System.getenv("${propertyName}")"""
-                            else """val ${value.varName} = ${string2ObjectKotlin("""System.getenv("${propertyName}""")}"""
+                            else """val ${value.varName} = ${string2ObjectKotlin("""System.getenv("${propertyName}")""")}"""
                         }
                         override fun requiredImports(): List<String> =  emptyList()
                        // override fun supportFunctions(): String = ""
@@ -44,11 +45,13 @@ object AwsResolvers {
 
         }
 
-
     // need reference to other resolvers to exclude
     fun restParameterResolver(exclusions: Set<Resolver>) =
         object : Resolver () {
             override fun resolve(value: Value, /*expansionLevel: Int,*/ ): List<Value.Requirement>? {
+                if (value.connectionFrom.entity2==WriteUserPrivateBucketData) {
+                    println("mmmm")
+                }
 
                 if (!exclusions.any{it.resolve(value)!=null}) {
                     value.renderer = object : Renderer() {
@@ -56,7 +59,7 @@ object AwsResolvers {
                             val propertyType = value.connectionFrom.entity2
                             val propertyName = value.connectionFrom.name
                             return if (propertyType.isValueType)  """val ${value.varName} = input.queryStringParameters.get("${propertyName}")"""
-                            else """val ${value.varName} = ${string2ObjectKotlin("""input.queryStringParameters.get(("${propertyName}""")}"""
+                            else """val ${value.varName} = ${string2ObjectKotlin("""input.queryStringParameters.get("${propertyName}")""")}"""
                         }
                         override fun requiredImports(): List<String> =  emptyList()
                         // override fun supportFunctions(): String = ""

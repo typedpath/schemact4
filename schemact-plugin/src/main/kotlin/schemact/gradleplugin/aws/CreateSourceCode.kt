@@ -12,6 +12,7 @@ import schemact.gradleplugin.aws.functiontemplates.injectionsupport.InjectablesF
 import schemact.gradleplugin.aws.functiontemplates.injectionsupport.InjectablesTemplate
 import schemact.gradleplugin.aws.functiontemplates.injectionsupport.UserDataUpdaterTemplate
 import schemact.gradleplugin.aws.functiontemplates.injectionsupport.VerifyCognitoTemplate
+import schemact.gradleplugin.injection.APIGatewayV2HTTPEventHandlerInjectedTemplate.templateLambdaEventHandlerFiles
 import java.io.File
 
 object CreateSourceCode {
@@ -34,16 +35,10 @@ object CreateSourceCode {
 
         val packageName = packageTree.joinToString(".")
 
-// TODO find all the top level entities
-//  print the top level entities
-//   if a top level entity is referenced do not redfine it
-//        val topLevelEntities = schemact.entities
 
         val allComplexTopLevelTypes = module.functions.flatMap {
            RestPolicy(it.paramType, it.returnType).complexTopLevelTypes }.toMutableSet()
-        // TODO add in type from userKeyedDatabase
 
-        // TODO add all types referenced by >1 parent
         val allEntitiesWithMoreThan1Connection = getAllConnections(allComplexTopLevelTypes).groupBy { it.entity2 }.filter {it.value.size > 1}.map { it.key }.filter { it !is PrimitiveType }
         println("createSourceCode allEntitiesWithMoreThan1Connection=${allEntitiesWithMoreThan1Connection.map { it.name }.joinToString(",")}")
         allComplexTopLevelTypes.addAll(allEntitiesWithMoreThan1Connection)
@@ -83,6 +78,8 @@ object CreateSourceCode {
                 allComplexTopLevelTypes=allComplexTopLevelTypes,
                 userInfoType = schemact.userKeyedDatabase?.userInfoType
             )
+            // TODO try new template ! ! - refer to codelocations package + handler class name
+
         }
         module.functionClients.forEach {
             if (it.language!=Language.Kotlin) throw RuntimeException("module ${module.name} has unsupported language ${it.language}")
@@ -119,7 +116,6 @@ object CreateSourceCode {
         return visited
     }
 
-
     private fun createFunctionCode(
         function: Function,
         module: Module,
@@ -152,10 +148,24 @@ object CreateSourceCode {
             }
         }
 
-        // TODO non string args
         val implClassName = CodeLocations.implClassName(function.name)
         val handlerClassName = CodeLocations.handlerClassName(function.name)
         val restPolicy = RestPolicy(function.paramType, function.returnType)
+
+        // TODO generate new form service code
+
+        generateServiceCodeNew(
+            function,
+            module,
+            packageTree,
+            genDir,
+            packageName,
+            implClassName,
+            handlerClassName,
+            restPolicy,
+            mainKotlinSourceDir,
+            allComplexTopLevelTypes
+        )
 
         generateServiceCode(
             function,
@@ -228,6 +238,26 @@ object CreateSourceCode {
         //val dataClassFile = File(genDir, dataClassSubPath)
         //dataClassFile.parentFile.mkdirs()
         writeSourceFile(genDir, packageTree, dataClassName, dataClass(`package`=packageName, entity = entity, topLevelEntities))
+    }
+
+    private fun generateServiceCodeNew(
+        function: Function,
+        module: Module,
+        defaultPackageTree: List<String>,
+        genDir: File,
+        defaultPackageName: String,
+        implClassName: String,
+        handlerClassName: String,
+        restPolicy: RestPolicy,
+        mainKotlinSourceDir: File,
+        allComplexTopLevelTypes: Set<Entity>
+    ) {
+        val srcMap = templateLambdaEventHandlerFiles(function = function, domainPath = defaultPackageTree, implClassName = implClassName, handlerClassName = "${handlerClassName}Injected")
+        srcMap.forEach {
+            val file = genDir.resolve(it.key)
+            file.parentFile.mkdirs()
+            file.writeText(it.value)
+        }
     }
 
     private fun generateServiceCode(
