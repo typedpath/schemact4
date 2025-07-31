@@ -2,8 +2,8 @@ package schemact.domain
 
 
 import schemact.domain.InfrastructureInjectables.ReadUserPrivateBucketData
-import schemact.domain.InfrastructureInjectables.UpdateUserInfo
-import schemact.domain.InfrastructureInjectables.VerifiedCognitoUser
+import schemact.domain.InfrastructureInjectables.UpdateUserData
+
 import schemact.domain.InfrastructureInjectables.WriteUserPrivateBucketData
 
 object InfrastructureInjectables {
@@ -70,7 +70,7 @@ object InfrastructureInjectables {
     val  verifyUserSession = Function (name="verifyUserSession",
                description = "verifies user session", paramType = Entity(name="params", description="params") {
                containsOne("cognitoClientDetails",  description = "cognitoClientDetails", CognitoClientDetails.entity)
-               containsOne("AuthorizationHeaderType", type = InfrastructureInjectables.AuthorizationHeaderType)
+               containsOne("token", type = InfrastructureInjectables.AuthorizationHeaderType)
         },
         returnType = VerifiedCognitoUser)
 
@@ -91,8 +91,23 @@ object InfrastructureInjectables {
         containsOne(name="verifiedCognitoUser", description = "Verified Cognito User", type = VerifiedCognitoUser)
     }
 
+    val UpdateUserData  = Entity(name = "UpdateUserData", description = "updates user data, first generic argument is the type updated",
+        prefferedPackage= AwsPackage,
+    ) {
+        isConstructedPreInjection = true
+        nativeDefinition = Entity.NativeDefinition(kotlin="typealias UpdateUserData<T> =(update: ((data: T) -> T)?, deserialize: (str: String, version: String) -> T, defaultData: ()->T) -> T")
+    }
+
+    val createUserDataUpdater = Function (name="createUserDataUpdater",
+        description = "creates user data updater", paramType = Entity(name="params", description="params") {
+            containsOne("verifiedCognitoUser",  description = "VerifiedCognitoUser", VerifiedCognitoUser)
+            containsOne("userTableName", type = DynamoDBTablenameType)
+            //containsOne(name = "version", type = dataVersionType)
+        },
+        returnType = UpdateUserData)
+
     val createWriteUserPrivateBucketData = Function (name="createWriteUserPrivateBucketData",
-    description = "verifies user session", paramType = Entity(name="params", description="params") {
+    description = "supplies a write to private bucket space", paramType = Entity(name="params", description="params") {
         containsOne("verifiedCognitoUser",  description = "VerifiedCognitoUser", VerifiedCognitoUser)
         containsOne("privateBucketName", type = InfrastructureInjectables.PrivateBucketNameType)
     },
@@ -101,11 +116,21 @@ object InfrastructureInjectables {
 
     val ReadUserPrivateBucketData = Entity(name = "ReadUserPrivateBucketData", description = "Read from a private bucket") {
         isConstructedPreInjection = true
+        nativeDefinition = Entity.NativeDefinition(kotlin="typealias ReadUserPrivateBucketData = (key: String) -> String")
+        //TODO remove these
         containsOne("PrivateBucketNameType", type = InfrastructureInjectables.PrivateBucketNameType)
         containsOne("AuthorizationHeaderType", type = InfrastructureInjectables.AuthorizationHeaderType)
         containsOne(name="cognitoDetails", description = "Cognito Details", type = InfrastructureInjectables.CognitoClientDetails.entity)
     }
 
+    val createReadUserPrivateBucketData = Function (name="createReadUserPrivateBucketData",
+        description = "supplies a reader of private bucket space", paramType = Entity(name="params", description="params") {
+            containsOne("verifiedCognitoUser",  description = "VerifiedCognitoUser", VerifiedCognitoUser)
+            containsOne("privateBucketName", type = InfrastructureInjectables.PrivateBucketNameType)
+        },
+        returnType = ReadUserPrivateBucketData)
+
+   // TODO remove
     fun UpdateUserInfo(userInfoType: Entity) = Entity(name = "Update${userInfoType.name}", description = "Updates User Data (${userInfoType.name})") {
         isConstructedPreInjection = true
         containsOne("DynamoDBTablenameType", type = InfrastructureInjectables.DynamoDBTablenameType)
@@ -125,5 +150,11 @@ object InfrastructureInjectables {
 
 fun Entity.writeUserPrivateBucketDataArg(): Connection = containsOne(name="WriteUserPrivateBucketData", type=WriteUserPrivateBucketData)
 fun Entity.readUserPrivateBucketDataArg(): Connection = containsOne(name="ReadUserPrivateBucketData", type=ReadUserPrivateBucketData)
-fun Entity.updateUserDataArg(userInfoType: Entity): Connection =
-    containsOne(name="Update${userInfoType.name}", type=UpdateUserInfo(userInfoType))
+fun Entity.updateUserDataArg(userDataType: Entity): Connection {
+    val result = containsOne(name = "Update${userDataType.name}", type =UpdateUserData)
+    result.genericParams = listOf(userDataType)
+    return result
+}
+
+val dataVersionType = StringType(100)
+

@@ -2,8 +2,6 @@
 package org.testedsoftware.accountview
 // created by template functionSampleImpl
 
-import schemact.aws.CognitoClientDetails
-
 
 class AddAccountImpl {
     // created from template  functionSampleImpl at 2025-05-10T21:43:21.138087600       

@@ -1,6 +1,6 @@
 package schemact.gradleplugin.injection
 
-import org.gradle.configurationcache.extensions.capitalized
+import schemact.domain.Entity
 import schemact.domain.Function
 import schemact.domain.InfrastructureInjectables.APIGatewayV2HTTPEventEntity
 import schemact.gradleplugin.aws.functiontemplates.dataClass
@@ -10,6 +10,7 @@ import schemact.gradleplugin.injection.ParameterResolver.assumeSingleDependencyM
 import schemact.gradleplugin.injection.ParameterResolver.checkForUnresolved
 import schemact.gradleplugin.injection.ParameterResolver.expandParamRequirements
 import schemact.gradleplugin.injection.ParameterResolver.orderLeastDependantToMost
+import schemact.gradleplugin.injection.mappers.getResourceAsText
 import java.time.LocalDateTime
 
 object APIGatewayV2HTTPEventHandlerInjectedTemplate {
@@ -34,39 +35,42 @@ object APIGatewayV2HTTPEventHandlerInjectedTemplate {
 
 
         val rootFilePath = domainPath.joinToString("/")
-        val mapperfunctionpath = domainPath.plus("mapperfunction")
         val mapperFunctions = LambdaResolvers.filterIsInstance<MapperResolver>().map{it.mapperFunction}
-        val mapperFunctionsRendered = LambdaResolvers.filterIsInstance<MapperResolver>().map {
-            "${mapperfunctionpath.joinToString("/")}/${it.mapperFunction.function.name}.kt" to it.printFunctionSrc(
-                domainPath = mapperfunctionpath
-            )
-        }
+        val mapperFunctionsRendered: Map<String, String> = LambdaResolvers.filterIsInstance<MapperResolver>().flatMap {
+            it.mapperFunction.dependenciesSrc.entries.map{Pair(it.key, it.value)}
+                .plus("${it.mapperFunction.classLocation.joinToString("/")}.kt" to it.mapperFunction.src)
+        }.associate { it.first to it.second }
         val mapperFunctionDataClassesRendered = mapperFunctions.flatMap {  it.function.paramType.connections.map{it.entity2}
             .plus(it.function.returnType) }.filter{!it.isValueType}
             .map {
                  val packageName=  it.prefferedPackage?:domainPath.joinToString(".")
-                 val src = it.nativeDefinition?.kotlin?: dataClass(`package`=packageName, entity=it, topLevelTypes = emptySet()/* TODO - fix this*/)
+                 val nativeDefinition = it.nativeDefinition
+                 val src = if (nativeDefinition!=null) nativeDefinitionSource(nativeDefinition, packageName) else dataClass(`package`=packageName, entity=it, topLevelTypes = emptySet()/* TODO - fix this*/)
                  val fileName = "${packageName.replace(".", "/")}/${it.name}.kt"
                  Pair(fileName, src)
             }
         // TODO render the external data classes - e.g. with DataClassTemplate
         // val handlerClassName = "${function.name}Handler"
-        return mapOf("${rootFilePath}/${handlerClassName}.kt" to templateLambdaHandler(context = context/*should accept handler classname*/, mapperFunctions=mapperFunctions,
-            domainPath = domainPath, handlerClassName = handlerClassName, implClassName = implClassName, function = function, mapperfunctionPath = mapperfunctionpath  ))
+        return mapOf("${rootFilePath}/${handlerClassName}.kt" to templateLambdaHandler(context = context/*should accept handler classname*/,
+            domainPath = domainPath, handlerClassName = handlerClassName, implClassName = implClassName, function = function  ))
             .plus(mapperFunctionsRendered)
             .plus(mapperFunctionDataClassesRendered)
     }
 
+    private fun nativeDefinitionSource(def: Entity.NativeDefinition, packageName: String) =
+"""
+package $packageName 
+${def.kotlin}   
+""".trimIndent()
 
     private fun templateLambdaHandler(context: List<Value>, domainPath: List<String>, handlerClassName:String,
                                       function: Function,
-                                      implClassName: String,
-                                      mapperfunctionPath: List<String>, mapperFunctions: List<MapperFunction>): String {
+                                      implClassName: String): String {
         val imports = listOf("com.amazonaws.services.lambda.runtime.Context",
             "com.amazonaws.services.lambda.runtime.RequestHandler",
             "${APIGatewayV2HTTPEventEntity.let { "${it.prefferedPackage}.${it.name}" }}",
-            "com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse")
-            .plus(mapperFunctions.map{"${domainPath.joinToString (".")}.${it.function.name.capitalized()}.${it.function.name}"})
+            "com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse",
+            "com.fasterxml.jackson.databind.ObjectMapper")
 
 
         return """package ${domainPath.joinToString(".")}
@@ -79,8 +83,9 @@ class ${handlerClassName} : RequestHandler<${APIGatewayV2HTTPEventEntity.name}, 
         ${inputParamName}: ${APIGatewayV2HTTPEventEntity.name}?,
         context: Context?
     ): APIGatewayV2HTTPResponse {
-       // created from template  apiGatewayEventHandler at ${LocalDateTime.now()}   
-               ${
+       // created from template  apiGatewayEventHandler at ${LocalDateTime.now()} 
+         input!!
+${
             context.map { value ->
                 value.renderer?.renderKotlin(
                     value = value,
@@ -99,7 +104,7 @@ class ${handlerClassName} : RequestHandler<${APIGatewayV2HTTPEventEntity.name}, 
             .withStatusCode(200)
             .build()
     }
-        
+}        
            """.trimIndent()
     }
 

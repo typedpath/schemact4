@@ -7,7 +7,6 @@ import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import schemact.aws.CognitoClientDetails
 import schemact.aws.VerifyCognito.verifyCognitoJwt
 
 

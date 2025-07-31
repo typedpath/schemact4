@@ -9,6 +9,7 @@ class Connection(val name: String, val description: String?=null,
                  var optional: Boolean = false,
                  var cardinality: Cardinality,
                  var type: ConnectionType,
+                 var genericParams: List<Entity> = emptyList(),
                  init: Connection.() -> Unit={})  {
 init { init() }
 }

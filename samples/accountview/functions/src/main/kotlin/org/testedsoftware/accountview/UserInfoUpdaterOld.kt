@@ -1,6 +1,5 @@
 package org.testedsoftware.accountview
 
-import schemact.aws.CognitoClientDetails
 import schemact.aws.VerifyCognito.verifyCognitoJwt
 
 //TODO autogen

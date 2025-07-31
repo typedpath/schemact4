@@ -4,13 +4,15 @@ import org.junit.jupiter.api.Test
 import schemact.domain.Entity
 import schemact.domain.Function
 import schemact.domain.int
+import schemact.domain.readUserPrivateBucketDataArg
 import schemact.domain.string
+import schemact.domain.updateUserDataArg
 import schemact.domain.writeUserPrivateBucketDataArg
 import schemact.gradleplugin.injection.APIGatewayV2HTTPEventHandlerInjectedTemplate.templateLambdaEventHandlerFiles
 
 class ParameterResolverTest {
 
-val userInfoLatest = Entity(name = "param", description = "Params") {
+val userInfoLatest = Entity(name = "UserNameDetails", description = "UserNameDetails") {
     string("firstName", "firstNamee", maxLength = 10)
     string("middleName", "middleName", maxLength = 10)
     string("lastName", "lastName", maxLength = 20)
@@ -22,11 +24,11 @@ val function  = Function(
     paramType = Entity(name = "param", description = "Params") {
         writeUserPrivateBucketDataArg()
         string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
-        /*readUserPrivateBucketDataArg()
         updateUserDataArg(userInfoLatest)
+        readUserPrivateBucketDataArg()
         string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
         string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
-        string("accountNumber", "AccountNumber", maxLength = 20)*/
+        string("accountNumber", "AccountNumber", maxLength = 20)
     },
     returnType = Entity(name = "status", description = "Status") {
         int("code", "code")
@@ -34,7 +36,6 @@ val function  = Function(
     }
 //        auth = auth
 )
-
 
 @Test
 fun test() {

@@ -1,7 +1,6 @@
 
 package org.testedsoftware.accountview
 // created by template functionSampleImpl
-import schemact.aws.CognitoClientDetails
 
 
 class SaveAutoCatFiltersImpl { 

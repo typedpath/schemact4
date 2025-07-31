@@ -57,5 +57,6 @@ open class Entity(val name: String, val description: String, val isValueType: Bo
 
     fun fieldsFromHeader() :List<Connection> = connections.filter {it.type==ConnectionType.Contains && it.entity2.isFromHeader}
 
+
 }
 

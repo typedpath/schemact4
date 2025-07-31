@@ -4,7 +4,6 @@ package org.testedsoftware.accountview
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.ObjectMetadata
-import schemact.aws.CognitoClientDetails
 import schemact.aws.VerifyCognito.verifyCognitoJwt
 import schemact.react.File
 import java.io.ByteArrayInputStream

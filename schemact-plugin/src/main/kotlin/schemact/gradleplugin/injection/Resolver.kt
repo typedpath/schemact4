@@ -5,6 +5,7 @@ import schemact.domain.Connection
 import schemact.domain.ConnectionType
 import schemact.domain.Entity
 import schemact.domain.Function
+import schemact.gradleplugin.injection.mappers.getResourceAsText
 
 
 abstract class Resolver {
@@ -19,33 +20,41 @@ fun requirement(from: Entity, to: Entity, name: String )  = Value.Requirement(na
         cardinality= Cardinality.OneToOne, type= ConnectionType.Contains)) },
 )
 
-data class MapperFunction(val function: Function, val src: String)
+class MapperFunction(val function: Function,
+                     val classLocation: List<String>,
+                     val src: String,
+                     val dependencyLocations: List<List<String>> = listOf(),
+                          ) {
+    val dependenciesSrc: Map<String, String> = dependencyLocations.map {
+           "${it.joinToString ("/")}.kt" to getResourceAsText(javaClass, "/${it.joinToString("/")}.kt")
+    }.toMap()
+}
 
-class MapperResolver(val mapperFunction: MapperFunction) : Resolver() {
-    fun printFunctionSrc(domainPath: List<String> ) : String {
-        return """package ${domainPath.joinToString(".")}
-${mapperFunction.src}            
-        """.trimIndent()
-    }
+open class MapperResolver(val mapperFunction: MapperFunction) : Resolver() {
+
+    // what is the point of coding without the occassional bodge !
+    open fun fitDependenciesToFunction(connectionFrom: Connection, dependencies: Map<String, Value>) : Map<String, Value> = dependencies
 
     override fun resolve(value: Value): List<Value.Requirement>? {
         // should emit requirements not actual values
         // == test + default
 
         if (value.connectionFrom.entity2 == mapperFunction.function.returnType /*&& value.requirements == null*/) {
-
+            val genericArgs = value.connectionFrom.genericParams
             value.renderer = object : Renderer() {
                 override fun renderKotlin(value: Value, dependencies: Map<String, Value>) : String{
+                    val genericsSpec = "${if (genericArgs.size>0) "<${genericArgs.map {it.name}.joinToString(",")}>" else "" }"
                     //return "val ${value.varName} = ${transformFunction.name}(${dependencies.map { (key, value) -> "$key=${value.varName}" }.joinToString(", ")})"
-                    return "val ${value.varName} = ${mapperFunction.function.name}(${dependencies.map{"${it.key}=${it.value.varName}"}.joinToString(", ")})"
+                    return "val ${value.varName} = ${mapperFunction.classLocation.joinToString (".")}.${mapperFunction.function.name}$genericsSpec(${fitDependenciesToFunction(value.connectionFrom, dependencies).map{"${it.key}=${it.value.varName}"}.joinToString(", ")})"
                 }
 
-                override fun requiredImports(): List<String> {
-                    TODO("Not yet implemented")
+                override fun renderKotlinDependencies(): Map<String, String> {
+                   TODO()
                 }
+
                 //  override fun transformFunction() : TransformFunction? = transformFunction
             }
-
+            // this is where to muck about with depencies
             value.requirements = mapperFunction.function.paramType.connections.map {
                 Value.Requirement(name=it.name, match = {
                         v->v.connectionFrom.entity2==it.entity2
@@ -63,37 +72,3 @@ ${mapperFunction.src}
 
 fun fromMapperFunction(mapperFunction: MapperFunction) = MapperResolver(mapperFunction = mapperFunction)
 
-fun fromEntity(entity: Entity/*, transformFunction: TransformFunction*/) = object : Resolver () {
-    override fun resolve(value: Value): List<Value.Requirement>? {
-        // should emit requirements not actual values
-        // == test + default
-
-        if (value.connectionFrom.entity2 == entity && value.requirements == null) {
-
-            value.renderer = object : Renderer() {
-                override fun renderKotlin(value: Value, dependencies: Map<String, Value>) : String{
-                    //return "val ${value.varName} = ${transformFunction.name}(${dependencies.map { (key, value) -> "$key=${value.varName}" }.joinToString(", ")})"
-                    return "val ${value.varName} = work out entity renderer"
-                }
-
-                override fun requiredImports(): List<String> {
-                    TODO("Not yet implemented")
-                }
-
-              //  override fun transformFunction() : TransformFunction? = transformFunction
-
-            }
-
-            value.requirements = value.connectionFrom.entity2.connections.map {
-                Value.Requirement(name=it.name, match = {
-                        v->v.connectionFrom.entity2==it.entity2
-                },
-                    creator = {Value(connectionFrom = it)}
-                )
-            }
-
-            return value.requirements
-        } else return null
-    }
-
-}

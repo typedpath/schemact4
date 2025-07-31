@@ -1,7 +1,6 @@
 
 package org.testedsoftware.accountview
 
-import schemact.aws.CognitoClientDetails 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder

@@ -9,7 +9,8 @@ val AwsAuthHeaderResolver = object : Resolver () {
         if (value.connectionFrom.entity2 == InfrastructureInjectables.AuthorizationHeaderType) {
             value.renderer = object : Renderer() {
                 override fun renderKotlin(value: Value, dependencies: Map<String, Value>) : String{
-                    return """val ${value.varName} = input["Authorization".lowercase()]"""
+                    //TODO handle not present !
+                    return """val ${value.varName} = input.headers["Authorization".lowercase()]!!"""
                 }
                 override fun requiredImports(): List<String> =  emptyList()
             }

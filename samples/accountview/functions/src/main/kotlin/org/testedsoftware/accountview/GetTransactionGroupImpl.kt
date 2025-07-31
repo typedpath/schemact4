@@ -4,7 +4,6 @@ package org.testedsoftware.accountview
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.testedsoftware.accountview.pivot.PivotCalc
-import schemact.aws.CognitoClientDetails
 
 
 class GetTransactionGroupImpl {
