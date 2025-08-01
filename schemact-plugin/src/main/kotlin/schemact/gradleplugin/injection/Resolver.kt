@@ -44,17 +44,11 @@ open class MapperResolver(val mapperFunction: MapperFunction) : Resolver() {
             value.renderer = object : Renderer() {
                 override fun renderKotlin(value: Value, dependencies: Map<String, Value>) : String{
                     val genericsSpec = "${if (genericArgs.size>0) "<${genericArgs.map {it.name}.joinToString(",")}>" else "" }"
-                    //return "val ${value.varName} = ${transformFunction.name}(${dependencies.map { (key, value) -> "$key=${value.varName}" }.joinToString(", ")})"
                     return "val ${value.varName} = ${mapperFunction.classLocation.joinToString (".")}.${mapperFunction.function.name}$genericsSpec(${fitDependenciesToFunction(value.connectionFrom, dependencies).map{"${it.key}=${it.value.varName}"}.joinToString(", ")})"
                 }
 
-                override fun renderKotlinDependencies(): Map<String, String> {
-                   TODO()
-                }
-
-                //  override fun transformFunction() : TransformFunction? = transformFunction
             }
-            // this is where to muck about with depencies
+            // this is where to muck about with dependencies
             value.requirements = mapperFunction.function.paramType.connections.map {
                 Value.Requirement(name=it.name, match = {
                         v->v.connectionFrom.entity2==it.entity2

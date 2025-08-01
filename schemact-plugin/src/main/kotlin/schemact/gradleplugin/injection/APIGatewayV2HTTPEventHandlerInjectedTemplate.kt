@@ -74,7 +74,7 @@ ${def.kotlin}
 
 
         return """package ${domainPath.joinToString(".")}
-// create by APIGatewayV2HTTPEventHandlerTemplate_Injection
+// created by APIGatewayV2HTTPEventHandlerTemplate_Injection
 ${imports.map{"import $it"}.joinToString(System.lineSeparator())}
 class ${handlerClassName} : RequestHandler<${APIGatewayV2HTTPEventEntity.name}, APIGatewayV2HTTPResponse> {
 

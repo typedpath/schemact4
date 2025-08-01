@@ -38,7 +38,10 @@ object CodeLocations {
 
     fun kotlinTypeName(connection: Connection): String {
         val entity = connection.entity2
-        val result = if (entity is PrimitiveType) entity.kotlinName else entity.name
+        var result = if (entity is PrimitiveType) entity.kotlinName else entity.name
+        if (connection.genericParams.size>0) {
+            result  = "$result<${connection.genericParams.map { it.name }.joinToString(",")}>"
+        }
         return if (connection.cardinality==Cardinality.OneToOne) result else "List<$result>"
     }
 }

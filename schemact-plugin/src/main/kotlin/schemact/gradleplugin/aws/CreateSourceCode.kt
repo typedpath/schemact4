@@ -13,6 +13,7 @@ import schemact.gradleplugin.aws.functiontemplates.injectionsupport.InjectablesT
 import schemact.gradleplugin.aws.functiontemplates.injectionsupport.UserDataUpdaterTemplate
 import schemact.gradleplugin.aws.functiontemplates.injectionsupport.VerifyCognitoTemplate
 import schemact.gradleplugin.injection.APIGatewayV2HTTPEventHandlerInjectedTemplate.templateLambdaEventHandlerFiles
+import schemact.gradleplugin.injection.functionSampleImplNew
 import java.io.File
 
 object CreateSourceCode {
@@ -153,14 +154,12 @@ object CreateSourceCode {
         val restPolicy = RestPolicy(function.paramType, function.returnType)
 
         // TODO generate new form service code
-
         generateServiceCodeNew(
             function,
             module,
             packageTree,
             genDir,
             packageName,
-            implClassName,
             handlerClassName,
             restPolicy,
             mainKotlinSourceDir,
@@ -246,12 +245,24 @@ object CreateSourceCode {
         defaultPackageTree: List<String>,
         genDir: File,
         defaultPackageName: String,
-        implClassName: String,
         handlerClassName: String,
         restPolicy: RestPolicy,
         mainKotlinSourceDir: File,
         allComplexTopLevelTypes: Set<Entity>
     ) {
+
+        val implClassName = "${CodeLocations.implClassName(function.name)}New"
+
+        val implSourceFile =
+            File(mainKotlinSourceDir, "${defaultPackageTree.joinToString("/")}/${implClassName}.kt")
+        println("implSourceFile: $implSourceFile")
+
+        // create a sample HandleImpl
+        if (!implSourceFile.exists()) {
+            implSourceFile.parentFile.mkdirs()
+            implSourceFile.writeText(functionSampleImplNew(defaultPackageName, implClassName, function))
+        }
+
         val srcMap = templateLambdaEventHandlerFiles(function = function, domainPath = defaultPackageTree, implClassName = implClassName, handlerClassName = "${handlerClassName}Injected")
         srcMap.forEach {
             val file = genDir.resolve(it.key)
