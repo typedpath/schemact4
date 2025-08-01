@@ -34,6 +34,9 @@ ${function.paramType.connections.plus(restPolicy.injectionPrecursorFields).map {
 
 class ${handlerClassName} : RequestHandler<${APIGatewayV2HTTPEventEntity.name}, APIGatewayV2HTTPResponse> {
 
+
+    
+
     ${if (restPolicy.argsFromBody.size>0) "data class Body (${restPolicy.argsFromBody.joinToString(",") { asDataClassField(it) }})" else ""}
 
     override fun handleRequest(

@@ -1,11 +1,15 @@
 package schemact.gradleplugin.injection
 
+import RestResolvers.bodyType
+import schemact.domain.Connection
 import schemact.domain.Entity
 import schemact.domain.Function
 import schemact.domain.InfrastructureInjectables.APIGatewayV2HTTPEventEntity
+import schemact.gradleplugin.aws.functiontemplates.CodeLocations
 import schemact.gradleplugin.aws.functiontemplates.dataClass
 import schemact.gradleplugin.aws.functiontemplates.inputParamName
 import schemact.gradleplugin.injection.AwsResolvers.LambdaResolvers
+import schemact.gradleplugin.injection.AwsResolvers.RestBodyParamResolver
 import schemact.gradleplugin.injection.ParameterResolver.assumeSingleDependencyMatches
 import schemact.gradleplugin.injection.ParameterResolver.checkForUnresolved
 import schemact.gradleplugin.injection.ParameterResolver.expandParamRequirements
@@ -24,13 +28,16 @@ object APIGatewayV2HTTPEventHandlerInjectedTemplate {
 
         val context = orderLeastDependantToMost(expandParamRequirements(function, LambdaResolvers))
         checkForUnresolved(context)
+
+        val allBodyParamRequirements = context.filter{RestBodyParamResolver.resolve(it)!=null}
+
         return templateLambdaEventHandlerFiles(function= function, domainPath = domainPath,
-            handlerClassName = handlerClassName, implClassName =  implClassName, context = context)
+            handlerClassName = handlerClassName, implClassName =  implClassName, context = context, allBodyParams = allBodyParamRequirements)
     }
 
 
         fun templateLambdaEventHandlerFiles(function: Function, domainPath: List<String>,
-                                        handlerClassName: String, implClassName: String,  context: List<Value>): Map<String, String> {
+                                        handlerClassName: String, implClassName: String,  context: List<Value>, allBodyParams: List<Value>): Map<String, String> {
 
 
 
@@ -49,9 +56,13 @@ object APIGatewayV2HTTPEventHandlerInjectedTemplate {
                  val fileName = "${packageName.replace(".", "/")}/${it.name}.kt"
                  Pair(fileName, src)
             }
+
+
+
         // TODO render the external data classes - e.g. with DataClassTemplate
         // val handlerClassName = "${function.name}Handler"
         return mapOf("${rootFilePath}/${handlerClassName}.kt" to templateLambdaHandler(context = context/*should accept handler classname*/,
+            allBodyParams = allBodyParams,
             domainPath = domainPath, handlerClassName = handlerClassName, implClassName = implClassName, function = function  ))
             .plus(mapperFunctionsRendered)
             .plus(mapperFunctionDataClassesRendered)
@@ -63,14 +74,15 @@ package $packageName
 ${def.kotlin}   
 """.trimIndent()
 
-    private fun templateLambdaHandler(context: List<Value>, domainPath: List<String>, handlerClassName:String,
+    private fun templateLambdaHandler(context: List<Value>, allBodyParams: List<Value>, domainPath: List<String>, handlerClassName:String,
                                       function: Function,
                                       implClassName: String): String {
         val imports = listOf("com.amazonaws.services.lambda.runtime.Context",
             "com.amazonaws.services.lambda.runtime.RequestHandler",
             "${APIGatewayV2HTTPEventEntity.let { "${it.prefferedPackage}.${it.name}" }}",
             "com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPResponse",
-            "com.fasterxml.jackson.databind.ObjectMapper")
+            "com.fasterxml.jackson.databind.ObjectMapper",
+            "com.fasterxml.jackson.annotation.JsonProperty")
 
 
         return """package ${domainPath.joinToString(".")}
@@ -85,6 +97,16 @@ class ${handlerClassName} : RequestHandler<${APIGatewayV2HTTPEventEntity.name}, 
     ): APIGatewayV2HTTPResponse {
        // created from template  apiGatewayEventHandler at ${LocalDateTime.now()} 
          input!!
+         
+    val debug = System.getenv("debug")!=null
+    if (debug) {
+          println("input: ${'$'}input")
+          ObjectMapper().writeValueAsString(input)
+          println("context: $context")
+          ObjectMapper().writeValueAsString(context)      
+          }
+
+    ${if (allBodyParams.size>0) "data class ${bodyType.name} (${allBodyParams.joinToString(",") { asDataClassField(it.connectionFrom) }})" else ""}
 ${
             context.map { value ->
                 value.renderer?.renderKotlin(
@@ -107,5 +129,6 @@ ${
 }        
            """.trimIndent()
     }
+    private fun asDataClassField(connection: Connection) = """@JsonProperty("${connection.name}") val ${connection.name}:${CodeLocations.kotlinTypeName(connection)} """
 
 }

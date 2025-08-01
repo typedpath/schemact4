@@ -3,6 +3,10 @@ package schemact.gradleplugin.injection
 import org.junit.jupiter.api.Test
 import schemact.domain.Entity
 import schemact.domain.Function
+import schemact.domain.InfrastructureInjectables
+import schemact.domain.IntType
+import schemact.domain.StringType
+import schemact.domain.bool
 import schemact.domain.int
 import schemact.domain.readUserPrivateBucketDataArg
 import schemact.domain.string
@@ -12,33 +16,19 @@ import schemact.gradleplugin.injection.APIGatewayV2HTTPEventHandlerInjectedTempl
 
 class ParameterResolverTest {
 
-val userInfoLatest = Entity(name = "UserNameDetails", description = "UserNameDetails") {
-    string("firstName", "firstNamee", maxLength = 10)
-    string("middleName", "middleName", maxLength = 10)
-    string("lastName", "lastName", maxLength = 20)
-}
 
-val function  = Function(
-    "getTransactionGroup2",
-    description = "gets a transactionGroup",
-    paramType = Entity(name = "param", description = "Params") {
-        writeUserPrivateBucketDataArg()
-        string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
-        updateUserDataArg(userInfoLatest)
-        readUserPrivateBucketDataArg()
-        string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
-        string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
-        string("accountNumber", "AccountNumber", maxLength = 20)
-    },
-    returnType = Entity(name = "status", description = "Status") {
-        int("code", "code")
-        string("description", "Status Description", maxLength = 20)
+    @Test
+fun getTransactonGroup2Test() {
+      test(getTransactionGroup2)
     }
-//        auth = auth
-)
 
-@Test
-fun test() {
+    @Test
+    fun categorizeTransactionsTest() {
+        test(categorizeTransactions)
+    }
+
+
+   fun test(function: Function) {
     val domainPath= listOf("com", "company")
     val srcMap = templateLambdaEventHandlerFiles(function = function, domainPath = domainPath, implClassName = "testImplClassName", handlerClassName = "testHandlerClassName")
     srcMap.forEach {  (input, output) -> println("""srcFile: $input

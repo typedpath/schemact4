@@ -1,10 +1,13 @@
 package schemact.gradleplugin.injection
 
 
+import RestResolvers.restBodyElementResolver
+import RestResolvers.restBodyResolver
+import RestResolvers.restParameterResolver
 import schemact.domain.Entity
 import schemact.domain.InfrastructureInjectables
+import schemact.gradleplugin.injection.ResolverUtil.string2ObjectKotlin
 import schemact.gradleplugin.injection.mappers.createReadUserPrivateBucketData
-import schemact.gradleplugin.injection.mappers.createUserDataUpdaterMapperFunction
 import schemact.gradleplugin.injection.mappers.createUserDataUpdaterResolver
 import schemact.gradleplugin.injection.mappers.createWriteUserPrivateBucketData
 import schemact.gradleplugin.injection.mappers.verifyUserSession
@@ -25,14 +28,22 @@ object AwsResolvers {
     val VerifiedUserResolver =
         fromMapperFunction(mapperFunction = verifyUserSession)
     val UpdateUserDataResolver = createUserDataUpdaterResolver
-       // fromMapperFunction(mapperFunction = createUserDataUpdaterMapperFunction)
 
     val allNonRestResolvers = listOf(PrivateBucketNameResolver, DynamoDBTablenameResolver, CognitoClientDetailsResolver,
         WriteUserPrivateBucketDataResolver, ReadUserPrivateBucketDataResolver, VerifiedUserResolver, UpdateUserDataResolver)
-    val RestParamResolver = restParameterResolver(exclusions = allNonRestResolvers.toSet().plus(AwsAuthHeaderResolver))
-    val LambdaResolvers = allNonRestResolvers.plus(RestParamResolver).plus(AwsAuthHeaderResolver)
 
-    private fun string2ObjectKotlin( expression: String, entity: Entity) = "ObjectMapper().readValue($expression, ${entity.prefferedPackage?.let{"$it."}?:""}${entity.name}::class.java)"
+    val RestBodyParamResolver = restBodyElementResolver(exclusions = allNonRestResolvers
+        .toSet().plus(AwsAuthHeaderResolver).plus(restBodyResolver))
+
+    val RestParamResolvers = listOf(restParameterResolver(exclusions = allNonRestResolvers.toSet()))
+        .plus(RestBodyParamResolver)
+        .plus(restBodyResolver)
+        .plus(AwsAuthHeaderResolver)
+
+
+    val LambdaResolvers = allNonRestResolvers.plus(RestParamResolvers)
+        .plus(AwsAuthHeaderResolver)
+
 
     fun SystemPropertyResolver(propertyName: String, propertyType: Entity) =
         object : Resolver () {
@@ -53,31 +64,6 @@ object AwsResolvers {
             }
 
         }
-
-    // need reference to other resolvers to exclude
-    fun restParameterResolver(exclusions: Set<Resolver>) =
-        object : Resolver () {
-            override fun resolve(value: Value, /*expansionLevel: Int,*/ ): List<Value.Requirement>? {
-
-                if (!exclusions.any{it.resolve(value)!=null}) {
-                    value.renderer = object : Renderer() {
-                        override fun renderKotlin(value: Value, dependencies: Map<String, Value>) : String{
-                            val propertyType = value.connectionFrom.entity2
-                            val propertyName = value.connectionFrom.name
-                            // TODO handle optionality !
-                            return if (propertyType.isValueType)  """val ${value.varName} = input.queryStringParameters.get("${propertyName}")!!"""
-                            else """val ${value.varName} = ${string2ObjectKotlin("""input.queryStringParameters.get("${propertyName}")!!""", value.connectionFrom.entity2)}"""
-                        }
-                        override fun requiredImports(): List<String> =  emptyList()
-                        // override fun supportFunctions(): String = ""
-                    }
-                    value.requirements = emptyList()
-                    return value.requirements
-                } else return null
-            }
-
-        }
-
 
 }
 

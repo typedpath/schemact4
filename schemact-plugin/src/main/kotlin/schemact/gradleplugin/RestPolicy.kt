@@ -53,7 +53,6 @@ class RestPolicy(val paramType: Entity, val returnType: Entity,
         }
 
 
-
     fun argIsTooBigForParam(paramType: Entity): Boolean = paramType is StringType && paramType.maxLength > 1000
     // assign small args to params
     val argsFromParams: List<Connection> = paramType.connections.filter {
