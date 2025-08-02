@@ -42,7 +42,7 @@ object RestResolvers {
     (!(connection.entity2 is PrimitiveType && connection.cardinality == Cardinality.OneToOne)|| argIsTooBigForParam(connection.entity2))
     // TODO use multipart
 
-    val restBodyParamName="_body"
+    val restBodyVarName="_body"
     fun restBodyElementResolver(exclusions: Set<Resolver>) =
         object : Resolver () {
             override fun resolve(value: Value, /*expansionLevel: Int,*/ ): List<Value.Requirement>? {
@@ -53,14 +53,14 @@ object RestResolvers {
                             val propertyType = value.connectionFrom.entity2
                             val propertyName = value.connectionFrom.name
                             // TODO handle optionality !
-                            return """val ${value.varName} = ${restBodyParamName}.${propertyName}"""
+                            return """val ${value.varName} = ${restBodyVarName}.${propertyName}"""
                         }
                         override fun requiredImports(): List<String> =  emptyList()
                     }
-                    value.requirements = listOf(Value.Requirement(name = restBodyParamName,
+                    value.requirements = listOf(Value.Requirement(name = restBodyVarName,
                           match = {v -> v.connectionFrom.entity2==bodyType},
                          creator =  {
-                             Value(connectionFrom = Connection(name=restBodyParamName, entity1 = value.connectionFrom.entity2,
+                             Value(connectionFrom = Connection(name=restBodyVarName, entity1 = value.connectionFrom.entity2,
                              entity2 = bodyType,
                              cardinality= Cardinality.OneToOne, type= ConnectionType.Contains))
                          }

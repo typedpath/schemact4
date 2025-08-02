@@ -42,9 +42,12 @@ object GenSourceTask {
 
         val mainSourceSet = kotlinJvmProjectExtension.sourceSets.getByName("main")
         val sourceGenDir = "${project.buildDir}/schemactsourcegen/kotlin"
+        val sourceInjectGenDir = "${project.buildDir}/schemactsourceinjectgen/kotlin"
 
         mainSourceSet.kotlin.srcDir(sourceGenDir)
+        mainSourceSet.kotlin.srcDir(sourceInjectGenDir)
         File(sourceGenDir).mkdirs()
+        File(sourceInjectGenDir).mkdirs()
         val genTask = project.tasks.create("${module.name}_genCode") { task ->
             task.group = groupName(module)
             task.actions.add {
@@ -67,6 +70,7 @@ object GenSourceTask {
                 // staticWebsite2Functions
                 createSourceCode(
                     genDir = File(sourceGenDir),
+                    injectGenDir = File(sourceInjectGenDir),
                     mainKotlinSourceDir = mainKotlinSourceDir,
                     functionToStaticWebsite = functionToStaticWebsite,
                     staticWebSiteToSourceRoot = safeStaticWebSiteToSourceRoot,

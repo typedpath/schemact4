@@ -19,6 +19,7 @@ import java.io.File
 object CreateSourceCode {
     fun createSourceCode(
         genDir: File,
+        injectGenDir: File,
         mainKotlinSourceDir: File,
         domain: Domain,
         schemact: Schemact,
@@ -48,14 +49,18 @@ object CreateSourceCode {
         // TODO - add return types
         allComplexTopLevelTypes.forEach {
             writeDataClassFile(entity=it, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=genDir, topLevelEntities =allComplexTopLevelTypes )
+            writeDataClassFile(entity=it, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=injectGenDir, topLevelEntities =allComplexTopLevelTypes )
         }
 
         schemact.userKeyedDatabase?.let {
             println("userKeyedDatabase writing userType based on allComplexTopLevelTypes=${allComplexTopLevelTypes.map { it.name }.joinToString (",")}")
            writeDataClassFile(entity=it.userInfoType, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=genDir, topLevelEntities =allComplexTopLevelTypes )
+            writeDataClassFile(entity=it.userInfoType, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=injectGenDir, topLevelEntities =allComplexTopLevelTypes )
            it.previousUserInfoTypes.forEach {
                println("userKeyedDatabase writing previous type ${it.name}.${it.version}")
                writeDataClassFile(entity=it, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=genDir, topLevelEntities =allComplexTopLevelTypes )
+               writeDataClassFile(entity=it, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=injectGenDir, topLevelEntities =allComplexTopLevelTypes )
+
            }
         }
         // TODO
@@ -64,13 +69,14 @@ object CreateSourceCode {
                         functionToStaticWebsite.flatMap { it.value }.joinToString(",") { it.name }
             )
             schemact.userKeyedDatabase?.userInfoType?.let {
-                // generate the user keyed database
+                // generate the user keyed database code
             }
             println("created website code in: ${staticWebSiteToSourceRoot.entries.joinToString(",") { "${it.key.name}=>${it.value}" }}")
             createFunctionCode(
                 function = it,
                 module = module,
                 genDir = genDir,
+                injectGenDir = injectGenDir,
                 mainKotlinSourceDir = mainKotlinSourceDir,
                 packageTree = packageTree,
                 staticWebSites = functionToStaticWebsite.get(it) ?: emptyList(),
@@ -121,6 +127,7 @@ object CreateSourceCode {
         function: Function,
         module: Module,
         genDir: File,
+        injectGenDir: File,
         packageTree: List<String>,
         mainKotlinSourceDir: File,
         staticWebSites: List<StaticWebsite>,
@@ -158,7 +165,7 @@ object CreateSourceCode {
             function,
             module,
             packageTree,
-            genDir,
+            injectGenDir,
             packageName,
             handlerClassName,
             restPolicy,
