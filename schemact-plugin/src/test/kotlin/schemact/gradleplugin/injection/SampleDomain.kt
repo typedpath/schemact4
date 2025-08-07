@@ -4,6 +4,8 @@ import schemact.domain.Entity
 import schemact.domain.Function
 import schemact.domain.InfrastructureInjectables
 import schemact.domain.IntType
+import schemact.domain.ReactJsInjectables
+import schemact.domain.RestInjectables
 import schemact.domain.StringType
 import schemact.domain.bool
 import schemact.domain.int
@@ -107,7 +109,7 @@ val  categorizeTransactions = schemact.domain.Function(
     "categorizeTransactions",
     description = "gets a transactionGroup",
     paramType = Entity(name = "param", description = "Params") {
-   /*     containsOne(
+        containsOne(
             "userTableName",
             description = "bucketName",
             type = InfrastructureInjectables.DynamoDBTablenameType
@@ -120,7 +122,7 @@ val  categorizeTransactions = schemact.domain.Function(
         containsOne(
             "Authorization",
             description = "Authorization header",
-            type = InfrastructureInjectables.AuthorizationHeaderType
+            type = RestInjectables.AuthorizationHeaderType
         )
         containsOne(
             "cognitoDetails",
@@ -129,7 +131,7 @@ val  categorizeTransactions = schemact.domain.Function(
         )
         string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
         string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
-        string("accountNumber", "AccountNumber", maxLength = 20)*/
+        string("accountNumber", "AccountNumber", maxLength = 20)
         containsMany(
             "transactionUpdates",
             "transaction updates",
@@ -142,3 +144,39 @@ val  categorizeTransactions = schemact.domain.Function(
     //auth = auth
 )
 
+val smallUploadFile = ReactJsInjectables.File(name ="File",
+    description="Random Uploaded File", maxBytes=10000000)
+
+val uploadFileFunction = schemact.domain.Function(
+    "uploadFile",
+    description = "uploads a file",
+    paramType = Entity(name = "param", description = "Params") {
+        containsOne(
+            "userTableName",
+            description = "bucketName",
+            type = InfrastructureInjectables.DynamoDBTablenameType
+        )
+        containsOne(
+            "privateBucketName",
+            description = "bucketName",
+            type = InfrastructureInjectables.PrivateBucketNameType
+        )
+        containsOne(
+            "Authorization",
+            description = "Authorization header",
+            type = RestInjectables.AuthorizationHeaderType
+        )
+                containsOne(
+                    "cognitoDetails", description = "Cognito Details",
+                    type = InfrastructureInjectables.CognitoClientDetails.entity
+                )
+        // for debug / development
+                containsOne(
+                    "input", description = "native input details",
+                    type = InfrastructureInjectables.APIGatewayV2HTTPEventEntity
+                )
+        containsOne(name = "file", "upload file", smallUploadFile)
+    },
+    returnType = userInfoLatest,
+   // auth = auth
+)

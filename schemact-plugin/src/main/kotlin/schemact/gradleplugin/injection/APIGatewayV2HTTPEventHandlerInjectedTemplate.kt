@@ -49,6 +49,7 @@ object APIGatewayV2HTTPEventHandlerInjectedTemplate {
         }.associate { it.first to it.second }
         val mapperFunctionDataClassesRendered = mapperFunctions.flatMap {  it.function.paramType.connections.map{it.entity2}
             .plus(it.function.returnType) }.filter{!it.isValueType}
+            .filter { it!=APIGatewayV2HTTPEventEntity}
             .map {
                  val packageName=  it.prefferedPackage?:domainPath.joinToString(".")
                  val nativeDefinition = it.nativeDefinition

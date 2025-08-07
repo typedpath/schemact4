@@ -1,5 +1,6 @@
 package org.testedsoftware.accountview
 
+import schemact.aws.CognitoClientDetails
 import schemact.aws.VerifyCognito.verifyCognitoJwt
 
 //TODO autogen
@@ -22,7 +23,7 @@ object UserInfoUpdaterOld {
     fun update(userTableName: String, userId: String, email: String,
                 version: String=UserInfoVersion.latest,
                 update: ((data: UserInfo) -> UserInfo ) ?)=
-        DynamoDbUtilOld.createOrUpdate(userTableName=userTableName,
+        DynamoDbOld.createOrUpdate(userTableName=userTableName,
             userId=userId, email=email, UserInfo::class.java,
             defaultData = {UserInfo()},
             update =  update,

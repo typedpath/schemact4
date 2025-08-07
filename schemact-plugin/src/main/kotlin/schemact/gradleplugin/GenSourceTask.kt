@@ -44,8 +44,8 @@ object GenSourceTask {
         val sourceGenDir = "${project.buildDir}/schemactsourcegen/kotlin"
         val sourceInjectGenDir = "${project.buildDir}/schemactsourceinjectgen/kotlin"
 
-        mainSourceSet.kotlin.srcDir(sourceGenDir)
         mainSourceSet.kotlin.srcDir(sourceInjectGenDir)
+        //mainSourceSet.kotlin.srcDir(sourceGenDir)
         File(sourceGenDir).mkdirs()
         File(sourceInjectGenDir).mkdirs()
         val genTask = project.tasks.create("${module.name}_genCode") { task ->

@@ -1,5 +1,8 @@
 
 package org.testedsoftware.accountview
+
+import schemact.aws.CognitoClientDetails
+
 // created by template functionSampleImpl
 
 

@@ -258,7 +258,7 @@ object CreateSourceCode {
         allComplexTopLevelTypes: Set<Entity>
     ) {
 
-        val implClassName = "${CodeLocations.implClassName(function.name)}New"
+        val implClassName = "${CodeLocations.implClassName(function.name)}"
 
         val implSourceFile =
             File(mainKotlinSourceDir, "${defaultPackageTree.joinToString("/")}/${implClassName}.kt")
@@ -270,7 +270,7 @@ object CreateSourceCode {
             implSourceFile.writeText(functionSampleImplNew(defaultPackageName, implClassName, function))
         }
 
-        val srcMap = templateLambdaEventHandlerFiles(function = function, domainPath = defaultPackageTree, implClassName = implClassName, handlerClassName = "${handlerClassName}Injected")
+        val srcMap = templateLambdaEventHandlerFiles(function = function, domainPath = defaultPackageTree, implClassName = implClassName, handlerClassName = "${handlerClassName}")
         srcMap.forEach {
             val file = genDir.resolve(it.key)
             file.parentFile.mkdirs()

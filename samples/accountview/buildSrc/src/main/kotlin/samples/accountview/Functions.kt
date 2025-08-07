@@ -5,6 +5,7 @@ import schemact.domain.Function
 import schemact.domain.InfrastructureInjectables
 import schemact.domain.Module
 import schemact.domain.ReactJsInjectables
+import schemact.domain.RestInjectables
 import schemact.domain.StringType
 import schemact.domain.int
 import schemact.domain.readUserPrivateBucketDataArg
@@ -33,7 +34,7 @@ val onLoginFunction = Function(
         containsOne(
             "Authorization",
             description = "Authorization header",
-            type = InfrastructureInjectables.AuthorizationHeaderType
+            type = RestInjectables.AuthorizationHeaderType
         )
         containsOne(
             "cognitoDetails", description = "Cognito Details",
@@ -64,7 +65,7 @@ val uploadFileFunction = schemact.domain.Function(
         containsOne(
             "Authorization",
             description = "Authorization header",
-            type = InfrastructureInjectables.AuthorizationHeaderType
+            type = RestInjectables.AuthorizationHeaderType
         )
         containsOne(
             "cognitoDetails", description = "Cognito Details",
@@ -98,7 +99,7 @@ val uploadTransactionGroupFunction = schemact.domain.Function(
         containsOne(
             "Authorization",
             description = "Authorization header",
-            type = InfrastructureInjectables.AuthorizationHeaderType
+            type = RestInjectables.AuthorizationHeaderType
         )
         containsOne(
             "cognitoDetails", description = "Cognito Details",
@@ -131,7 +132,7 @@ val getTransactionGroup = schemact.domain.Function(
         containsOne(
             "Authorization",
             description = "Authorization header",
-            type = InfrastructureInjectables.AuthorizationHeaderType
+            type = RestInjectables.AuthorizationHeaderType
         )
         containsOne(
             "cognitoDetails",
@@ -179,7 +180,7 @@ val categorizeTransactions = schemact.domain.Function(
         containsOne(
             "Authorization",
             description = "Authorization header",
-            type = InfrastructureInjectables.AuthorizationHeaderType
+            type = RestInjectables.AuthorizationHeaderType
         )
         containsOne(
             "cognitoDetails",
@@ -218,7 +219,7 @@ val addAccountFunction = Function(
         containsOne(
             "Authorization",
             description = "Authorization header",
-            type = InfrastructureInjectables.AuthorizationHeaderType
+            type = RestInjectables.AuthorizationHeaderType
         )
         containsOne(
             "cognitoDetails",
@@ -244,7 +245,7 @@ val saveCategoriesFunction = Function(
         containsOne(
             "Authorization",
             description = "Authorization header",
-            type = InfrastructureInjectables.AuthorizationHeaderType
+            type = RestInjectables.AuthorizationHeaderType
         )
         containsOne(
             "cognitoDetails",
@@ -269,7 +270,7 @@ val saveAutoCatFilters = Function(
         containsOne(
             "Authorization",
             description = "Authorization header",
-            type = InfrastructureInjectables.AuthorizationHeaderType
+            type = RestInjectables.AuthorizationHeaderType
         )
         containsOne(
             "cognitoDetails",

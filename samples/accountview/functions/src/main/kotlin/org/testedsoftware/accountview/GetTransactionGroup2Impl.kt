@@ -5,17 +5,16 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.testedsoftware.accountview.pivot.PivotCalc
 
-// created by template functionSampleImpl
-
-
+// created by template functionSampleImplNew
 
 class GetTransactionGroup2Impl { 
-    // created from template  functionSampleImpl at 2025-07-08T21:28:44.170014500       
-    fun getTransactionGroup2(WriteUserPrivateBucketData: WriteUserPrivateBucketData, ReadUserPrivateBucketData: ReadUserPrivateBucketData, UpdateUserInfo: UpdateUserInfo, fromInclusiveDate: String, toInclusiveDate: String, accountNumber: String) : TransactionGroup {
+    // created from template  functionSampleImplNew at 2025-08-07T12:56:04.795413100       
+    fun getTransactionGroup2(WriteUserPrivateBucketData: schemact.aws.WriteUserPrivateBucketData,
+                             ReadUserPrivateBucketData: schemact.aws.ReadUserPrivateBucketData, UpdateUserInfo: schemact.aws.UpdateUserData<UserInfo>, fromInclusiveDate: String, toInclusiveDate: String, accountNumber: String) : TransactionGroup {
         var result: TransactionGroup? = null
 
         UpdateUserInfo(
-            {
+             {
                     existingData ->
                 val account = existingData?.accounts?.find { accountNumber.equals(it.accountNumber)  }?:
                 throw Exception("Account Number not found $accountNumber ")
@@ -36,12 +35,11 @@ class GetTransactionGroup2Impl {
                 )
                 existingData
             },
-            {
-                str, version-> UserInfoDeserializer.deserialize(str, version)
-            }
-        )
-        return result!!
-
+             {
+                    str, version-> UserInfoDeserializer.deserialize(str, version)
+            },
+             { UserInfo()})
+    return result!!
     }
     
 }

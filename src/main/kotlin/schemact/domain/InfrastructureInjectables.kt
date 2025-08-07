@@ -5,6 +5,7 @@ import schemact.domain.InfrastructureInjectables.ReadUserPrivateBucketData
 import schemact.domain.InfrastructureInjectables.UpdateUserData
 
 import schemact.domain.InfrastructureInjectables.WriteUserPrivateBucketData
+import schemact.domain.RestInjectables.MultiPartBodyReader
 
 object InfrastructureInjectables {
 // see here https://ogp.me/
@@ -53,11 +54,7 @@ object InfrastructureInjectables {
         }
     }
 
-    object  AuthorizationHeaderType : StringType(maxLength = 2000, name = "AuthorizationHeader") {
-                init {
-                    isFromHeader = true
-                }
-            }
+
 
     //    data class CognitoResult(val sub: String, val email: String?, val username: String?)
     val VerifiedCognitoUser = Entity(name = "VerifiedCognitoUser", description = "user details from cognito or whatever",
@@ -70,7 +67,7 @@ object InfrastructureInjectables {
     val  verifyUserSession = Function (name="verifyUserSession",
                description = "verifies user session", paramType = Entity(name="params", description="params") {
                containsOne("cognitoClientDetails",  description = "cognitoClientDetails", CognitoClientDetails.entity)
-               containsOne("token", type = InfrastructureInjectables.AuthorizationHeaderType)
+               containsOne("token", type = RestInjectables.AuthorizationHeaderType)
         },
         returnType = VerifiedCognitoUser)
 
@@ -87,7 +84,7 @@ object InfrastructureInjectables {
             // should be paramType and returnType
         //TODO remove these
         containsOne("PrivateBucketNameType", type = InfrastructureInjectables.PrivateBucketNameType)
-        containsOne("AuthorizationHeaderType", type = InfrastructureInjectables.AuthorizationHeaderType)
+        containsOne("AuthorizationHeaderType", type = RestInjectables.AuthorizationHeaderType)
         containsOne(name="verifiedCognitoUser", description = "Verified Cognito User", type = VerifiedCognitoUser)
     }
 
@@ -116,11 +113,9 @@ object InfrastructureInjectables {
 
     val ReadUserPrivateBucketData = Entity(name = "ReadUserPrivateBucketData", description = "Read from a private bucket") {
         isConstructedPreInjection = true
+        prefferedPackage= AwsPackage
         nativeDefinition = Entity.NativeDefinition(kotlin="typealias ReadUserPrivateBucketData = (key: String) -> String")
         //TODO remove these
-        containsOne("PrivateBucketNameType", type = InfrastructureInjectables.PrivateBucketNameType)
-        containsOne("AuthorizationHeaderType", type = InfrastructureInjectables.AuthorizationHeaderType)
-        containsOne(name="cognitoDetails", description = "Cognito Details", type = InfrastructureInjectables.CognitoClientDetails.entity)
     }
 
     val createReadUserPrivateBucketData = Function (name="createReadUserPrivateBucketData",
@@ -130,11 +125,18 @@ object InfrastructureInjectables {
         },
         returnType = ReadUserPrivateBucketData)
 
-   // TODO remove
+    val createMultiPartBodyReader = Function (name="createMultiPartBodyReader",
+        description = "supplies a reader of private bucket space", paramType = Entity(name="params", description="params") {
+            containsOne("input",  description = "APIGatewayV2HTTPEventEntity", APIGatewayV2HTTPEventEntity)
+        },
+        returnType = MultiPartBodyReader)
+
+
+    // TODO remove
     fun UpdateUserInfo(userInfoType: Entity) = Entity(name = "Update${userInfoType.name}", description = "Updates User Data (${userInfoType.name})") {
         isConstructedPreInjection = true
         containsOne("DynamoDBTablenameType", type = InfrastructureInjectables.DynamoDBTablenameType)
-        containsOne("AuthorizationHeaderType", type = InfrastructureInjectables.AuthorizationHeaderType)
+        containsOne("AuthorizationHeaderType", type = RestInjectables.AuthorizationHeaderType)
         containsOne(name="cognitoDetails", description = "Cognito Details", type = InfrastructureInjectables.CognitoClientDetails.entity)
     }
 

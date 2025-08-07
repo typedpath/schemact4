@@ -3,6 +3,7 @@ package org.testedsoftware.accountview
 
 
 import org.testedsoftware.accountview.AutoCatFiltersExtra.defaultAutoCatFilters
+import schemact.aws.CognitoClientDetails
 import java.time.LocalDateTime
 
 class OnLoginImpl {

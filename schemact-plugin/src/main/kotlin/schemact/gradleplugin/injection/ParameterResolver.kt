@@ -72,13 +72,16 @@ object ParameterResolver {
 
         val value2Dependency = value2DependencyL.toMap()
 
-        fun isTransitivelyDependantOn(vFrom: Value, vTo: Value): Boolean {
+        fun isTransitivelyDependantOn(vFrom: Value, vTo: Value, depth: Int=0): Boolean {
+            if (depth>5) {
+                throw Exception("oops a loop ${vFrom.varName}->${vTo.varName} with depth $depth")
+            }
             val dependencies = value2Dependency.get(vFrom)!!
             if (dependencies.contains(vTo)) {
                 //("${vFrom.connectionFrom.name} is directly dependant on ${vTo.connectionFrom.name}")
                 return true
             }
-            if (dependencies.any { isTransitivelyDependantOn(it, vTo) }) {
+            if (dependencies.any { isTransitivelyDependantOn(it, vTo, depth+1) }) {
                 //println("${vFrom.connectionFrom.name} is transitively dependant on ${vTo.connectionFrom.name}")
                 return true
             }

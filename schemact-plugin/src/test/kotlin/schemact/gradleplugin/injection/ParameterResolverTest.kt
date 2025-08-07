@@ -27,6 +27,10 @@ fun getTransactonGroup2Test() {
         test(categorizeTransactions)
     }
 
+    @Test
+    fun uploadMultiPartTest() {
+        test(uploadFileFunction)
+    }
 
    fun test(function: Function) {
     val domainPath= listOf("com", "company")

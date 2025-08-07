@@ -1,11 +1,10 @@
-import org.testedsoftware.accountview.MultiPart
 
 //TODO convert to automated test
 fun main() {
-
-    val parts = MultiPart.read(body, contentType)
-    println("==================")
-    println(parts.map { "${it.key} => ${it.value} ${System.lineSeparator()} ${String(it.value.body)}" }.joinToString("\n"))
+     // TODO fix this
+    //val parts = schemact.aws.CreateMultiPartBodyReader.CreateMultiPartBodyReader.MultiPart.read(body, contentType)
+    //println("==================")
+    //println(parts.map { "${it.key} => ${it.value} ${System.lineSeparator()} ${String(it.value.body)}" }.joinToString("\n"))
 }
 
 

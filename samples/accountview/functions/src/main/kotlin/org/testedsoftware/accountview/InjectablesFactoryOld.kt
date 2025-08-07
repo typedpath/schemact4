@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.model.GetObjectRequest
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.amazonaws.services.s3.model.PutObjectRequest
 import com.fasterxml.jackson.databind.ObjectMapper
+import schemact.aws.CognitoClientDetails
 import schemact.aws.VerifyCognito.verifyCognitoJwt
 
 object InjectablesFactoryOld {
@@ -12,6 +13,7 @@ object InjectablesFactoryOld {
                                      val writeToUserToDataPrivateBucket : WriteToUserToDataPrivateBucket?,
                                      val readUserDataPrivateBucket : ReadUserDataPrivateBucket?
         )
+
     fun create(Authorization: String, cognitoDetails: CognitoClientDetails, userTableName: String,
                privateBucketName: String?=null) : SecureUserInjectables {
 
