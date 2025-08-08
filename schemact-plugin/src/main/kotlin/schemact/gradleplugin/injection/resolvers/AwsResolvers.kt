@@ -66,8 +66,15 @@ object AwsResolvers {
     val RestBodyParamResolver = restBodyElementResolver(exclusions = allNonRestResolvers
         .toSet().plus(AwsAuthHeaderResolver).plus(restBodyResolver).plus(restMultiBodyElementResolver))
 
+    val RestUrlParamResolver = restParameterResolver(exclusions = allNonRestResolvers.toSet()
+        .plus(restMultiBodyElementResolver)
+        .plus(RestBodyParamResolver)
+        .plus(restBodyResolver)
+        .plus(AwsAuthHeaderResolver)
 
-    val RestParamResolvers = listOf(restParameterResolver(exclusions = allNonRestResolvers.toSet()))
+    /*TOD - review this should have more exclusions ?*/)
+
+    val RestParamResolvers = listOf(RestUrlParamResolver)
         .plus(restMultiBodyElementResolver)
         .plus(RestBodyParamResolver)
         .plus(restBodyResolver)

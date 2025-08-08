@@ -8,12 +8,7 @@ import schemact.domain.InfrastructureInjectables.APIGatewayV2HTTPEventEntity
 import schemact.gradleplugin.aws.functiontemplates.CodeLocations
 import schemact.gradleplugin.aws.functiontemplates.dataClass
 import schemact.gradleplugin.aws.functiontemplates.inputParamName
-import schemact.gradleplugin.injection.resolvers.AwsResolvers.LambdaResolvers
-import schemact.gradleplugin.injection.resolvers.AwsResolvers.RestBodyParamResolver
 import schemact.gradleplugin.injection.ParameterDependencyGrapher.assumeSingleDependencyMatches
-import schemact.gradleplugin.injection.ParameterDependencyGrapher.checkForUnresolved
-import schemact.gradleplugin.injection.ParameterDependencyGrapher.expandParamRequirements
-import schemact.gradleplugin.injection.ParameterDependencyGrapher.orderLeastDependantToMost
 import java.time.LocalDateTime
 
 object APIGatewayV2HTTPEventHandlerInjectedTemplate {
@@ -23,7 +18,7 @@ object APIGatewayV2HTTPEventHandlerInjectedTemplate {
     //  should probably return structure containing handler full class name
 
     // TODO remove this overload - put all dependencies in a Lambda dependency grapher thing
-    fun templateLambdaEventHandlerFiles(function: Function, domainPath: List<String>,
+   /* fun templateLambdaEventHandlerFiles(function: Function, domainPath: List<String>,
                                         handlerClassName: String, implClassName: String ): Map<String, String> {
 
         val context = orderLeastDependantToMost(expandParamRequirements(function, LambdaResolvers))
@@ -34,20 +29,19 @@ object APIGatewayV2HTTPEventHandlerInjectedTemplate {
         return templateLambdaEventHandlerFiles(function= function, domainPath = domainPath,
             handlerClassName = handlerClassName, implClassName =  implClassName, context = context, allBodyParams = allBodyParamRequirements)
     }
-
+*/
 
         fun templateLambdaEventHandlerFiles(function: Function, domainPath: List<String>,
-                                        handlerClassName: String, implClassName: String,  context: List<Value>, allBodyParams: List<Value>): Map<String, String> {
-
-
+                                        handlerClassName: String, implClassName: String, parameterDependencyGraph: ParameterDependencyGraph): Map<String, String> {
 
         val rootFilePath = domainPath.joinToString("/")
-        val mapperFunctions = LambdaResolvers.filterIsInstance<MapperResolver>().map{it.mapperFunction}
-        val mapperFunctionsRendered: Map<String, String> = LambdaResolvers.filterIsInstance<MapperResolver>().flatMap {
-            it.mapperFunction.dependenciesSrc.entries.map{Pair(it.key, it.value)}
-                .plus("${it.mapperFunction.classLocation.joinToString("/")}.kt" to it.mapperFunction.src)
+        //val mapperFunctions = LambdaResolvers.filterIsInstance<MapperResolver>().map{it.mapperFunction}
+        val mapperFunctions = parameterDependencyGraph.mapperFunctions
+        val mapperFunctionsRendered: Map<String, String> = mapperFunctions.flatMap {
+            it.dependenciesSrc.entries.map{Pair(it.key, it.value)}
+                .plus("${it.classLocation.joinToString("/")}.kt" to it.src)
         }.associate { it.first to it.second }
-        val mapperFunctionDataClassesRendered = mapperFunctions.flatMap {  it.function.paramType.connections.map{it.entity2}
+        val mapperFunctionDataClassesRendered = parameterDependencyGraph.mapperFunctions.flatMap {  it.function.paramType.connections.map{it.entity2}
             .plus(it.function.returnType) }.filter{!it.isValueType}
             .filter { it!=APIGatewayV2HTTPEventEntity}
             .map {
@@ -60,8 +54,8 @@ object APIGatewayV2HTTPEventHandlerInjectedTemplate {
 
         // TODO render the external data classes - e.g. with DataClassTemplate
         // val handlerClassName = "${function.name}Handler"
-        return mapOf("${rootFilePath}/${handlerClassName}.kt" to templateLambdaHandler(context = context/*should accept handler classname*/,
-            allBodyParams = allBodyParams,
+        return mapOf("${rootFilePath}/${handlerClassName}.kt" to templateLambdaHandler(context = parameterDependencyGraph.sortedContext/*should accept handler classname*/,
+            allBodyParams = parameterDependencyGraph.restBodyParamRequirements,
             domainPath = domainPath, handlerClassName = handlerClassName, implClassName = implClassName, function = function  ))
             .plus(mapperFunctionsRendered)
             .plus(mapperFunctionDataClassesRendered)

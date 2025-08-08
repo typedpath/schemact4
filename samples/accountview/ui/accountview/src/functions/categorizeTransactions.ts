@@ -7,7 +7,7 @@ import { TransactionGroup } from './TransactionGroup';
 
 const urlPath = "/functions/categorizeTransactions" 
 
-export default async function categorizeTransactions(fromInclusiveDate_in: string, toInclusiveDate_in: string, accountNumber_in: string, transactionUpdates_in: TransactionUpdate[], Authorization_in: string) : Promise<AxiosResponse<TransactionGroup, any>> { // TODO map to specified return type
+export default async function categorizeTransactions(Authorization_in: string, fromInclusiveDate_in: string, toInclusiveDate_in: string, accountNumber_in: string, transactionUpdates_in: TransactionUpdate[]) : Promise<AxiosResponse<TransactionGroup, any>> { // TODO map to specified return type
     let url = urlPath
     if (window.location.href.indexOf("localhost")>=0) {
       url = 'https://accountview.testedsoftware.org' + urlPath
@@ -19,11 +19,11 @@ export default async function categorizeTransactions(fromInclusiveDate_in: strin
       
     let body = {transactionUpdates: transactionUpdates_in}; 
 
-    let fromInclusiveDate = fromInclusiveDate_in;
+    let accountNumber = accountNumber_in;
     let toInclusiveDate = toInclusiveDate_in;
-    let accountNumber = accountNumber_in;    
+    let fromInclusiveDate = fromInclusiveDate_in;    
        let res = await axios.post(url, body, {headers : headers,
-       params: { fromInclusiveDate, toInclusiveDate, accountNumber}
+       params: { accountNumber, toInclusiveDate, fromInclusiveDate}
 
      });
         console.log('res:', res)

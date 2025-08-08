@@ -7,7 +7,7 @@ import { UserInfo } from './UserInfo';
 
 const urlPath = "/functions/addAccount" 
 
-export default async function addAccount(account_in: Account, Authorization_in: string) : Promise<AxiosResponse<UserInfo, any>> { // TODO map to specified return type
+export default async function addAccount(Authorization_in: string, account_in: Account) : Promise<AxiosResponse<UserInfo, any>> { // TODO map to specified return type
     let url = urlPath
     if (window.location.href.indexOf("localhost")>=0) {
       url = 'https://accountview.testedsoftware.org' + urlPath

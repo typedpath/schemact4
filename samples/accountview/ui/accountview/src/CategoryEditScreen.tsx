@@ -45,7 +45,7 @@ const CategoryEditScreen: React.FC<CategoryEditScreenProps> = ({ setUserInfo }) 
 
       if (categoryOptions.length === 0) throw new Error('No categories to save');
 
-      const response: AxiosResponse<UserInfo> = await saveCategories(categoryOptions, idToken);
+      const response: AxiosResponse<UserInfo> = await saveCategories(idToken, categoryOptions);
       setSuccess('Categories saved successfully!');
       setUserInfo(response.data); // Update userInfo
       setCategoryOptions(response.data.categories || categoryOptions);

@@ -2,8 +2,8 @@ package schemact.gradleplugin.injection
 
 import schemact.domain.Function
 import schemact.domain.asString
-
-data class ParameterDependencyGraph(val sortedContext: List<Value>)
+import schemact.gradleplugin.injection.resolvers.AwsResolvers.LambdaResolvers
+import schemact.gradleplugin.injection.resolvers.AwsResolvers.RestBodyParamResolver
 
 object ParameterDependencyGrapher {
     // distinguish between expansion and resolution

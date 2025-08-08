@@ -37,7 +37,7 @@ const Accounts: React.FC<AccountsProps> = ({ accounts, setUserInfo, Authorizatio
 
   async function onAccountAdded(account: Account) {
     try {
-      const result = await addAccount(account, Authorization_in);
+      const result = await addAccount(Authorization_in, account );
       setUserInfo(result.data);
     } catch (error) {
       console.error('Failed to add account:', error);

@@ -6,6 +6,7 @@ import schemact.domain.*
 import schemact.domain.Function
 import schemact.gradleplugin.RestPolicy
 import schemact.gradleplugin.aws.functiontemplates.*
+import schemact.gradleplugin.aws.functiontemplates.FunctionTypescriptClientInjectedTemplate.functionTypescriptClientInjectedTemplate
 import schemact.gradleplugin.aws.functiontemplates.FunctionTypescriptClientTemplate.functionTypescriptClientTemplate
 import schemact.gradleplugin.aws.functiontemplates.injectionsupport.DynamoDbUtilTemplate
 import schemact.gradleplugin.aws.functiontemplates.injectionsupport.InjectablesFactoryTemplate
@@ -13,6 +14,8 @@ import schemact.gradleplugin.aws.functiontemplates.injectionsupport.InjectablesT
 import schemact.gradleplugin.aws.functiontemplates.injectionsupport.UserDataUpdaterTemplate
 import schemact.gradleplugin.aws.functiontemplates.injectionsupport.VerifyCognitoTemplate
 import schemact.gradleplugin.injection.APIGatewayV2HTTPEventHandlerInjectedTemplate.templateLambdaEventHandlerFiles
+import schemact.gradleplugin.injection.AwsLambdaDependencyGrapher
+import schemact.gradleplugin.injection.ParameterDependencyGraph
 import schemact.gradleplugin.injection.functionSampleImplNew
 import java.io.File
 
@@ -161,6 +164,9 @@ object CreateSourceCode {
         val restPolicy = RestPolicy(function.paramType, function.returnType)
 
         // TODO generate new form service code
+
+        val parameterDependencyGraph = AwsLambdaDependencyGrapher.expandAndCheckRequirements(function)
+
         generateServiceCodeNew(
             function,
             module,
@@ -170,7 +176,8 @@ object CreateSourceCode {
             handlerClassName,
             restPolicy,
             mainKotlinSourceDir,
-            allComplexTopLevelTypes
+            allComplexTopLevelTypes,
+            parameterDependencyGraph=parameterDependencyGraph
         )
 
         generateServiceCode(
@@ -198,6 +205,7 @@ object CreateSourceCode {
                 module=module,
                 function = function,
                 restPolicy = restPolicy,
+                parameterDependencyGraph,
                 defaultLocalServerDomain=defaultLocalServerDomain
             )
         }
@@ -206,6 +214,7 @@ object CreateSourceCode {
 
     private fun generateClientCode(
         sourceRoot: File, packageName: String, module:Module, function: Function, restPolicy: RestPolicy,
+        parameterDependencyGraph: ParameterDependencyGraph,
         defaultLocalServerDomain: String?
     ) {
         val dataClasses = listOf(function.returnType).filter { !it.isValueType }
@@ -218,12 +227,15 @@ object CreateSourceCode {
         val file = File(sourceRoot, "functions/${function.name}.ts")
         file.parentFile.mkdirs()
         file.writeText(
-            functionTypescriptClientTemplate(
+/*            functionTypescriptClientTemplate(
                 packageName = packageName, function = function,
                 module=module,
                 restPolicy = restPolicy,
-                defaultLocalServerDomain=defaultLocalServerDomain
-            )
+                defaultLocalServerDomain=defaultLocalServerDomain)*/
+            functionTypescriptClientInjectedTemplate( packageName = packageName, function = function,
+                module=module,
+                parameterDependencyGraph = parameterDependencyGraph,
+                defaultLocalServerDomain=defaultLocalServerDomain)
         )
     }
 
@@ -255,7 +267,8 @@ object CreateSourceCode {
         handlerClassName: String,
         restPolicy: RestPolicy,
         mainKotlinSourceDir: File,
-        allComplexTopLevelTypes: Set<Entity>
+        allComplexTopLevelTypes: Set<Entity>,
+        parameterDependencyGraph: ParameterDependencyGraph
     ) {
 
         val implClassName = "${CodeLocations.implClassName(function.name)}"
@@ -270,7 +283,8 @@ object CreateSourceCode {
             implSourceFile.writeText(functionSampleImplNew(defaultPackageName, implClassName, function))
         }
 
-        val srcMap = templateLambdaEventHandlerFiles(function = function, domainPath = defaultPackageTree, implClassName = implClassName, handlerClassName = "${handlerClassName}")
+        val srcMap = templateLambdaEventHandlerFiles(function = function, domainPath = defaultPackageTree, implClassName = implClassName,
+            handlerClassName = "${handlerClassName}", parameterDependencyGraph = parameterDependencyGraph)
         srcMap.forEach {
             val file = genDir.resolve(it.key)
             file.parentFile.mkdirs()

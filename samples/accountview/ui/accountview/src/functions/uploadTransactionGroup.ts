@@ -19,10 +19,10 @@ export default async function uploadTransactionGroup(Authorization_in: string, f
        
     headers['Content-Type'] = 'multipart/form-data';     
     const body = new FormData();
-       body.append('file', file_in);
- body.append('fromInclusiveDate', fromInclusiveDate_in);
+       body.append('accountNumber', accountNumber_in);
  body.append('toInclusiveDate', toInclusiveDate_in);
- body.append('accountNumber', accountNumber_in);
+ body.append('fromInclusiveDate', fromInclusiveDate_in);
+ body.append('file', file_in);
 
     
        let res = await axios.post(url, body, {headers : headers,

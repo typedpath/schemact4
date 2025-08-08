@@ -100,11 +100,11 @@ const TransactionGroupDetail: React.FC = () => {
       }));
 
       const response = await categorizeTransactions(
+        idToken,
         fromDate!,
         toDate!,
         accountNumber!,
-        updates,
-        idToken
+        updates
       );
 
       setTransactionGroup(response.data);

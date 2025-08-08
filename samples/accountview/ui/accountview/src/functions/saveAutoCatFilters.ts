@@ -7,7 +7,7 @@ import { UserInfo } from './UserInfo';
 
 const urlPath = "/functions/saveAutoCatFilters" 
 
-export default async function saveAutoCatFilters(autoCatFilters_in: AutoCatFilter[], Authorization_in: string) : Promise<AxiosResponse<UserInfo, any>> { // TODO map to specified return type
+export default async function saveAutoCatFilters(Authorization_in: string, autoCatFilters_in: AutoCatFilter[]) : Promise<AxiosResponse<UserInfo, any>> { // TODO map to specified return type
     let url = urlPath
     if (window.location.href.indexOf("localhost")>=0) {
       url = 'https://accountview.testedsoftware.org' + urlPath
