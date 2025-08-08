@@ -8,13 +8,12 @@ import schemact.domain.InfrastructureInjectables.APIGatewayV2HTTPEventEntity
 import schemact.gradleplugin.aws.functiontemplates.CodeLocations
 import schemact.gradleplugin.aws.functiontemplates.dataClass
 import schemact.gradleplugin.aws.functiontemplates.inputParamName
-import schemact.gradleplugin.injection.AwsResolvers.LambdaResolvers
-import schemact.gradleplugin.injection.AwsResolvers.RestBodyParamResolver
-import schemact.gradleplugin.injection.ParameterResolver.assumeSingleDependencyMatches
-import schemact.gradleplugin.injection.ParameterResolver.checkForUnresolved
-import schemact.gradleplugin.injection.ParameterResolver.expandParamRequirements
-import schemact.gradleplugin.injection.ParameterResolver.orderLeastDependantToMost
-import schemact.gradleplugin.injection.mappers.getResourceAsText
+import schemact.gradleplugin.injection.resolvers.AwsResolvers.LambdaResolvers
+import schemact.gradleplugin.injection.resolvers.AwsResolvers.RestBodyParamResolver
+import schemact.gradleplugin.injection.ParameterDependencyGrapher.assumeSingleDependencyMatches
+import schemact.gradleplugin.injection.ParameterDependencyGrapher.checkForUnresolved
+import schemact.gradleplugin.injection.ParameterDependencyGrapher.expandParamRequirements
+import schemact.gradleplugin.injection.ParameterDependencyGrapher.orderLeastDependantToMost
 import java.time.LocalDateTime
 
 object APIGatewayV2HTTPEventHandlerInjectedTemplate {
@@ -23,6 +22,7 @@ object APIGatewayV2HTTPEventHandlerInjectedTemplate {
     //          com/company/mappers/verifiedCognitoUser.kt ->.. the src
     //  should probably return structure containing handler full class name
 
+    // TODO remove this overload - put all dependencies in a Lambda dependency grapher thing
     fun templateLambdaEventHandlerFiles(function: Function, domainPath: List<String>,
                                         handlerClassName: String, implClassName: String ): Map<String, String> {
 
@@ -57,8 +57,6 @@ object APIGatewayV2HTTPEventHandlerInjectedTemplate {
                  val fileName = "${packageName.replace(".", "/")}/${it.name}.kt"
                  Pair(fileName, src)
             }
-
-
 
         // TODO render the external data classes - e.g. with DataClassTemplate
         // val handlerClassName = "${function.name}Handler"

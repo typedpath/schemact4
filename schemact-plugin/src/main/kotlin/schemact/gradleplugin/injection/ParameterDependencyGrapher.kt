@@ -3,7 +3,9 @@ package schemact.gradleplugin.injection
 import schemact.domain.Function
 import schemact.domain.asString
 
-object ParameterResolver {
+data class ParameterDependencyGraph(val sortedContext: List<Value>)
+
+object ParameterDependencyGrapher {
     // distinguish between expansion and resolution
     fun expandParamRequirements(function: Function, resolvers: List<Resolver>): List<Value> {
         val unexpandedValues =

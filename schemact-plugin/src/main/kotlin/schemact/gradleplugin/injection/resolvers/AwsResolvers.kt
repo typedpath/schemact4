@@ -1,4 +1,4 @@
-package schemact.gradleplugin.injection
+package schemact.gradleplugin.injection.resolvers
 
 
 import RestResolvers.restBodyElementResolver
@@ -7,7 +7,11 @@ import RestResolvers.restMultiBodyElementResolver
 import RestResolvers.restParameterResolver
 import schemact.domain.Entity
 import schemact.domain.InfrastructureInjectables
+import schemact.gradleplugin.injection.Renderer
+import schemact.gradleplugin.injection.Resolver
 import schemact.gradleplugin.injection.ResolverUtil.string2ObjectKotlin
+import schemact.gradleplugin.injection.Value
+import schemact.gradleplugin.injection.fromMapperFunction
 import schemact.gradleplugin.injection.mappers.createMultiPartBodyReader
 import schemact.gradleplugin.injection.mappers.createReadUserPrivateBucketData
 import schemact.gradleplugin.injection.mappers.createUserDataUpdaterResolver
@@ -74,7 +78,7 @@ object AwsResolvers {
         //.plus(AwsAuthHeaderResolver)
 
 
-    fun SystemPropertyResolver(propertyType: Entity) =
+    fun SystemPropertyResolver(propertyType: Entity) : Resolver =
         object : Resolver () {
             override fun resolve(value: Value): List<Value.Requirement>? {
 

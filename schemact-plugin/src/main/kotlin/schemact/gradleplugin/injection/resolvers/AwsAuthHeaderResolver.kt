@@ -1,6 +1,9 @@
-package schemact.gradleplugin.injection
+package schemact.gradleplugin.injection.resolvers
 
 import schemact.domain.RestInjectables
+import schemact.gradleplugin.injection.Renderer
+import schemact.gradleplugin.injection.Resolver
+import schemact.gradleplugin.injection.Value
 import kotlin.String
 
 val AwsAuthHeaderResolver = object : Resolver () {
