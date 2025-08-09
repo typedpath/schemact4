@@ -6,8 +6,10 @@ import schemact.gradleplugin.injection.ParameterDependencyGrapher.expandParamReq
 import schemact.gradleplugin.injection.ParameterDependencyGrapher.orderLeastDependantToMost
 import schemact.gradleplugin.injection.resolvers.AwsAuthHeaderResolver
 import schemact.gradleplugin.injection.resolvers.AwsResolvers.LambdaResolvers
+import schemact.gradleplugin.injection.resolvers.AwsResolvers.LambdaSystemPropertyResolvers
 import schemact.gradleplugin.injection.resolvers.AwsResolvers.RestBodyParamResolver
 import schemact.gradleplugin.injection.resolvers.AwsResolvers.RestUrlParamResolver
+import schemact.gradleplugin.injection.resolvers.AwsResolvers.SystemPropertyResolver
 import schemact.gradleplugin.injection.resolvers.AwsResolvers.restMultiBodyElementResolver
 
 object AwsLambdaDependencyGrapher {
@@ -19,12 +21,14 @@ object AwsLambdaDependencyGrapher {
         val restBodyParamRequirements = context.filter{RestBodyParamResolver.resolve(it)!=null}
         val multiPartBodyParamRequirements = context.filter{restMultiBodyElementResolver.resolve(it)!=null}
         val urlParamRequirements = context.filter{RestUrlParamResolver.resolve(it)!=null}
+        val systemPropertyRequirements = context.filter{value->LambdaSystemPropertyResolvers.any { it.resolve(value)!=null} }
         val restHeaderRequirements = context.filter { AwsAuthHeaderResolver.resolve(it)!=null }
         val mapperFunctions = LambdaResolvers.filterIsInstance<MapperResolver>().map{it.mapperFunction}
 
         return ParameterDependencyGraph(sortedContext = context, restBodyParamRequirements=restBodyParamRequirements,
             restMultiPartBodyParamRequirements=multiPartBodyParamRequirements, restUrlParamRequirements=urlParamRequirements,
             restHeaderRequirements = restHeaderRequirements,
+            systemPropertyRequirements = systemPropertyRequirements,
             mapperFunctions=mapperFunctions)
     }
 

@@ -138,7 +138,7 @@ object ParameterDependencyGrapher {
         }
     }
 
-    //TODO get rid of this - renders should deal withmultiple values
+    //TODO get rid of this - rendererss should deal withmultiple values e.g. surround aspects
     fun assumeSingleDependencyMatches(value: Value, context: List<Value>) : Map<String, Value> {
         return value.requirements!!.map {
                 requirement ->

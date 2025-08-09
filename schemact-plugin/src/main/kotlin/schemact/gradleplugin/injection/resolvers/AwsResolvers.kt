@@ -20,11 +20,14 @@ import schemact.gradleplugin.injection.mappers.verifyUserSession
 
 object AwsResolvers {
 
+    val LambdaSystemPropertyTypes = setOf(
+        InfrastructureInjectables.PrivateBucketNameType,
+        InfrastructureInjectables.BucketNameType,
+        InfrastructureInjectables.DynamoDBTablenameType,
+        InfrastructureInjectables.CognitoClientDetails.entity
+    )
+    val LambdaSystemPropertyResolvers = LambdaSystemPropertyTypes.map { SystemPropertyResolver(it) }
 
-    val PrivateBucketNameResolver = SystemPropertyResolver(InfrastructureInjectables.PrivateBucketNameType)
-    val BucketNameResolver = SystemPropertyResolver(InfrastructureInjectables.BucketNameType)
-    val DynamoDBTablenameResolver = AwsResolvers.SystemPropertyResolver( InfrastructureInjectables.DynamoDBTablenameType)
-    val CognitoClientDetailsResolver = AwsResolvers.SystemPropertyResolver(InfrastructureInjectables.CognitoClientDetails.entity)
 
     val WriteUserPrivateBucketDataResolver =
         fromMapperFunction(mapperFunction = createWriteUserPrivateBucketData)
@@ -36,11 +39,11 @@ object AwsResolvers {
         fromMapperFunction(mapperFunction = verifyUserSession)
     val UpdateUserDataResolver = createUserDataUpdaterResolver
 
-    val MultiPartBodyReaderResolver  =
+    val MultiPartBodyReaderResolver =
         fromMapperFunction(mapperFunction = createMultiPartBodyReader)
 
     val RawInputResolverResolver =
-        object : Resolver () {
+        object : Resolver() {
             override fun resolve(value: Value): List<Value.Requirement>? {
 
                 if (value.connectionFrom.entity2 == InfrastructureInjectables.APIGatewayV2HTTPEventEntity) {
@@ -54,25 +57,35 @@ object AwsResolvers {
             }
         }
 
-    val allNonRestResolvers = listOf(PrivateBucketNameResolver, BucketNameResolver, DynamoDBTablenameResolver, CognitoClientDetailsResolver,
-        WriteUserPrivateBucketDataResolver, ReadUserPrivateBucketDataResolver, VerifiedUserResolver, UpdateUserDataResolver,
-        RawInputResolverResolver, MultiPartBodyReaderResolver)
+    val allNonRestResolvers = listOf(
+        WriteUserPrivateBucketDataResolver,
+        ReadUserPrivateBucketDataResolver,
+        VerifiedUserResolver,
+        UpdateUserDataResolver,
+        RawInputResolverResolver,
+        MultiPartBodyReaderResolver
+    ).plus(LambdaSystemPropertyResolvers)
 
     // TODO rest resolver exclusions should be auto added
-    val restMultiBodyElementResolver = restMultiBodyElementResolver(exclusions = allNonRestResolvers
-        .toSet().plus(AwsAuthHeaderResolver))
+    val restMultiBodyElementResolver = restMultiBodyElementResolver(
+        exclusions = allNonRestResolvers
+            .toSet().plus(AwsAuthHeaderResolver)
+    )
 
 
-    val RestBodyParamResolver = restBodyElementResolver(exclusions = allNonRestResolvers
-        .toSet().plus(AwsAuthHeaderResolver).plus(restBodyResolver).plus(restMultiBodyElementResolver))
+    val RestBodyParamResolver = restBodyElementResolver(
+        exclusions = allNonRestResolvers
+            .toSet().plus(AwsAuthHeaderResolver).plus(restBodyResolver)
+            .plus(restMultiBodyElementResolver)
+    )
 
-    val RestUrlParamResolver = restParameterResolver(exclusions = allNonRestResolvers.toSet()
-        .plus(restMultiBodyElementResolver)
-        .plus(RestBodyParamResolver)
-        .plus(restBodyResolver)
-        .plus(AwsAuthHeaderResolver)
-
-    /*TOD - review this should have more exclusions ?*/)
+    val RestUrlParamResolver = restParameterResolver(
+        exclusions = allNonRestResolvers.toSet()
+            .plus(restMultiBodyElementResolver)
+            .plus(RestBodyParamResolver)
+            .plus(restBodyResolver)
+            .plus(AwsAuthHeaderResolver)
+    )
 
     val RestParamResolvers = listOf(RestUrlParamResolver)
         .plus(restMultiBodyElementResolver)
@@ -82,27 +95,32 @@ object AwsResolvers {
 
 
     val LambdaResolvers = allNonRestResolvers.plus(RestParamResolvers)
-        //.plus(AwsAuthHeaderResolver)
+    //.plus(AwsAuthHeaderResolver)
 
 
-    fun SystemPropertyResolver(propertyType: Entity) : Resolver =
-        object : Resolver () {
-            override fun resolve(value: Value): List<Value.Requirement>? {
+    class SystemPropertyResolver(val propertyType: Entity) : Resolver() {
+        override fun resolve(value: Value): List<Value.Requirement>? {
 
-                if (value.connectionFrom.entity2 == propertyType) {
-                    value.renderer = object : Renderer() {
-                        override fun renderKotlin(value: Value, dependencies: Map<String, Value>) : String{
-                            return if (propertyType.isValueType)  """val ${value.varName} = System.getenv("${value.connectionFrom.name}")"""
-                            else """val ${value.varName} = ${string2ObjectKotlin("""System.getenv("${value.connectionFrom.name}")""", value.connectionFrom.entity2)}"""
-                        }
+            if (value.connectionFrom.entity2 == propertyType) {
+                value.renderer = object : Renderer() {
+                    override fun renderKotlin(
+                        value: Value,
+                        dependencies: Map<String, Value>
+                    ): String {
+                        return if (propertyType.isValueType) """val ${value.varName} = System.getenv("${value.connectionFrom.name}")"""
+                        else """val ${value.varName} = ${
+                            string2ObjectKotlin(
+                                """System.getenv("${value.connectionFrom.name}")""",
+                                value.connectionFrom.entity2
+                            )
+                        }"""
                     }
-                    value.requirements = emptyList()
-                    return value.requirements
-                } else return null
-            }
+                }
+                value.requirements = emptyList()
+                return value.requirements
+            } else return null
+
         }
-
-
-
+    }
 }
 

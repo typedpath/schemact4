@@ -34,9 +34,12 @@ fun getTransactonGroup2Test() {
 
    fun test(function: Function) {
     val domainPath= listOf("com", "company")
-    //TODO reinstate val srcMap = templateLambdaEventHandlerFiles(function = function, domainPath = domainPath, implClassName = "testImplClassName", handlerClassName = "testHandlerClassName")
-    val srcMap = emptyMap<String, String>()
-       srcMap.forEach {  (input, output) -> println("""srcFile: $input
+    val now=System.currentTimeMillis()
+    val parameterDependencyGraph = AwsLambdaDependencyGrapher.expandAndCheckRequirements(function)
+    println("time taken parameterDependencyGraph ${System.currentTimeMillis()-now}")
+    val srcMap = templateLambdaEventHandlerFiles(function = function, domainPath = domainPath, implClassName = "testImplClassName", handlerClassName = "testHandlerClassName",
+        parameterDependencyGraph=parameterDependencyGraph)
+    srcMap.forEach {  (input, output) -> println("""srcFile: $input
 *****************************
 $output
     """.trimMargin()) }

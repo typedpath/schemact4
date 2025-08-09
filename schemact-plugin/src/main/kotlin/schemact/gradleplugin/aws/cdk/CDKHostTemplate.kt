@@ -3,10 +3,10 @@ import PrivateBucketCdk
 import schemact.domain.*
 import schemact.domain.Function
 import schemact.gradleplugin.FunctionIdKey
-import schemact.gradleplugin.RestPolicy
 import schemact.gradleplugin.aws.cdk.CreateWebsiteResourcesCloudFrontDistribution.createWebsiteResourcesCloudFrontDistribution
 import schemact.gradleplugin.aws.functiontemplates.CodeLocations.handlerFullClassName
 import schemact.gradleplugin.functionId
+import schemact.gradleplugin.injection.AwsLambdaDependencyGrapher
 import software.amazon.awscdk.Stack
 import software.amazon.awscdk.StackProps
 import software.amazon.awscdk.services.cloudfront.CfnDistribution
@@ -80,7 +80,9 @@ class CDKHostTemplate(scope: Construct, id: String?, props: StackProps?,
 
     fun environmentVariables(module: Module, function: Function, entityToEnvironmentVariable: Map<Entity, String>) : Map<String, String> {
         println("environmentVariables ${entityToEnvironmentVariable.entries.joinToString { "${it.key.name}=${it.value}"  }}" )
-        val result =  RestPolicy(function.paramType, function.returnType).argsFromEnvironment.map {
+        val parameterDependencyGraph = AwsLambdaDependencyGrapher.expandAndCheckRequirements(function)
+        val argsFromEnvironment = parameterDependencyGraph.systemPropertyRequirements.map {it.connectionFrom}
+        val result =  argsFromEnvironment.map {
             if (entityToEnvironmentVariable.containsKey(it.entity2)) it.name to (entityToEnvironmentVariable[it.entity2])!!
             else throw RuntimeException("unknown infrastructure field type ${it.entity2.name} in function ${function.name}.${it.entity1.name}.${it.name}")
         }.associateBy({it.first}, {it.second}).toMutableMap()

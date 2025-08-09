@@ -67,7 +67,8 @@ object InfrastructureInjectables {
     val  verifyUserSession = Function (name="verifyUserSession",
                description = "verifies user session", paramType = Entity(name="params", description="params") {
                containsOne("cognitoClientDetails",  description = "cognitoClientDetails", CognitoClientDetails.entity)
-               containsOne("token", type = RestInjectables.AuthorizationHeaderType)
+               // TODO fix this so doesnt have to be the same name as header
+               containsOne("Authorization", type = RestInjectables.AuthorizationHeaderType)
         },
         returnType = VerifiedCognitoUser)
 

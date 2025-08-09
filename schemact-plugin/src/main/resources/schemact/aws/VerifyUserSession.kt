@@ -7,9 +7,9 @@ import java.security.interfaces.RSAPublicKey
 import com.auth0.jwk.UrlJwkProvider
 
 object VerifyUserSession {
-    fun verifyUserSession (/*TODO take these off the function*/token: String, cognitoClientDetails: CognitoClientDetails): VerifiedCognitoUser {
+    fun verifyUserSession (/*TODO take these off the function*/Authorization: String, cognitoClientDetails: CognitoClientDetails): VerifiedCognitoUser {
         // Decode JWT to get kid (key ID)
-        val decodedJwt = JWT.decode(token)
+        val decodedJwt = JWT.decode(Authorization)
         val kid = decodedJwt.keyId ?: throw JWTVerificationException("Missing kid in JWT header")
         println("using cognitoDetails.jwksUrl "+ cognitoClientDetails.jwksUrl)
         // Fetch JWKS and get public key
@@ -25,7 +25,7 @@ object VerifyUserSession {
             .withClaim("token_use", "id") // Ensure ID token
             .build()
 
-        val verifiedJwt = verifier.verify(token)
+        val verifiedJwt = verifier.verify(Authorization)
 
         println("claims" + verifiedJwt.claims.entries.map { "${it.key} => ${it.value}" }.joinToString (","))
 
