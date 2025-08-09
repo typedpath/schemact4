@@ -17,29 +17,12 @@ val userInfoLatest = userInfo3
 val transactionGroupLatest = transactionGroup3
 val accountLatest = account3
 
+
 val onLoginFunction = Function(
     "onLogin",
     description = "updates the auth table on login",
     paramType = Entity(name = "param", description = "Params") {
-        containsOne(
-            "userTableName",
-            description = "bucketName",
-            type = InfrastructureInjectables.DynamoDBTablenameType
-        )
-        containsOne(
-            "bucketName",
-            description = "bucketName",
-            type = InfrastructureInjectables.BucketNameType
-        )
-        containsOne(
-            "Authorization",
-            description = "Authorization header",
-            type = RestInjectables.AuthorizationHeaderType
-        )
-        containsOne(
-            "cognitoDetails", description = "Cognito Details",
-            type = InfrastructureInjectables.CognitoClientDetails.entity
-        )
+        updateUserDataArg(userInfoLatest)
     },
     returnType = userInfoLatest,
     auth = auth
@@ -289,7 +272,3 @@ val functionsModule = Module(name= "functions",
         addAccountFunction, uploadTransactionGroupFunction, getTransactionGroup,
         getTransactionGroup2,
         categorizeTransactions, saveCategoriesFunction, saveAutoCatFilters))
-
-val functionsModuleX = Module(name= "functions",
-    version = functionModuleVersion,
-    functions = mutableListOf(getTransactionGroup2))
