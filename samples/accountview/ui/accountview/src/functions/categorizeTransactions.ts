@@ -7,7 +7,7 @@ import { TransactionGroup } from './TransactionGroup';
 
 const urlPath = "/functions/categorizeTransactions" 
 
-export default async function categorizeTransactions(Authorization_in: string, fromInclusiveDate_in: string, toInclusiveDate_in: string, accountNumber_in: string, transactionUpdates_in: TransactionUpdate[]) : Promise<AxiosResponse<TransactionGroup, any>> { // TODO map to specified return type
+export default async function categorizeTransactions(fromInclusiveDate_in: string, toInclusiveDate_in: string, accountNumber_in: string, transactionUpdates_in: TransactionUpdate[], Authorization_in: string) : Promise<AxiosResponse<TransactionGroup, any>> { // TODO map to specified return type
     let url = urlPath
     if (window.location.href.indexOf("localhost")>=0) {
       url = 'https://accountview.testedsoftware.org' + urlPath
