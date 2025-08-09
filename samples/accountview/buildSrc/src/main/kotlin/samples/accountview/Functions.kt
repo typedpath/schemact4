@@ -220,21 +220,7 @@ val saveCategoriesFunction = Function(
     "saveCategories",
     description = "saves categories",
     paramType = Entity(name = "param", description = "Params") {
-        containsOne(
-            "userTableName",
-            description = "table name",
-            type = InfrastructureInjectables.DynamoDBTablenameType
-        )
-        containsOne(
-            "Authorization",
-            description = "Authorization header",
-            type = RestInjectables.AuthorizationHeaderType
-        )
-        containsOne(
-            "cognitoDetails",
-            description = "Cognito Details",
-            type = InfrastructureInjectables.CognitoClientDetails.entity
-        )
+        updateUserDataArg(userInfoLatest)
         containsMany("categories", description = "cats", type = StringType(maxLength = 50))
     },
     returnType = userInfoLatest,
@@ -245,21 +231,7 @@ val saveAutoCatFilters = Function(
     "saveAutoCatFilters",
     description = "saves autoCatFilters",
     paramType = Entity(name = "param", description = "Params") {
-        containsOne(
-            "userTableName",
-            description = "table name",
-            type = InfrastructureInjectables.DynamoDBTablenameType
-        )
-        containsOne(
-            "Authorization",
-            description = "Authorization header",
-            type = RestInjectables.AuthorizationHeaderType
-        )
-        containsOne(
-            "cognitoDetails",
-            description = "Cognito Details",
-            type = InfrastructureInjectables.CognitoClientDetails.entity
-        )
+        updateUserDataArg(userInfoLatest)
         containsMany("autoCatFilters", description = "autoCatFilters", type =autoCatFilter)
     },
     returnType = userInfoLatest,

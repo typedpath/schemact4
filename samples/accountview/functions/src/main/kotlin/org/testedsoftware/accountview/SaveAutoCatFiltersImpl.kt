@@ -1,23 +1,14 @@
 
 package org.testedsoftware.accountview
+// created by template functionSampleImplNew
 
-import schemact.aws.CognitoClientDetails
-
-// created by template functionSampleImpl
-
-
-class SaveAutoCatFiltersImpl { 
-    // created from template  functionSampleImpl at 2025-06-17T13:20:47.776842700
-    // TODO auto gen injectable creation
-    fun saveAutoCatFilters(userTableName: String, Authorization: String, cognitoDetails: CognitoClientDetails, autoCatFilters: List<AutoCatFilter>) : UserInfo {
-        val injectables = InjectablesFactoryOld.create(Authorization=Authorization, cognitoDetails=cognitoDetails, userTableName=userTableName )
-        return saveAutoCatFilters(injectables.updateUserInfo, autoCatFilters)
-    }
-
-    fun saveAutoCatFilters(updateUserInfo: UpdateUserInfoOld, autoCatFilters: List<AutoCatFilter>) : UserInfo =
-        updateUserInfo({
-            userInfo ->
-                userInfo.autoCatFilters = autoCatFilters.toMutableList()
-                userInfo
-        })
-    }
+class SaveAutoCatFiltersImpl {
+    // created from template  functionSampleImplNew at 2025-08-09T22:25:22.153253100       
+    fun saveAutoCatFilters(
+        UpdateUserInfo: schemact.aws.UpdateUserData<UserInfo>,
+        autoCatFilters: List<AutoCatFilter>
+    ): UserInfo =
+        AccountViewUserInfoUpdate.accountViewUserInfoUpdate(UpdateUserInfo) { data ->
+            data.autoCatFilters = autoCatFilters.toMutableList()
+        }
+}
