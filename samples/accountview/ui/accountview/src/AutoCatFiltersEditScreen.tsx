@@ -121,7 +121,7 @@ const AutoCatFiltersEditScreen: React.FC<AutoCatFiltersEditScreenProps> = ({ use
       }
       console.log('handleSaveAutoCatFilters network');
 
-      const response: AxiosResponse<UserInfo> = await saveAutoCatFilters(idToken, filters );
+      const response: AxiosResponse<UserInfo> = await saveAutoCatFilters(filters, idToken );
       console.log('handleSaveAutoCatFilters response', response);
 
       setUserInfo(response.data);
