@@ -89,28 +89,8 @@ val addAccountFunction = Function(
     "addAccount",
     description = "adds an account",
     paramType = Entity(name = "param", description = "Params") {
-        containsOne(
-            "userTableName",
-            description = "table name",
-            type = InfrastructureInjectables.DynamoDBTablenameType
-        )
-        containsOne(
-            "privateBucketName",
-            description = "bucketName",
-            type = InfrastructureInjectables.PrivateBucketNameType
-        )
-        containsOne(
-            "Authorization",
-            description = "Authorization header",
-            type = RestInjectables.AuthorizationHeaderType
-        )
-        containsOne(
-            "cognitoDetails",
-            description = "Cognito Details",
-            type = InfrastructureInjectables.CognitoClientDetails.entity
-        )
+        updateUserDataArg(userInfoLatest)
         containsOne("account", description = "Account", type = accountLatest)
-
     },
     returnType = userInfoLatest,
     auth = auth

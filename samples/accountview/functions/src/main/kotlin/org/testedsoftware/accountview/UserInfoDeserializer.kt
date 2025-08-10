@@ -3,6 +3,9 @@ package org.testedsoftware.accountview
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlin.String
 
+/**
+ * deals with schema upgrades
+ */
 object UserInfoDeserializer {
     fun deserialize(str: String, version: String) : UserInfo {
         return if (version.equals(UserInfoVersion.latest)) {

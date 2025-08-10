@@ -1,17 +1,11 @@
 
 package org.testedsoftware.accountview
+// created by template functionSampleImplNew
 
-import schemact.aws.CognitoClientDetails
-
-// created by template functionSampleImpl
-
-
-class AddAccountImpl {
-    // created from template  functionSampleImpl at 2025-05-10T21:43:21.138087600       
-    fun addAccount(userTableName: String, privateBucketName: String, Authorization: String,
-                   cognitoDetails: CognitoClientDetails, account: Account) : UserInfo =
-         UserInfoUpdaterOld.updateSecure(Authorization=Authorization, userTableName=userTableName, cognitoDetails =  cognitoDetails,
-            update = {data -> data.accounts.add(account)
-                      data})
-    
+class AddAccountImpl { 
+    // created from template  functionSampleImplNew at 2025-08-10T17:28:54.170776100       
+    fun addAccount(UpdateUserInfo: schemact.aws.UpdateUserData<UserInfo>, account: Account) : UserInfo =
+        AccountViewUserInfoUpdate.accountViewUserInfoUpdate(UpdateUserInfo) {
+            data -> data.accounts.add(account)
+        }
 }
