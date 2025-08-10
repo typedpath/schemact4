@@ -17,7 +17,6 @@ val userInfoLatest = userInfo3
 val transactionGroupLatest = transactionGroup3
 val accountLatest = account3
 
-
 val onLoginFunction = Function(
     "onLogin",
     description = "updates the auth table on login",
@@ -31,63 +30,12 @@ val onLoginFunction = Function(
 val smallUploadFile = ReactJsInjectables.File(name ="File",
     description="Random Uploaded File", maxBytes=10000000)
 
-val uploadFileFunction = schemact.domain.Function(
-    "uploadFile",
-    description = "uploads a file",
-    paramType = Entity(name = "param", description = "Params") {
-        containsOne(
-            "userTableName",
-            description = "bucketName",
-            type = InfrastructureInjectables.DynamoDBTablenameType
-        )
-        containsOne(
-            "privateBucketName",
-            description = "bucketName",
-            type = InfrastructureInjectables.PrivateBucketNameType
-        )
-        containsOne(
-            "Authorization",
-            description = "Authorization header",
-            type = RestInjectables.AuthorizationHeaderType
-        )
-        containsOne(
-            "cognitoDetails", description = "Cognito Details",
-            type = InfrastructureInjectables.CognitoClientDetails.entity
-        )
-        containsOne(name = "file", "upload file", smallUploadFile)
-// for debug / development
-        containsOne(
-            "input", description = "native input details",
-            type = InfrastructureInjectables.APIGatewayV2HTTPEventEntity
-        )
-    },
-    returnType = userInfoLatest,
-    auth = auth
-)
-
 val uploadTransactionGroupFunction = schemact.domain.Function(
     "uploadTransactionGroup",
     description = "uploads a transactionGroup",
     paramType = Entity(name = "param", description = "Params") {
-        containsOne(
-            "userTableName",
-            description = "bucketName",
-            type = InfrastructureInjectables.DynamoDBTablenameType
-        )
-        containsOne(
-            "privateBucketName",
-            description = "bucketName",
-            type = InfrastructureInjectables.PrivateBucketNameType
-        )
-        containsOne(
-            "Authorization",
-            description = "Authorization header",
-            type = RestInjectables.AuthorizationHeaderType
-        )
-        containsOne(
-            "cognitoDetails", description = "Cognito Details",
-            type = InfrastructureInjectables.CognitoClientDetails.entity
-        )
+        writeUserPrivateBucketDataArg()
+        updateUserDataArg(userInfoLatest)
         containsOne(name = "file", description = "upload file", type = smallUploadFile)
         string("fromInclusiveDate", "From Inclusive Date", maxLength = 10)
         string("toInclusiveDate", "To Inclusive Date", maxLength = 10)
@@ -192,6 +140,6 @@ val saveAutoCatFilters = Function(
 
 val functionsModule = Module(name= "functions",
     version = functionModuleVersion,
-    functions = mutableListOf(onLoginFunction, uploadFileFunction,
+    functions = mutableListOf(onLoginFunction,
         addAccountFunction, uploadTransactionGroupFunction, getTransactionGroup,
         categorizeTransactions, saveCategoriesFunction, saveAutoCatFilters))

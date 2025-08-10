@@ -1,43 +1,26 @@
 
 package org.testedsoftware.accountview
-// created by template functionSampleImpl
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
-import com.amazonaws.services.s3.model.ObjectMetadata
-import schemact.aws.CognitoClientDetails
-import schemact.aws.VerifyCognito.verifyCognitoJwt
-import schemact.react.File
-import java.io.ByteArrayInputStream
+
 import java.time.LocalDateTime
 
+// created by template functionSampleImplNew
 
-class UploadTransactionGroupImpl {
-    // created from template  functionSampleImpl at 2025-05-12T15:57:02.558775500       
-    fun uploadTransactionGroup(userTableName: String, privateBucketName: String, Authorization: String, cognitoDetails: CognitoClientDetails, file: File, fromInclusiveDate: String, toInclusiveDate: String, accountNumber: String) : UserInfo {
-        val cognitoData = verifyCognitoJwt(Authorization, cognitoDetails)
-        println(cognitoData)
-        val userId = cognitoData.sub
-        val email = cognitoData.email?:"unknown"
-        // TODO switch to use Transaction Group extension function
-
-        val s3: AmazonS3 =
-            AmazonS3ClientBuilder.standard()
-                .withRegion(cognitoDetails.region)
-                .build()
-
+class UploadTransactionGroupImpl { 
+    // created from template  functionSampleImplNew at 2025-08-10T13:31:59.696656200       
+    fun uploadTransactionGroup(WriteUserPrivateBucketData: schemact.aws.WriteUserPrivateBucketData,
+                               UpdateUserInfo: schemact.aws.UpdateUserData<UserInfo>,
+                               file: schemact.react.File, fromInclusiveDate: String, toInclusiveDate: String, accountNumber: String) : UserInfo {
         val groupName = file.filename.substring(0, file.filename.lastIndexOf("."))
 
         // Upload to S3 with environment-specific prefix
         val location = "/transactionGroups/${groupName}"
-        val rawKey = "$userId$location/${file.filename}"
-        val metadata = ObjectMetadata().apply {
-            this.contentType = file.contentType
-            this.contentLength = file.content.size.toLong()
-        }
-        val s3Bucket = privateBucketName
-        s3.putObject(s3Bucket, rawKey, ByteArrayInputStream(file.content), metadata)
+        val rawDataKey = "$location/${file.filename}"
 
-        val transactions = RawTransactionFileIO.readBarclaysCsvContent(String(file.content))
+        val strContent = String(file.content)
+
+        WriteUserPrivateBucketData(rawDataKey, strContent)
+
+        val transactions = BarclaysCsvReader.readBarclaysCsvContent(strContent)
         val transactionFileName = "$groupName.json"
 
         val rawTransactionFile = TransactionGroup.RawTransactionFile(
@@ -51,27 +34,22 @@ class UploadTransactionGroupImpl {
             location = location, contentType = "application/json",
             uploadTime = LocalDateTime.now().toString() )
 
-        println("writing json to (s3Bucket, transactionFileKey)- ($s3Bucket, ${transactionFile.keyFromUserId(userId)})")
-        RawTransactionFileIO.writeJson(s3Bucket, transactionFile.keyFromUserId(userId),  transactions)
+        WriteUserPrivateBucketData("$location/${transactionFileName}", transactions)
 
+        return AccountViewUserInfoUpdate.accountViewUserInfoUpdate(UpdateUserInfo) {
+                data ->
+            val account = data.accounts.find { it.accountNumber == accountNumber }
+                ?: throw IllegalArgumentException("Account with accountNumber $accountNumber not found")
 
-        return UserInfoUpdaterOld.update(userTableName=userTableName,  userId = userId,
-            email = email,
-            update= { data ->
-                val account = data.accounts.find { it.accountNumber == accountNumber }
-                    ?: throw IllegalArgumentException("Account with accountNumber $accountNumber not found")
-
-                val transactionGroup = TransactionGroup(
-                    fromInclusiveDate = fromInclusiveDate,
-                    toInclusiveDate = toInclusiveDate,
-                    rawTransactionFile = rawTransactionFile, transactionFile=transactionFile,
-                )
-                // Add the new transaction group to the found account
-                account.transactionGroups.add(transactionGroup)
-                data
-            })
+            val transactionGroup = TransactionGroup(
+                fromInclusiveDate = fromInclusiveDate,
+                toInclusiveDate = toInclusiveDate,
+                rawTransactionFile = rawTransactionFile, transactionFile=transactionFile,
+            )
+            // Add the new transaction group to the found account
+            account.transactionGroups.add(transactionGroup)
+            data
+        }
     }
-
-
-
+    
 }

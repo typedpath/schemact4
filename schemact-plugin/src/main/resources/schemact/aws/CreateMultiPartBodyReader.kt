@@ -10,7 +10,9 @@ object CreateMultiPartBodyReader {
 
     fun createMultiPartBodyReader(input: APIGatewayV2HTTPEvent): MultiPartBodyReader {
 
-        val contentType = "TODO"
+        val contentType = input.headers?.get("content-type")
+            ?: throw Exception("Missing Content-Type")
+        println("createMultiPartBodyReader contentType: $contentType")
         val bodyBytes = Base64.getDecoder().decode(input.body)
         val boundary = contentType.split("boundary=")[1]
         val inputStream = ByteArrayInputStream(bodyBytes)

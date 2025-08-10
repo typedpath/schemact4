@@ -3,7 +3,7 @@ package samples.accountview
 import schemact.domain.*
 import schemact.domain.Language.Typescript
 
-val functionModuleVersion="1.0.111-SNAPSHOT"
+val functionModuleVersion="1.0.116-SNAPSHOT"
 
 val auth =  Auth()
 
@@ -27,7 +27,6 @@ name = "accountview",
     ) {
     mainPage = staticWebsite("mainPage", "the main page") {
         client(onLoginFunction, Typescript)
-        client(uploadFileFunction, Typescript)
         client(addAccountFunction, Typescript)
         client(uploadTransactionGroupFunction, Typescript)
         client(getTransactionGroup, Typescript)

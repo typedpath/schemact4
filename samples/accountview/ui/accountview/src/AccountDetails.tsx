@@ -123,11 +123,11 @@ const AccountDetails: React.FC<AccountDetailsProps> = ({ userInfo, setUserInfo, 
 
     try {
       const response = await uploadTransactionGroup(
-        Authorization_in,
         file,
         fromInclusiveDate,
         toInclusiveDate,
-        accountNumber!
+        accountNumber!,
+        Authorization_in
       );
 
       if (response.status !== 200) {
