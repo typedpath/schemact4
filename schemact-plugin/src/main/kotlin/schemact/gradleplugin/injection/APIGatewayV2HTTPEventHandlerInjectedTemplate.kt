@@ -7,7 +7,6 @@ import schemact.domain.Function
 import schemact.domain.InfrastructureInjectables.APIGatewayV2HTTPEventEntity
 import schemact.gradleplugin.aws.functiontemplates.CodeLocations
 import schemact.gradleplugin.aws.functiontemplates.dataClass
-import schemact.gradleplugin.aws.functiontemplates.inputParamName
 import schemact.gradleplugin.injection.ParameterDependencyGrapher.assumeSingleDependencyMatches
 import java.time.LocalDateTime
 
@@ -85,7 +84,7 @@ class ${handlerClassName} : RequestHandler<${APIGatewayV2HTTPEventEntity.name}, 
 
 
     override fun handleRequest(
-        ${inputParamName}: ${APIGatewayV2HTTPEventEntity.name}?,
+        ${InjectionConstants.inputParamName}: ${APIGatewayV2HTTPEventEntity.name}?,
         context: Context?
     ): APIGatewayV2HTTPResponse {
        // created from template  apiGatewayEventHandler at ${LocalDateTime.now()} 

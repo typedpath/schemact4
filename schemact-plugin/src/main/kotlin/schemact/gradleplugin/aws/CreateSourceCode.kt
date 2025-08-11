@@ -1,18 +1,11 @@
 package schemact.gradleplugin.aws
 
-import multiPartCode
 import org.gradle.configurationcache.extensions.capitalized
 import schemact.domain.*
 import schemact.domain.Function
 import schemact.gradleplugin.RestPolicy
 import schemact.gradleplugin.aws.functiontemplates.*
 import schemact.gradleplugin.aws.functiontemplates.FunctionTypescriptClientInjectedTemplate.functionTypescriptClientInjectedTemplate
-import schemact.gradleplugin.aws.functiontemplates.FunctionTypescriptClientTemplate.functionTypescriptClientTemplate
-import schemact.gradleplugin.aws.functiontemplates.injectionsupport.DynamoDbUtilTemplate
-import schemact.gradleplugin.aws.functiontemplates.injectionsupport.InjectablesFactoryTemplate
-import schemact.gradleplugin.aws.functiontemplates.injectionsupport.InjectablesTemplate
-import schemact.gradleplugin.aws.functiontemplates.injectionsupport.UserDataUpdaterTemplate
-import schemact.gradleplugin.aws.functiontemplates.injectionsupport.VerifyCognitoTemplate
 import schemact.gradleplugin.injection.APIGatewayV2HTTPEventHandlerInjectedTemplate.templateLambdaEventHandlerFiles
 import schemact.gradleplugin.injection.AwsLambdaDependencyGrapher
 import schemact.gradleplugin.injection.ParameterDependencyGraph
@@ -21,7 +14,6 @@ import java.io.File
 
 object CreateSourceCode {
     fun createSourceCode(
-        genDir: File,
         injectGenDir: File,
         mainKotlinSourceDir: File,
         domain: Domain,
@@ -51,17 +43,14 @@ object CreateSourceCode {
 
         // TODO - add return types
         allComplexTopLevelTypes.forEach {
-            writeDataClassFile(entity=it, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=genDir, topLevelEntities =allComplexTopLevelTypes )
             writeDataClassFile(entity=it, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=injectGenDir, topLevelEntities =allComplexTopLevelTypes )
         }
 
         schemact.userKeyedDatabase?.let {
             println("userKeyedDatabase writing userType based on allComplexTopLevelTypes=${allComplexTopLevelTypes.map { it.name }.joinToString (",")}")
-           writeDataClassFile(entity=it.userInfoType, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=genDir, topLevelEntities =allComplexTopLevelTypes )
             writeDataClassFile(entity=it.userInfoType, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=injectGenDir, topLevelEntities =allComplexTopLevelTypes )
            it.previousUserInfoTypes.forEach {
                println("userKeyedDatabase writing previous type ${it.name}.${it.version}")
-               writeDataClassFile(entity=it, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=genDir, topLevelEntities =allComplexTopLevelTypes )
                writeDataClassFile(entity=it, defaultPackageName = packageName, defaultPackageTree = packageTree, genDir=injectGenDir, topLevelEntities =allComplexTopLevelTypes )
 
            }
@@ -78,7 +67,6 @@ object CreateSourceCode {
             createFunctionCode(
                 function = it,
                 module = module,
-                genDir = genDir,
                 injectGenDir = injectGenDir,
                 mainKotlinSourceDir = mainKotlinSourceDir,
                 packageTree = packageTree,
@@ -86,7 +74,6 @@ object CreateSourceCode {
                 staticWebSiteToSourceRoot = staticWebSiteToSourceRoot,
                 defaultLocalServerDomain=defaultLocalServerDomain,
                 allComplexTopLevelTypes=allComplexTopLevelTypes,
-                userInfoType = schemact.userKeyedDatabase?.userInfoType
             )
             // TODO try new template ! ! - refer to codelocations package + handler class name
 
@@ -94,7 +81,7 @@ object CreateSourceCode {
         module.functionClients.forEach {
             if (it.language!=Language.Kotlin) throw RuntimeException("module ${module.name} has unsupported language ${it.language}")
             createKotlinClientFunctionCode(functionClient = it, schemact=schemact,
-                genDir = genDir, packageTree=packageTree)
+                genDir = injectGenDir, packageTree=packageTree)
         }
     }
 
@@ -129,39 +116,20 @@ object CreateSourceCode {
     private fun createFunctionCode(
         function: Function,
         module: Module,
-        genDir: File,
         injectGenDir: File,
         packageTree: List<String>,
         mainKotlinSourceDir: File,
         staticWebSites: List<StaticWebsite>,
         staticWebSiteToSourceRoot: Map<StaticWebsite, File>,
         defaultLocalServerDomain: String?,
-        allComplexTopLevelTypes: Set<Entity>,
-        userInfoType: Entity?=null
+        allComplexTopLevelTypes: Set<Entity>
     ) {
-        println("creating code for function ${function.name} in ${genDir.absolutePath}")
+        println("creating code for function ${function.name} in ${injectGenDir.absolutePath}")
 
 
-        genDir.mkdirs()
         val packageName = packageTree.joinToString(".")
 
-        mapOf("VerifyCognito" to VerifyCognitoTemplate.VerifyCognitoTemplate(packageName),
-            "Injectables" to InjectablesTemplate.InjectablesTemplate(packageName, if (userInfoType!=null)userInfoType.name else null),
-            "InjectablesFactory" to InjectablesFactoryTemplate.InjectablesFactoryTemplate(packageName, userInfoType),
-            ).forEach {
-            writeSourceFile(genDir, packageTree, it.key,it.value)
-        }
-        if (userInfoType!=null) {
-            mapOf("DynamoDbUtil" to DynamoDbUtilTemplate.DynamoDbUtilTemplate(packageName),
-                "${userInfoType.name}Updater" to UserDataUpdaterTemplate.UserDataUpdaterTemplate(entity = userInfoType, packageName=packageName))
-                .forEach {
-                writeSourceFile(genDir, packageTree, it.key,it.value)
-            }
-        }
-
-        val implClassName = CodeLocations.implClassName(function.name)
         val handlerClassName = CodeLocations.handlerClassName(function.name)
-        val restPolicy = RestPolicy(function.paramType, function.returnType)
 
         // TODO generate new form service code
 
@@ -174,25 +142,10 @@ object CreateSourceCode {
             injectGenDir,
             packageName,
             handlerClassName,
-            restPolicy,
             mainKotlinSourceDir,
             allComplexTopLevelTypes,
             parameterDependencyGraph=parameterDependencyGraph
         )
-
-        generateServiceCode(
-            function,
-            module,
-            packageTree,
-            genDir,
-            packageName,
-            implClassName,
-            handlerClassName,
-            restPolicy,
-            mainKotlinSourceDir,
-            allComplexTopLevelTypes
-        )
-
 
 
         staticWebSites.forEach {
@@ -204,7 +157,6 @@ object CreateSourceCode {
                 packageName = packageName,
                 module=module,
                 function = function,
-                restPolicy = restPolicy,
                 parameterDependencyGraph,
                 defaultLocalServerDomain=defaultLocalServerDomain
             )
@@ -213,7 +165,7 @@ object CreateSourceCode {
     }
 
     private fun generateClientCode(
-        sourceRoot: File, packageName: String, module:Module, function: Function, restPolicy: RestPolicy,
+        sourceRoot: File, packageName: String, module:Module, function: Function,
         parameterDependencyGraph: ParameterDependencyGraph,
         defaultLocalServerDomain: String?
     ) {
@@ -227,11 +179,6 @@ object CreateSourceCode {
         val file = File(sourceRoot, "functions/${function.name}.ts")
         file.parentFile.mkdirs()
         file.writeText(
-/*            functionTypescriptClientTemplate(
-                packageName = packageName, function = function,
-                module=module,
-                restPolicy = restPolicy,
-                defaultLocalServerDomain=defaultLocalServerDomain)*/
             functionTypescriptClientInjectedTemplate( packageName = packageName, function = function,
                 module=module,
                 parameterDependencyGraph = parameterDependencyGraph,
@@ -265,7 +212,6 @@ object CreateSourceCode {
         genDir: File,
         defaultPackageName: String,
         handlerClassName: String,
-        restPolicy: RestPolicy,
         mainKotlinSourceDir: File,
         allComplexTopLevelTypes: Set<Entity>,
         parameterDependencyGraph: ParameterDependencyGraph
@@ -292,71 +238,6 @@ object CreateSourceCode {
         }
     }
 
-    private fun generateServiceCode(
-        function: Function,
-        module: Module,
-        defaultPackageTree: List<String>,
-        genDir: File,
-        defaultPackageName: String,
-        implClassName: String,
-        handlerClassName: String,
-        restPolicy: RestPolicy,
-        mainKotlinSourceDir: File,
-        allComplexTopLevelTypes: Set<Entity>
-    ) {
-        // find all the entities in the arguments
-        // assume all definitions are nested
-        // generate source
-        val allTopLevelConnections = restPolicy.allTopLevelConnections
-
-        //assume argFrom environment are defined elsewhere
-        val complexTopLevelTypes = allComplexTopLevelTypes//restPolicy.complexTopLevelTypes// allTopLevelConnections.map { it.entity2 }.filter { it !is PrimitiveType || it.connections.size>0}.toMutableSet()
-        println("generateServiceCode complexTopLevelTypes for function ${function.name} reviewing : ${allTopLevelConnections.joinToString(","){it.name}}")
-        println("generateServiceCode complexTopLevelTypes for function ${function.name}: ${complexTopLevelTypes.joinToString(","){it.name}}")
-        complexTopLevelTypes.forEach {
-            writeDataClassFile(entity = it, defaultPackageTree=defaultPackageTree, defaultPackageName = defaultPackageName,
-                genDir= genDir, topLevelEntities = complexTopLevelTypes)
-        }
-
-        if (restPolicy.argsFromMultiPart.size>0) {
-            writeSourceFile(genDir, defaultPackageTree, "MultiPart", multiPartCode(defaultPackageTree.joinToString(".")))
-        }
-
-        val interfaceClassName = CodeLocations.interfaceClassName(id = function.name)
-
-        val interfaceSourceSubpath = "${defaultPackageTree.joinToString("/")}/${interfaceClassName}.kt"
-        val interfaceSourceFile = File(genDir, interfaceSourceSubpath)
-        interfaceSourceFile.parentFile.mkdirs()
-        interfaceSourceFile.writeText(
-            functionInterface(
-                `package` = defaultPackageName,
-                functionId = function.name, function = function, interfaceName = interfaceClassName
-            )
-        )
-
-        if (module.type==Module.Type.StandaloneFunction) {
-            val handlerSource =
-                apiGatewayEventHandler(
-                    packageName = defaultPackageName, function = function,
-                    implClassName = implClassName,
-                    handlerClassName = handlerClassName,
-                    restPolicy = restPolicy)
-
-            val handlerSourceSubpath = "${defaultPackageTree.joinToString("/")}/${handlerClassName}.kt"
-            val handlerSourceFile = File(genDir, handlerSourceSubpath)
-            handlerSourceFile.parentFile.mkdirs()
-            handlerSourceFile.writeText(handlerSource)
-        }
-
-        val implSourceFile =
-            File(mainKotlinSourceDir, "${defaultPackageTree.joinToString("/")}/${implClassName}.kt")
-        println("implSourceFile: $implSourceFile")
-        // create a sample HandleImpl
-        if (!implSourceFile.exists()) {
-            implSourceFile.parentFile.mkdirs()
-            implSourceFile.writeText(functionSampleImpl(defaultPackageName, implClassName, function))
-        }
-    }
 }
 
 

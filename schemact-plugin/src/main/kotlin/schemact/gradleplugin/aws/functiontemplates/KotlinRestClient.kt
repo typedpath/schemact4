@@ -5,6 +5,7 @@ import schemact.domain.Function
 import schemact.gradleplugin.RestPolicy
 import schemact.gradleplugin.aws.functiontemplates.CodeLocations.dataClassName
 
+// TODO move this to injection - eliminate RestPolicy
 fun kotlinRestClient(module: Module, function: Function, packageName: String, className: String) : String  {
     val restPolicy = RestPolicy(function.paramType, function.returnType)
     val visited = mutableSetOf<Entity>()

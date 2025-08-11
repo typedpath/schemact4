@@ -9,9 +9,6 @@ import schemact.gradleplugin.KotlinFunctionClientDependencies.kotlinFunctionClie
 import schemact.gradleplugin.TaskNaming.groupName
 import schemact.gradleplugin.aws.AwsDependencies.awsLambdaDependencies
 import schemact.gradleplugin.aws.CreateSourceCode.createSourceCode
-import schemact.gradleplugin.golang.templates.Makefile
-import schemact.gradleplugin.golang.templates.goMod
-import schemact.gradleplugin.golang.templates.mainGo
 import java.io.File
 
 object GenSourceTask {
@@ -41,12 +38,10 @@ object GenSourceTask {
         }
 
         val mainSourceSet = kotlinJvmProjectExtension.sourceSets.getByName("main")
-        val sourceGenDir = "${project.buildDir}/schemactsourcegen/kotlin"
         val sourceInjectGenDir = "${project.buildDir}/schemactsourceinjectgen/kotlin"
 
         mainSourceSet.kotlin.srcDir(sourceInjectGenDir)
         //mainSourceSet.kotlin.srcDir(sourceGenDir)
-        File(sourceGenDir).mkdirs()
         File(sourceInjectGenDir).mkdirs()
         val genTask = project.tasks.create("${module.name}_genCode") { task ->
             task.group = groupName(module)
@@ -69,7 +64,6 @@ object GenSourceTask {
 
                 // staticWebsite2Functions
                 createSourceCode(
-                    genDir = File(sourceGenDir),
                     injectGenDir = File(sourceInjectGenDir),
                     mainKotlinSourceDir = mainKotlinSourceDir,
                     functionToStaticWebsite = functionToStaticWebsite,
@@ -103,15 +97,6 @@ object GenSourceTask {
             functionsToStaticWebsites.entries.flatMap { it.value }.toSet()
         // validations
         if (functionsToStaticWebsites.size > 0) {
-            fun requiredFunctionClients() = "${
-                functionsToStaticWebsites.map {
-                    Pair(
-                        it.key,
-                        it.value.map { it.name }.joinToString(",")
-                    )
-                }
-                    .map { "${it.first}:${it.second}" }.joinToString(" ")
-            }"
 
             val staticWebSitesWithUnknownSrcRoots =
                 staticWebsitesWithClients.minus(staticWebSiteToSourceRoot.keys)
@@ -148,7 +133,6 @@ object GenSourceTask {
                 }"
             )
         }
-
 
         return functionsToStaticWebsites
     }

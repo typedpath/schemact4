@@ -6,7 +6,6 @@ import schemact.domain.Entity
 import schemact.domain.Function
 import schemact.domain.PrimitiveType
 import schemact.gradleplugin.aws.functiontemplates.CodeLocations
-import schemact.gradleplugin.aws.functiontemplates.topLevelFieldsAsArgs
 import java.time.LocalDateTime
 
 fun functionSampleImplNew(`package`: String, implClassName: String, function: Function) = """
