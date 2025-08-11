@@ -1,5 +1,5 @@
 package schemact.gradleplugin.aws
-
+/*deploys schemact4 artifacts to a cloudformation managed bucket */
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3Client
 import schemact.domain.Deployment

@@ -4,7 +4,7 @@ import samples.accountview.mainPage
 
 plugins {
     kotlin("jvm") version "2.0.0"
-    id("com.typedpath.schemact4.schemact-plugin") version "1.0.1-SNAPSHOT"
+    id("com.typedpath.schemact4.schemact-plugin") version "1.0.1"
 }
 
 group = "com.typedpath"
